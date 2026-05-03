@@ -92,7 +92,7 @@
   <div class="hero-stats">
     <div class="stat"><span class="stat-val">7</span><span class="stat-lbl">Solver</span></div>
     <div class="stat"><span class="stat-val">303+</span><span class="stat-lbl">Gleichungen</span></div>
-    <div class="stat"><span class="stat-val">v2.5</span><span class="stat-lbl">Version</span></div>
+    <div class="stat"><span class="stat-val">v2.11</span><span class="stat-lbl">Version</span></div>
     <div class="stat"><span class="stat-val">Java 11+</span><span class="stat-lbl">Plattform</span></div>
   </div>
 </div>
@@ -382,28 +382,48 @@
     <thead><tr><th>Version</th><th>Inhalt</th><th>Status</th></tr></thead>
     <tbody>
       <tr>
-        <td><code>v2.1</code></td>
-        <td>Baseline — Newton-Armijo, LM, Broyden</td>
-        <td><span class="badge b-na">Archiv</span></td>
-      </tr>
-      <tr>
-        <td><code>v2.2</code></td>
-        <td>GSPAR Sparse-LU, paralleler Jacobi-Aufbau</td>
-        <td><span class="badge b-na">Archiv</span></td>
-      </tr>
-      <tr>
         <td><code>v2.3</code></td>
         <td>SolverAPI, Logging-Bereinigung, Javadoc, ELSEIF-Expansion, B27/B28 Bugfixes</td>
-        <td><span class="badge b-ok">✅ Stabil</span></td>
+        <td><span class="badge b-na">Archiv</span></td>
       </tr>
       <tr>
         <td><code>v2.4</code></td>
         <td>ParseError-Infrastruktur — strukturierte Fehlerbehandlung mit Zeilennummern</td>
-        <td><span class="badge b-ok">✅ Stabil</span></td>
+        <td><span class="badge b-na">Archiv</span></td>
       </tr>
       <tr>
         <td><code>v2.5</code></td>
         <td>LinkedHashMap Refactoring (EqnData) + Output-Writer (SolverResult)</td>
+        <td><span class="badge b-na">Archiv</span></td>
+      </tr>
+      <tr>
+        <td><code>v2.6</code></td>
+        <td>Bugfix FUNC_MAP Wortgrenzen — verhindert Korrumpierung von Variablennamen</td>
+        <td><span class="badge b-na">Archiv</span></td>
+      </tr>
+      <tr>
+        <td><code>v2.7</code></td>
+        <td>Javadoc — alle 14 undokumentierten Klassen vollständig dokumentiert</td>
+        <td><span class="badge b-na">Archiv</span></td>
+      </tr>
+      <tr>
+        <td><code>v2.8</code></td>
+        <td>R-07 Inline-Kommentare · R-08 SQR(x)=x² · R-13 Relatives Abbruchkriterium</td>
+        <td><span class="badge b-na">Archiv</span></td>
+      </tr>
+      <tr>
+        <td><code>v2.9</code></td>
+        <td>R-16 SolverLogger Handler · R-17 SolverResultTableModel (GUI-Vorbereitung)</td>
+        <td><span class="badge b-na">Archiv</span></td>
+      </tr>
+      <tr>
+        <td><code>v2.10</code></td>
+        <td>R-03/06/09/14/20/21 — alle mittelfristigen Roadmap-Punkte umgesetzt</td>
+        <td><span class="badge b-ok">✅ Stabil</span></td>
+      </tr>
+      <tr>
+        <td><code>v2.11</code></td>
+        <td>JacobiEquilibrator (Sinkhorn-Knopp) · Roadmap R-01 analysiert · LL-19</td>
         <td><span class="badge b-ok">✅ Aktuell</span></td>
       </tr>
     </tbody>
@@ -411,10 +431,27 @@
   </div>
 </section>
 
+<!-- Quellcode -->
+<section>
+  <h2>Quellcode & Lizenz</h2>
+  <div class="note blue">
+    <strong>Quellcode:</strong> Der Java-Quellcode von CMDSolver ist in einem
+    privaten Repository verfügbar. Diese Dokumentation wird öffentlich bereitgestellt
+    um die Nutzung der API und die Modellierungskonzepte zu erläutern.
+    Für Anfragen zum Quellcode bitte direkt Kontakt aufnehmen.
+  </div>
+  <div class="note amber" style="margin-top:.8rem">
+    <strong>Hinweis:</strong> CMDSolver ist ein Forschungs- und Entwicklungsprojekt.
+    Die Dokumentation spiegelt den aktuellen Entwicklungsstand wider und wird
+    kontinuierlich erweitert. Alle Solver wurden auf den bereitgestellten
+    Beispielmodellen getestet (SimpleSystem.cas, NozzleSystem_4_fixed.cas).
+  </div>
+</section>
+
 </main>
 
 <footer>
-  <span>CMDSolver Dokumentation · v2.5 · Mai 2026</span>
+  <span>CMDSolver Dokumentation · v2.11 · Mai 2026</span>
   <span>Alle Solver getestet auf SimpleSystem.cas · Java 21</span>
 </footer>
 
