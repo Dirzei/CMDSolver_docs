@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CMDSolver Docs — Broyden-GSPAR Sparse</title>
+<link rel="stylesheet" href="docs.css">
+</head>
+<body>
+
+<div class="doc-header">
+  <div class="breadcrumb">
+    <a href="index.html">CMDSolver Docs</a>
+    <span>›</span><span>Solver</span>
+    <span>›</span><span>Broyden-Sparse</span>
+  </div>
+  <span class="doc-badge solver">SolverType.BROYDEN_SPARSE</span>
+</div>
+
+<div class="hero">
+  <div class="hero-sub">Solver 6 von 7</div>
+  <h1>Broyden<br>Quasi-Newton GSPAR</h1>
+  <p class="tagline">
+    Broyden-Update mit GSPAR Sparse-LU. Schnellster Solver im Testbetrieb —
+    kombiniert günstige Jacobi-Updates mit effizienter Sparse-Linearalgebra.
+  </p>
+  <div class="hero-stats">
+    <div class="stat"><span class="stat-val">3</span><span class="stat-lbl">Iter (SimpleSystem)</span></div>
+    <div class="stat"><span class="stat-val">3.16e-11</span><span class="stat-lbl">fsum</span></div>
+    <div class="stat"><span class="stat-val">~9ms</span><span class="stat-lbl">Laufzeit</span></div>
+    <div class="stat"><span class="stat-val">Rang-1+Sparse</span><span class="stat-lbl">Update</span></div>
+  </div>
+</div>
+
+<nav>
+  <a href="#theorie">Theorie</a>
+  <a href="#pseudocode">Pseudocode</a>
+  <a href="#dateien">Dateien</a>
+  <a href="#parameter">Parameter</a>
+  <a href="#verhalten">Verhalten</a>
+</nav>
+
+<main>
+
+<section id="theorie">
+  <h2>Theoretischer Kontext</h2>
+
+  <p>
+    BROYDEN_SPARSE kombiniert den Broyden Rang-1-Update mit GSPAR Sparse-LU —
+    analog zu NEWTON_SPARSE_ARMIJO vs NEWTON_ARMIJO. Bei gut konditionierten
+    Systemen kann dieser Solver 5–10× schneller sein als BROYDEN_DENSE.
+  </p>
+
+  <div class="math-block">
+    <div class="eq"><span class="hi">Schritt k (wenn kein Reset):</span></div>
+    <div class="eq">  1. Rang-1-Update der Jacobi-Approximation J̃</div>
+    <div class="eq">  2. Sparse-LU: J̃ = L·U</div>
+    <div class="eq">  3. Lösung: Δx via L·U·Δx = −F(x)  (Substitution)</div>
+    <div class="eq"></div>
+    <div class="eq"><span class="hi">Reset-Schritt (alle resetInterval Iterationen):</span></div>
+    <div class="eq">  Vollständiger Jacobi-Neuaufbau + neue GSPAR-Faktorisierung</div>
+  </div>
+
+  <div class="note green">
+    <strong>Warum so schnell?</strong> Beim SimpleSystem-Test: Der Rang-1-Update
+    ist günstiger als vollständiger Jacobi-Neuaufbau, GSPAR ist günstiger als
+    dichte LU. Zusammen ergibt das ~9ms gegenüber ~42ms für NEWTON_ARMIJO.
+    Bei größeren Systemen werden die Unterschiede noch ausgeprägter.
+  </div>
+</section>
+
+<section id="pseudocode">
+  <h2>Pseudocode</h2>
+<pre><span class="kw">function</span> <span class="fn">broyden_sparse_solve</span>(F, x₀, tol, maxIter, resetInterval):
+    x ← InitGuessApplier(x₀)
+    J ← buildJacobian(F, x)         <span class="cmt">// vollständiger Start</span>
+    [L, U, P] ← gspar_lu(J)         <span class="cmt">// Sparse-LU Faktorisierung</span>
+
+    <span class="kw">for</span> k = 0 <span class="kw">to</span> maxIter:
+        f ← F(x)
+        Δx ← gspar_solve(L, U, P, −f)  <span class="cmt">// schnelle Substitution</span>
+
+        x_new ← x + Δx
+        f_new ← F(x_new)
+
+        <span class="cmt">// ── Broyden-Update oder Reset ──</span>
+        <span class="kw">if</span> k % resetInterval == 0:
+            J ← buildJacobian(F, x_new)
+            [L, U, P] ← gspar_lu(J)
+        <span class="kw">else</span>:
+            Δf ← f_new − f
+            J ← broyden_rank1_update(J, Δx, Δf)
+            [L, U, P] ← gspar_lu(J)     <span class="cmt">// Re-Faktorisierung</span>
+
+        x ← x_new
+        x ← PhysicalProjector(x)
+        fsum ← Σ|Fᵢ(x)|
+        <span class="kw">if</span> fsum &lt; tol: <span class="kw">return</span> CONVERGED, x, k, fsum
+
+    <span class="kw">return</span> NOT_CONVERGED, x, maxIter, fsum</pre>
+</section>
+
+<section id="dateien">
+  <h2>Wichtige Dateien</h2>
+  <ul class="file-list">
+    <li>
+      <span class="file-icon">KERN</span>
+      <div class="file-desc">
+        <strong>BroydenGSPARSolver.java</strong>
+        Erbt von GSPARSolver. Überschreibt Iterationslogik für Rang-1-Update
+        mit anschließender Sparse-Refaktorisierung.
+        <br><code>apps/eqnParser/solver/BroydenGSPARSolver.java</code>
+      </div>
+    </li>
+    <li>
+      <span class="file-icon">BASIS</span>
+      <div class="file-desc">
+        <strong>GSPARSolver.java</strong>
+        Basisklasse — stellt GSPAR Sparse-LU bereit.
+        <br><code>apps/eqnParser/solver/GSPARSolver.java</code>
+      </div>
+    </li>
+  </ul>
+</section>
+
+<section id="parameter">
+  <h2>Parameter</h2>
+  <pre>java CASSolver -I:model.cas -S:BROYDEN_SPARSE</pre>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>Parameter</th><th>Default</th><th>Beschreibung</th></tr></thead>
+    <tbody>
+      <tr><td><code>tolerance</code></td><td><code>1e-7</code></td><td>Konvergenzschwelle</td></tr>
+      <tr><td><code>maxIter</code></td><td><code>100</code></td><td>Maximale Iterationen</td></tr>
+      <tr><td><code>broydenResetInterval</code></td><td><code>25</code></td><td>Vollständiger Jacobi-Neuaufbau alle n Iterationen</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<section id="verhalten">
+  <h2>Konvergenzverhalten</h2>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>Situation</th><th>Verhalten</th></tr></thead>
+    <tbody>
+      <tr><td>Gut konditioniertes großes System</td><td><span class="badge b-ok">✅ Schnellster Solver</span></td></tr>
+      <tr><td>Parameterstudien (BatchRunner)</td><td><span class="badge b-ok">✅ Sehr effizient</span></td></tr>
+      <tr><td>Schlechte Kondition</td><td><span class="badge b-warn">⚠️ Reset häuft sich → LM bevorzugen</span></td></tr>
+      <tr><td>Schlechter Startvektor</td><td><span class="badge b-warn">⚠️ Kein Backtracking → kann divergieren</span></td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <span>CMDSolver Docs · Broyden-GSPAR Sparse · v2.5</span>
+  <span>
+    <a href="solver_broyden.html">← Broyden</a> &nbsp;|&nbsp;
+    <a href="solver_homotopy.html">Homotopie →</a>
+  </span>
+</footer>
+</body>
+</html>

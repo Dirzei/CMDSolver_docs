@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CMDSolver — Modulare Stream-Architektur</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap');
+
+  :root {
+    --bg:      #0d0f12;
+    --bg2:     #13161b;
+    --bg3:     #1a1e25;
+    --border:  #252a33;
+    --border2: #2e3540;
+    --text:    #c8cdd6;
+    --text2:   #7a8496;
+    --text3:   #4a5568;
+    --accent:  #4a9eff;
+    --ok:      #3ecf8e;
+    --warn:    #f0a030;
+    --err:     #ff5c5c;
+    --purple:  #a78bfa;
+    --teal:    #2dd4bf;
+    --mono:    'IBM Plex Mono', monospace;
+    --sans:    'IBM Plex Sans', sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: var(--sans);
+    background: var(--bg);
+    color: var(--text);
+    font-size: 13.5px;
+    line-height: 1.7;
+  }
+
+  header {
+    border-bottom: 1px solid var(--border);
+    padding: 2rem 3rem 1.5rem;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+
+  .logo { font-family: var(--mono); font-size: 11px; color: var(--text3);
+          letter-spacing: .15em; text-transform: uppercase; margin-bottom: .4rem; }
+  h1 { font-size: 22px; font-weight: 600; color: #e8ecf4; letter-spacing: -.02em; }
+  .meta { font-size: 12px; color: var(--text2); font-family: var(--mono); }
+
+  main { padding: 2rem 3rem 4rem; max-width: 1000px; }
+
+  /* ── Sections ── */
+  section { margin-bottom: 3rem; }
+
+  section h2 {
+    font-size: 12px; font-family: var(--mono);
+    letter-spacing: .12em; text-transform: uppercase;
+    color: var(--text3); margin-bottom: 1.2rem;
+    padding-bottom: .5rem; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: .5rem;
+  }
+
+  section h2::before {
+    content: ''; display: inline-block;
+    width: 6px; height: 6px; border-radius: 50%; background: var(--accent);
+  }
+
+  section h3 {
+    font-size: 14px; font-weight: 500; color: #e8ecf4;
+    margin: 1.4rem 0 .6rem;
+  }
+
+  p { color: var(--text); margin-bottom: .8rem; }
+
+  /* ── Note boxes ── */
+  .note {
+    border-radius: 6px; padding: .9rem 1.1rem;
+    font-size: 13px; line-height: 1.7; margin-bottom: 1.5rem;
+  }
+  .note.blue  { background: rgba(74,158,255,.06); border-left: 3px solid var(--accent); }
+  .note.green { background: rgba(62,207,142,.06); border-left: 3px solid var(--ok); }
+  .note.amber { background: rgba(240,160,48,.06); border-left: 3px solid var(--warn); }
+  .note strong { color: #e8ecf4; }
+
+  /* ── Comparison table ── */
+  .tbl-wrap { overflow-x: auto; border-radius: 8px; border: 1px solid var(--border); margin-bottom: 1.5rem; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  thead th {
+    background: var(--bg3); padding: 9px 14px; text-align: left;
+    font-weight: 500; font-size: 11px; letter-spacing: .06em;
+    text-transform: uppercase; color: var(--text2);
+    border-bottom: 1px solid var(--border2); white-space: nowrap;
+  }
+  tbody tr { border-bottom: 1px solid var(--border); transition: background .1s; }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: var(--bg3); }
+  td { padding: 9px 14px; vertical-align: top; }
+
+  code {
+    font-family: var(--mono); font-size: 11.5px;
+    background: rgba(255,255,255,.05); padding: 1px 5px;
+    border-radius: 3px; color: #a8c8f0;
+  }
+
+  pre {
+    font-family: var(--mono); font-size: 12px;
+    background: var(--bg3); border: 1px solid var(--border);
+    border-radius: 8px; padding: 1rem 1.2rem;
+    overflow-x: auto; line-height: 1.6; margin-bottom: 1rem;
+    color: #c8cdd6;
+  }
+
+  .kw  { color: var(--purple); }
+  .cmt { color: var(--text3); }
+  .str { color: var(--ok); }
+  .num { color: var(--warn); }
+  .typ { color: var(--teal); }
+
+  /* ── Effort badges ── */
+  .badge {
+    display: inline-block; font-size: 11px; padding: 2px 8px;
+    border-radius: 12px; font-family: var(--mono); white-space: nowrap;
+  }
+  .b-low  { background: rgba(62,207,142,.1);  color: var(--ok);   border: 1px solid rgba(62,207,142,.2); }
+  .b-mid  { background: rgba(240,160,48,.1);  color: var(--warn); border: 1px solid rgba(240,160,48,.2); }
+  .b-high { background: rgba(255,92,92,.1);   color: var(--err);  border: 1px solid rgba(255,92,92,.2); }
+  .b-info { background: rgba(74,158,255,.1);  color: var(--accent);border: 1px solid rgba(74,158,255,.2); }
+
+  /* ── Architecture diagram (pure CSS/SVG inline) ── */
+  .arch-diagram {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: 10px; padding: 1.5rem;
+    margin-bottom: 1.5rem; overflow-x: auto;
+  }
+
+  footer {
+    border-top: 1px solid var(--border); padding: 1.5rem 3rem;
+    font-family: var(--mono); font-size: 11px; color: var(--text3);
+    display: flex; justify-content: space-between; flex-wrap: wrap; gap: .5rem;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <div class="logo">CMDSolver · Architektur-Analyse</div>
+    <h1>Modulare Stream-Architektur</h1>
+  </div>
+  <div class="meta">Mai 2026 · Gedankenspiel / Roadmap</div>
+</header>
+
+<main>
+
+<!-- 1. Ausgangslage -->
+<section>
+  <h2>Ausgangslage — aktuelles monolithisches Modell</h2>
+
+  <p>Das aktuelle CMDSolver-Modell ist ein <strong>flaches Gleichungssystem</strong>: alle Variablen
+  (<code>PARTM.F060.PT</code>, <code>FULLM.F166.W</code>, …) und alle Gleichungen liegen in einem
+  einzigen <code>SystemData</code>-Objekt. Der Solver sieht eine Jacobi-Matrix über alle 303+ Variablen
+  gleichzeitig.</p>
+
+  <div class="note blue">
+    <strong>Vorteil heute:</strong> Vollständige Kopplung — der Solver kann globale Wechselwirkungen
+    direkt erkennen. Druckgleichgewicht zwischen Core und Bypass wird automatisch als Teil desselben
+    Gleichungssystems gelöst.<br><br>
+    <strong>Nachteil heute:</strong> Ein Modell = eine Datei. Mixer, Jetpipe, Düse sind nicht
+    austauschbar ohne die CAS-Datei manuell zu editieren.
+  </div>
+</section>
+
+<!-- 2. Zielarchitektur -->
+<section>
+  <h2>Zielarchitektur — Module + Streams</h2>
+
+  <p>In einer modularen Architektur ist jedes Bauteil (Mixer, Nozzle, Jetpipe) ein eigenständiges
+  Modul mit definierten Ein- und Ausgängen. <strong>Streams</strong> verbinden Module und übertragen
+  thermodynamische Größen wie Druck, Temperatur, Massenstrom.</p>
+
+  <div class="arch-diagram">
+    <svg width="100%" viewBox="0 0 860 220" role="img">
+      <title>Modulare Stream-Architektur</title>
+      <defs>
+        <marker id="arr" viewBox="0 0 10 10" refX="8" refY="5"
+                markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M2 1L8 5L2 9" fill="none" stroke="#4a9eff"
+                stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </marker>
+      </defs>
+
+      <!-- Module -->
+      <rect x="20"  y="80" width="120" height="60" rx="8" fill="#1a1e25" stroke="#2e3540" stroke-width="1"/>
+      <text x="80"  y="106" text-anchor="middle" font-family="IBM Plex Sans" font-size="13" fill="#e8ecf4" font-weight="500">Mixer</text>
+      <text x="80"  y="124" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" fill="#7a8496">mixer.cas</text>
+
+      <rect x="230" y="80" width="140" height="60" rx="8" fill="#1a1e25" stroke="#2e3540" stroke-width="1"/>
+      <text x="300" y="106" text-anchor="middle" font-family="IBM Plex Sans" font-size="13" fill="#e8ecf4" font-weight="500">Jetpipe</text>
+      <text x="300" y="124" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" fill="#7a8496">jetpipe.cas</text>
+
+      <rect x="460" y="80" width="140" height="60" rx="8" fill="#1a1e25" stroke="#2e3540" stroke-width="1"/>
+      <text x="530" y="106" text-anchor="middle" font-family="IBM Plex Sans" font-size="13" fill="#e8ecf4" font-weight="500">Nozzle</text>
+      <text x="530" y="124" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" fill="#7a8496">nozzle.cas</text>
+
+      <rect x="700" y="80" width="140" height="60" rx="8" fill="#0f6e56" stroke="#1d9e75" stroke-width="1"/>
+      <text x="770" y="106" text-anchor="middle" font-family="IBM Plex Sans" font-size="13" fill="#9fe1cb" font-weight="500">Thrust</text>
+      <text x="770" y="124" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" fill="#5dcaa5">Output</text>
+
+      <!-- Streams -->
+      <line x1="140" y1="110" x2="228" y2="110" stroke="#4a9eff" stroke-width="1.5" marker-end="url(#arr)"/>
+      <text x="184" y="102" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" fill="#6ab3ff">S1</text>
+      <text x="184" y="130" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="#4a5568">PT,TT,W</text>
+
+      <line x1="370" y1="110" x2="458" y2="110" stroke="#4a9eff" stroke-width="1.5" marker-end="url(#arr)"/>
+      <text x="414" y="102" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" fill="#6ab3ff">S2</text>
+      <text x="414" y="130" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="#4a5568">PT,TT,W</text>
+
+      <line x1="600" y1="110" x2="698" y2="110" stroke="#4a9eff" stroke-width="1.5" marker-end="url(#arr)"/>
+      <text x="649" y="102" text-anchor="middle" font-family="IBM Plex Mono" font-size="10" fill="#6ab3ff">S3</text>
+      <text x="649" y="130" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="#4a5568">VT,PS,W</text>
+
+      <!-- Eingang oben -->
+      <line x1="80" y1="30" x2="80" y2="78" stroke="#4a9eff" stroke-width="1.5" marker-end="url(#arr)" stroke-dasharray="4 3"/>
+      <text x="80" y="22" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="#4a5568">Core+Bypass</text>
+
+      <!-- Labels -->
+      <text x="430" y="195" text-anchor="middle" font-family="IBM Plex Sans" font-size="11" fill="#4a5568">
+        Streams transportieren: PT, TT, PS, TS, W, RGAS, FAR, WGR, MN, …
+      </text>
+    </svg>
+  </div>
+
+  <div class="note blue">
+    <strong>Was ein Stream ist:</strong> Ein Stream ist ein benanntes Bündel thermodynamischer
+    Zustandsgrößen an einem Querschnitt — analog zu den bestehenden
+    <code>PARTM.F060.*</code> / <code>PARTM.F066.*</code> Blöcken, aber als formales
+    Interface-Konzept mit Typ-Prüfung.
+  </div>
+</section>
+
+<!-- 3. Was müsste geändert werden -->
+<section>
+  <h2>Was müsste geändert werden</h2>
+
+  <h3>① Stream-Typ definieren (neue Klasse)</h3>
+  <p>Ein Stream ist eine typisierte Sammlung von Variablen an einer Modulgrenze.
+  Das könnte direkt in der CAS-Syntax ausgedrückt werden:</p>
+
+  <pre><span class="cmt">// stream_types.cas — Stream-Typ-Definitionen</span>
+<span class="kw">STREAMTYPE</span> <span class="typ">GasStream</span>
+  <span class="typ">REAL</span> PT;      <span class="cmt">// Totaldruck [Pa]</span>
+  <span class="typ">REAL</span> TT;      <span class="cmt">// Totaltemperatur [K]</span>
+  <span class="typ">REAL</span> W;       <span class="cmt">// Massenstrom [kg/s]</span>
+  <span class="typ">REAL</span> RGAS;    <span class="cmt">// Gaskonstante [J/kgK]</span>
+  <span class="typ">REAL</span> FAR;     <span class="cmt">// Fuel-air ratio [-]</span>
+  <span class="typ">REAL</span> WGR;     <span class="cmt">// Water-gas ratio [-]</span>
+<span class="kw">END</span></pre>
+
+  <h3>② Modul-Syntax erweitern</h3>
+  <p>Module deklarieren ihre Ein- und Ausgänge explizit.
+  Der Parser muss <code>MODULE</code>, <code>INLET</code>, <code>OUTLET</code> als neue
+  Schlüsselwörter kennen:</p>
+
+  <pre><span class="kw">MODULE</span> Mixer
+  <span class="kw">INLET</span>:  CoreIn  <span class="kw">AS</span> <span class="typ">GasStream</span>;
+  <span class="kw">INLET</span>:  BypassIn <span class="kw">AS</span> <span class="typ">GasStream</span>;
+  <span class="kw">OUTLET</span>: MixOut  <span class="kw">AS</span> <span class="typ">GasStream</span>;
+
+  <span class="cmt">// Interne Gleichungen — Variablen wie bisher</span>
+  GEOM.RMIXER <span class="kw">AS</span> <span class="typ">REAL</span> (...);
+  ...
+
+  <span class="cmt">// Gleichungen referenzieren Inlet/Outlet-Größen direkt</span>
+  MixOut.W = CoreIn.W + BypassIn.W;
+  MixOut.TT = (CoreIn.W*CoreIn.TT + BypassIn.W*BypassIn.TT) / MixOut.W;
+<span class="kw">END</span></pre>
+
+  <h3>③ Topologie-Datei</h3>
+  <p>Eine übergeordnete Datei verbindet Module über Streams:</p>
+
+  <pre><span class="kw">SYSTEM</span> NozzleSystem
+
+  <span class="kw">MODULE</span>  mixer   <span class="kw">USES</span> <span class="str">"mixer.cas"</span>;
+  <span class="kw">MODULE</span>  jetpipe <span class="kw">USES</span> <span class="str">"jetpipe.cas"</span>;
+  <span class="kw">MODULE</span>  nozzle  <span class="kw">USES</span> <span class="str">"nozzle.cas"</span>;
+
+  <span class="kw">CONNECT</span> mixer.MixOut   → jetpipe.Inlet;
+  <span class="kw">CONNECT</span> jetpipe.Outlet → nozzle.Inlet;
+
+<span class="kw">END</span></pre>
+
+  <h3>④ Solver-Strategie: Gekoppelt oder sequenziell?</h3>
+
+  <div class="tbl-wrap">
+  <table>
+    <thead>
+      <tr><th>Strategie</th><th>Wie</th><th>Vorteil</th><th>Nachteil</th><th>Aufwand</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Vollständig gekoppelt</strong></td>
+        <td>Module werden zu einem einzigen <code>SystemData</code> zusammengeführt — wie heute, nur strukturiert geladen</td>
+        <td>Exakt dasselbe Konvergenzverhalten wie heute. Kein neuer Solver nötig.</td>
+        <td>Verliert die Modularität beim Lösen. Große Jacobi.</td>
+        <td><span class="badge b-low">Gering</span></td>
+      </tr>
+      <tr>
+        <td><strong>Sequenziell (Stream-iteration)</strong></td>
+        <td>Module werden nacheinander gelöst. Stream-Werte werden iteriert bis Konvergenz.</td>
+        <td>Jedes Modul klein und gut konditioniert. Leicht parallelisierbar.</td>
+        <td>Konvergenz nicht garantiert bei starker Rückkopplung. Braucht äußere Iteration.</td>
+        <td><span class="badge b-mid">Mittel</span></td>
+      </tr>
+      <tr>
+        <td><strong>Block-Newton</strong></td>
+        <td>Jacobi wird block-strukturiert — ein Block pro Modul. Stream-Variablen sind Kopplungsblöcke.</td>
+        <td>Beste Konvergenz + Modularität. Strukturell wie GSPAR aber block-weise.</td>
+        <td>Komplexe Jacobi-Assemblierung.</td>
+        <td><span class="badge b-high">Hoch</span></td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="note green">
+    <strong>Empfehlung:</strong> Die einfachste und risikoärmste Strategie ist
+    <strong>vollständig gekoppelt mit Merge</strong> — Module werden beim Laden zu einem
+    einzigen <code>SystemData</code> zusammengeführt. Der Solver sieht nichts anderes als heute.
+    Die Modularität wirkt nur auf Datei- und Modellierungsebene, nicht auf Solver-Ebene.
+    Das ist in 2-3 Wochen umsetzbar ohne den Solver anzufassen.
+  </div>
+</section>
+
+<!-- 4. Konkrete Änderungen -->
+<section>
+  <h2>Konkrete Änderungen am Code</h2>
+
+  <div class="tbl-wrap">
+  <table>
+    <thead>
+      <tr><th>Komponente</th><th>Änderung</th><th>Aufwand</th><th>Solver-Auswirkung</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>EqnSysReader</code></td>
+        <td>Neue Schlüsselwörter <code>MODULE</code>, <code>STREAMTYPE</code>, <code>INLET</code>, <code>OUTLET</code>, <code>CONNECT</code> erkennen und parsen</td>
+        <td><span class="badge b-mid">Mittel</span></td>
+        <td>Keine</td>
+      </tr>
+      <tr>
+        <td><code>StreamDef</code> (neu)</td>
+        <td>Neue Klasse: Stream-Typ mit Liste von Variablennamen und deren Typen</td>
+        <td><span class="badge b-low">Gering</span></td>
+        <td>Keine</td>
+      </tr>
+      <tr>
+        <td><code>ModuleDef</code> (neu)</td>
+        <td>Neue Klasse: Modul mit Inlet/Outlet-Deklarationen und Verweis auf CAS-Datei</td>
+        <td><span class="badge b-low">Gering</span></td>
+        <td>Keine</td>
+      </tr>
+      <tr>
+        <td><code>SystemAssembler</code> (neu)</td>
+        <td>Liest Topologie-Datei, lädt Module, generiert Verbindungsgleichungen aus CONNECT-Anweisungen, merged alles in ein <code>SystemData</code></td>
+        <td><span class="badge b-mid">Mittel</span></td>
+        <td>Keine — Output ist normales <code>SystemData</code></td>
+      </tr>
+      <tr>
+        <td><code>SystemData</code></td>
+        <td>Optionaler Modul-Namespace: Variablennamen werden beim Merge mit Modul-Präfix versehen (<code>mixer.GEOM.R</code> statt <code>GEOM.R</code>)</td>
+        <td><span class="badge b-low">Gering</span></td>
+        <td>Keine</td>
+      </tr>
+      <tr>
+        <td><code>CASSolver</code> / GUI</td>
+        <td>Neuer Einstiegspunkt für Topologie-Dateien (<code>.sys</code> statt <code>.cas</code>). Vor dem Solve wird Assembler aufgerufen.</td>
+        <td><span class="badge b-low">Gering</span></td>
+        <td>Keine</td>
+      </tr>
+      <tr>
+        <td>Alle Solver</td>
+        <td><strong>Keine Änderung</strong> — sie sehen nur das fertige <code>SystemData</code></td>
+        <td>—</td>
+        <td><strong>Keine</strong></td>
+      </tr>
+      <tr>
+        <td>Jacobi / <code>DerivativeMatrix</code></td>
+        <td><strong>Keine Änderung</strong></td>
+        <td>—</td>
+        <td><strong>Keine</strong></td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<!-- 5. Was die CONNECT-Gleichungen erzeugen -->
+<section>
+  <h2>Was CONNECT intern erzeugt</h2>
+
+  <p>Eine CONNECT-Anweisung generiert automatisch Kopplungsgleichungen.
+  Das sind einfache Gleichheitsbedingungen — nichts strukturell Neues:</p>
+
+  <pre><span class="cmt">// Topologie:</span>
+<span class="kw">CONNECT</span> mixer.MixOut → jetpipe.Inlet;
+
+<span class="cmt">// Erzeugt automatisch folgende Gleichungen im merged SystemData:</span>
+jetpipe.Inlet.PT  = mixer.MixOut.PT;
+jetpipe.Inlet.TT  = mixer.MixOut.TT;
+jetpipe.Inlet.W   = mixer.MixOut.W;
+jetpipe.Inlet.RGAS = mixer.MixOut.RGAS;
+jetpipe.Inlet.FAR = mixer.MixOut.FAR;
+jetpipe.Inlet.WGR = mixer.MixOut.WGR;</pre>
+
+  <p>Diese Gleichungen sind lineare Identitäten — ihre Jacobi-Einträge sind ±1 und
+  fügen keine numerische Schwierigkeit hinzu. Das ist strukturell identisch zu den
+  bestehenden Kopplungen wie <code>PARTM.F066.W = PARTM.F070.W</code> die heute
+  schon im monolithischen Modell existieren.</p>
+
+  <div class="note amber">
+    <strong>Einzige numerische Überlegung:</strong> Wenn Module stark rückgekoppelt sind
+    (z.B. Nozzle-Gegendruck beeinflusst Mixer-Eintrittsbedingungen), ist die vollständig
+    gekoppelte Strategie zwingend — sequenziell würde hier nicht konvergieren.
+    Bei Triebwerkskomponenten in Reihe (Mixer → Jetpipe → Nozzle) ohne Rückkopplung
+    wäre sequenziell möglich, aber der Merge-Ansatz ist trotzdem robuster.
+  </div>
+</section>
+
+<!-- 6. Übergangsweg -->
+<section>
+  <h2>Übergangsweg — bestehende CAS-Dateien bleiben kompatibel</h2>
+
+  <p>Der entscheidende Vorteil des Merge-Ansatzes: bestehende monolithische
+  <code>.cas</code>-Dateien funktionieren weiterhin unverändert.
+  Die neue Topologie-Syntax ist optional — <code>CASSolver</code> erkennt am
+  Datei-Suffix <code>.sys</code> dass ein modulares System vorliegt.</p>
+
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>Phase</th><th>Was</th><th>Zeitaufwand</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><span class="badge b-info">Phase 1</span></td>
+        <td>StreamDef + ModuleDef Klassen, STREAMTYPE/MODULE/CONNECT Parser-Erweiterung in EqnSysReader</td>
+        <td>~1 Woche</td>
+      </tr>
+      <tr>
+        <td><span class="badge b-info">Phase 2</span></td>
+        <td>SystemAssembler: lädt Module, löst Namenskonflikte via Präfix, generiert CONNECT-Gleichungen, merged zu SystemData</td>
+        <td>~1 Woche</td>
+      </tr>
+      <tr>
+        <td><span class="badge b-info">Phase 3</span></td>
+        <td>CASSolver / GUI: .sys-Einstiegspunkt, Modul-Übersicht in GUI</td>
+        <td>~3 Tage</td>
+      </tr>
+      <tr>
+        <td><span class="badge b-info">Optional</span></td>
+        <td>Stream-Typ-Validierung (Einheitenkonsistenz), sequenzielle Solver-Strategie</td>
+        <td>~2 Wochen</td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="note green">
+    <strong>Fazit:</strong> Die Solver-Implementierungen — Newton, LM, Broyden, GSPAR, Homotopie —
+    müssen <strong>nicht angefasst werden</strong>. Die gesamte Arbeit liegt im Parser und im
+    neuen Assembler. Der Aufwand ist überschaubar und das Risiko gering, weil der
+    Kernalgorithmus unverändert bleibt.
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <span>CMDSolver v2.3 · Modulare Stream-Architektur Analyse · Mai 2026</span>
+  <span>Gedankenspiel — kein Code geändert</span>
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CMDSolver Docs — Levenberg-Marquardt</title>
+<link rel="stylesheet" href="docs.css">
+</head>
+<body>
+
+<div class="doc-header">
+  <div class="breadcrumb">
+    <a href="index.html">CMDSolver Docs</a>
+    <span>›</span><span>Solver</span>
+    <span>›</span><span>Levenberg-Marquardt</span>
+  </div>
+  <span class="doc-badge solver">SolverType.LEVENBERG_MARQUARDT</span>
+</div>
+
+<div class="hero">
+  <div class="hero-sub">Solver 4 von 7</div>
+  <h1>Levenberg-Marquardt</h1>
+  <p class="tagline">
+    Der robusteste Solver für schlecht konditionierte Systeme. Kombiniert
+    Newton-Raphson mit Gradientenabstieg über einen adaptiven Dämpfungsparameter μ.
+    Konvergiert auch bei κ > 10²⁵.
+  </p>
+  <div class="hero-stats">
+    <div class="stat"><span class="stat-val">36</span><span class="stat-lbl">Iter (SimpleSystem)</span></div>
+    <div class="stat"><span class="stat-val">8.30e-09</span><span class="stat-lbl">fsum</span></div>
+    <div class="stat"><span class="stat-val">~61ms</span><span class="stat-lbl">Laufzeit</span></div>
+    <div class="stat"><span class="stat-val">Adaptiv μ</span><span class="stat-lbl">Dämpfung</span></div>
+  </div>
+</div>
+
+<nav>
+  <a href="#theorie">Theorie</a>
+  <a href="#flussdiagramm">Flussdiagramm</a>
+  <a href="#pseudocode">Pseudocode</a>
+  <a href="#dateien">Dateien</a>
+  <a href="#parameter">Parameter</a>
+  <a href="#verhalten">Verhalten</a>
+  <a href="#grenzen">Grenzen</a>
+</nav>
+
+<main>
+
+<section id="theorie">
+  <h2>Theoretischer Kontext</h2>
+
+  <h3>Grundidee — allgemein verständlich</h3>
+  <p>
+    Levenberg-Marquardt (LM) löst das Problem dass Newton-Raphson bei schlecht
+    konditionierten Systemen versagt. Die Idee: Man fügt der Jacobi einen
+    Dämpfungsterm μ·I hinzu. Das macht das System numerisch stabiler —
+    ähnlich wie man eine wackelige Leiter durch einen Stützpunkt sichert.
+  </p>
+  <p>
+    Der Parameter μ wird adaptiv angepasst: Wenn der Schritt gut war (Residuum
+    sinkt), wird μ verkleinert (→ Newton-artig, schneller). Wenn der Schritt
+    schlecht war, wird μ vergrößert (→ Gradientenabstieg, stabiler).
+  </p>
+
+  <div class="math-block">
+    <div class="eq"><span class="hi">LM-System:</span>  (JᵀJ + μ·I) · Δx = −Jᵀ·F(x)</div>
+    <div class="eq"></div>
+    <div class="eq"><span class="hi">μ-Anpassung:</span></div>
+    <div class="eq">  Schritt gut  (||F(x+Δx)|| &lt; ||F(x)||) → μ ← μ / νdown  <span class="cmt">← schneller</span></div>
+    <div class="eq">  Schritt schlecht                           → μ ← μ · νup   <span class="cmt">← stabiler</span></div>
+    <div class="eq"></div>
+    <div class="eq"><span class="hi">Grenzfälle:</span></div>
+    <div class="eq">  μ → 0  :  reines Newton-Raphson (quadratisch, schnell)</div>
+    <div class="eq">  μ → ∞  :  skalierter Gradientenabstieg (robust, langsam)</div>
+  </div>
+
+  <h3>Warum JᵀJ + μI statt nur J?</h3>
+  <p>
+    Bei fast-singulärer Jacobi J sind kleine Singulärwerte nahe 0 — das erzeugt
+    riesige Lösungskomponenten in Δx. JᵀJ + μI ist immer positiv definit
+    (alle Eigenwerte ≥ μ > 0) — das garantiert numerische Stabilität auch bei
+    κ → ∞. Der Preis: mehr Iterationen als reines Newton.
+  </p>
+
+  <h3>LM in CMDSolver — Implementierungsdetails</h3>
+  <p>
+    In CMDSolver verwendet LM die dichte <code>MatrixSimple</code> für die
+    (JᵀJ + μI)-Zerlegung. μ wird beim ersten Schritt aus der Jacobi-Diagonale
+    initialisiert (<code>μ = lmMuInit · maxDiag</code>) und danach adaptiv
+    angepasst. Bei singulärer Matrix wird μ erhöht und der Schritt wiederholt.
+  </p>
+</section>
+
+<section id="flussdiagramm">
+  <h2>Flussdiagramm</h2>
+  <div class="flowchart">
+  <svg width="100%" viewBox="0 0 680 560" xmlns="http://www.w3.org/2000/svg"
+       font-family="IBM Plex Sans, sans-serif" font-size="12">
+    <defs>
+      <marker id="arr" viewBox="0 0 10 10" refX="8" refY="5"
+              markerWidth="6" markerHeight="6" orient="auto">
+        <path d="M2 1L8 5L2 9" fill="none" stroke="#4a9eff" stroke-width="1.5"/>
+      </marker>
+      <marker id="arr-warn" viewBox="0 0 10 10" refX="8" refY="5"
+              markerWidth="6" markerHeight="6" orient="auto">
+        <path d="M2 1L8 5L2 9" fill="none" stroke="#f0a030" stroke-width="1.5"/>
+      </marker>
+    </defs>
+
+    <rect x="240" y="10" width="200" height="38" rx="19" fill="#1a2535" stroke="#4a9eff" stroke-width="1.5"/>
+    <text x="340" y="34" text-anchor="middle" fill="#4a9eff" font-weight="600">START</text>
+    <line x1="340" y1="48" x2="340" y2="76" stroke="#4a9eff" stroke-width="1.5" marker-end="url(#arr)"/>
+
+    <rect x="170" y="78" width="340" height="44" rx="6" fill="#13161b" stroke="#2e3540"/>
+    <text x="340" y="97" text-anchor="middle" fill="#c8cdd6">Jacobi aufbauen J + Residuum F</text>
+    <text x="340" y="113" text-anchor="middle" fill="#4a5568" font-size="10">Iteration 0: μ = lmMuInit · maxDiag(JᵀJ)</text>
+    <line x1="340" y1="122" x2="340" y2="150" stroke="#4a9eff" stroke-width="1.5" marker-end="url(#arr)"/>
+
+    <rect x="170" y="152" width="340" height="44" rx="6" fill="#13161b" stroke="#2e3540"/>
+    <text x="340" y="171" text-anchor="middle" fill="#c8cdd6">LM-System lösen</text>
+    <text x="340" y="187" text-anchor="middle" fill="#4a5568" font-size="10">(JᵀJ + μ·I) · Δx = −Jᵀ·F(x)</text>
+    <line x1="340" y1="196" x2="340" y2="224" stroke="#4a9eff" stroke-width="1.5" marker-end="url(#arr)"/>
+
+    <!-- Singular? -->
+    <polygon points="340,226 450,250 340,274 230,250"
+             fill="#1a1e25" stroke="#a78bfa" stroke-width="1.5"/>
+    <text x="340" y="254" text-anchor="middle" fill="#a78bfa" font-size="11">Singular?</text>
+
+    <!-- Ja: μ erhöhen -->
+    <line x1="450" y1="250" x2="540" y2="250" stroke="#f0a030" stroke-width="1.5" marker-end="url(#arr-warn)"/>
+    <rect x="542" y="230" width="120" height="40" rx="4" fill="#1a1600" stroke="#f0a030"/>
+    <text x="602" y="247" text-anchor="middle" fill="#f0a030" font-size="11">μ ← μ · νup</text>
+    <text x="602" y="262" text-anchor="middle" fill="#4a5568" font-size="10">Wiederholen</text>
+    <!-- Zurückpfeil -->
+    <line x1="602" y1="230" x2="602" y2="170" stroke="#f0a030" stroke-width="1"/>
+    <line x1="602" y1="170" x2="510" y2="170" stroke="#f0a030" stroke-width="1" marker-end="url(#arr-warn)"/>
+    <text x="460" y="250" fill="#f0a030" font-size="10">ja</text>
+
+    <!-- Nein: Update -->
+    <line x1="340" y1="274" x2="340" y2="302" stroke="#4a9eff" stroke-width="1.5" marker-end="url(#arr)"/>
+    <text x="350" y="294" fill="#4a5568" font-size="10">nein</text>
+
+    <rect x="170" y="304" width="340" height="44" rx="6" fill="#13161b" stroke="#2e3540"/>
+    <text x="340" y="323" text-anchor="middle" fill="#c8cdd6">x_try ← x + Δx</text>
+    <text x="340" y="339" text-anchor="middle" fill="#4a5568" font-size="10">||F(x_try)|| berechnen</text>
+    <line x1="340" y1="348" x2="340" y2="376" stroke="#4a9eff" stroke-width="1.5" marker-end="url(#arr)"/>
+
+    <!-- Besser? -->
+    <polygon points="340,378 450,402 340,426 230,402"
+             fill="#1a1e25" stroke="#a78bfa" stroke-width="1.5"/>
+    <text x="340" y="406" text-anchor="middle" fill="#a78bfa" font-size="11">Besser?</text>
+
+    <!-- Nein: μ erhöhen -->
+    <line x1="230" y1="402" x2="130" y2="402" stroke="#f0a030" stroke-width="1.5" marker-end="url(#arr-warn)"/>
+    <rect x="10" y="382" width="120" height="40" rx="4" fill="#1a1600" stroke="#f0a030"/>
+    <text x="70" y="399" text-anchor="middle" fill="#f0a030" font-size="11">μ ← μ · νup</text>
+    <text x="70" y="414" text-anchor="middle" fill="#4a5568" font-size="10">stabiler</text>
+    <text x="180" y="394" fill="#f0a030" font-size="10">nein</text>
+
+    <!-- Ja: Akzeptieren + μ reduzieren -->
+    <line x1="340" y1="426" x2="340" y2="454" stroke="#4a9eff" stroke-width="1.5" marker-end="url(#arr)"/>
+    <text x="350" y="446" fill="#4a5568" font-size="10">ja</text>
+
+    <rect x="170" y="456" width="340" height="44" rx="6" fill="#13161b" stroke="#2e3540"/>
+    <text x="340" y="475" text-anchor="middle" fill="#c8cdd6">x ← x_try · μ ← μ / νdown</text>
+    <text x="340" y="491" text-anchor="middle" fill="#4a5568" font-size="10">schneller konvergieren</text>
+    <line x1="340" y1="500" x2="340" y2="528" stroke="#4a9eff" stroke-width="1.5" marker-end="url(#arr)"/>
+
+    <rect x="230" y="530" width="220" height="28" rx="14" fill="#0f2a1e" stroke="#3ecf8e" stroke-width="1.5"/>
+    <text x="340" y="548" text-anchor="middle" fill="#3ecf8e" font-weight="600">fsum &lt; tol → CONVERGED</text>
+  </svg>
+  </div>
+</section>
+
+<section id="pseudocode">
+  <h2>Pseudocode</h2>
+<pre><span class="kw">function</span> <span class="fn">levenberg_marquardt_solve</span>(F, x₀, tol, maxIter):
+    x ← InitGuessApplier(x₀)
+    μ ← <span class="num">0</span>  <span class="cmt">// wird beim ersten Schritt initialisiert</span>
+
+    <span class="kw">for</span> k = 0 <span class="kw">to</span> maxIter:
+        J ← buildJacobian(F, x)
+        f ← F(x)
+        JtJ ← Jᵀ · J
+
+        <span class="cmt">// μ initialisieren (Iteration 0)</span>
+        <span class="kw">if</span> k == 0:
+            μ ← lmMuInit · max(diag(JtJ))
+
+        <span class="cmt">// ── LM-System lösen (mit Wiederholung bei singulärer Matrix) ──</span>
+        <span class="kw">for</span> attempt = 1 <span class="kw">to</span> maxAttempts:
+            A ← JtJ + μ·I             <span class="cmt">// regularisiert, immer pd</span>
+            <span class="kw">try</span>:
+                Δx ← solve(A, −Jᵀ·f)
+                <span class="kw">break</span>
+            <span class="kw">except</span> Singular:
+                μ ← μ · νup           <span class="cmt">// erhöhen und wiederholen</span>
+
+        <span class="cmt">// ── Schritt testen ──</span>
+        x_try ← x + Δx
+        <span class="kw">if</span> ||F(x_try)|| &lt; ||f||:
+            x ← x_try
+            μ ← μ / νdown            <span class="cmt">// Newton-artiger</span>
+        <span class="kw">else</span>:
+            μ ← μ · νup              <span class="cmt">// stabiler</span>
+
+        x ← PhysicalProjector(x)
+        fsum ← Σ|Fᵢ(x)|
+        <span class="kw">if</span> fsum &lt; tol: <span class="kw">return</span> CONVERGED, x, k, fsum
+
+    <span class="kw">return</span> NOT_CONVERGED, x, maxIter, fsum</pre>
+</section>
+
+<section id="dateien">
+  <h2>Wichtige Dateien</h2>
+  <ul class="file-list">
+    <li>
+      <span class="file-icon">KERN</span>
+      <div class="file-desc">
+        <strong>LevenbergMarquardtSolver.java</strong>
+        Implementiert LM mit adaptivem μ. Enthält μ-Initialisierung,
+        Singular-Recovery und Schritttestung.
+        <br><code>apps/eqnParser/solver/LevenbergMarquardtSolver.java</code>
+      </div>
+    </li>
+    <li>
+      <span class="file-icon">BASIS</span>
+      <div class="file-desc">
+        <strong>AbstractSolver.java</strong>
+        Basisklasse — Jacobi aufbauen, Iteration, Konvergenzprüfung.
+        <br><code>apps/eqnParser/solver/AbstractSolver.java</code>
+      </div>
+    </li>
+  </ul>
+</section>
+
+<section id="parameter">
+  <h2>Parameter</h2>
+  <pre>java CASSolver -I:model.cas -S:LEVENBERG_MARQUARDT</pre>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>Parameter</th><th>Default</th><th>Beschreibung</th></tr></thead>
+    <tbody>
+      <tr><td><code>tolerance</code></td><td><code>1e-7</code></td><td>Konvergenzschwelle</td></tr>
+      <tr><td><code>maxIter</code></td><td><code>100</code></td><td>Maximale Iterationen</td></tr>
+      <tr><td><code>lmMuInit</code></td><td><code>1e-3</code></td><td>Initialer μ-Faktor (× max Diagonale)</td></tr>
+      <tr><td><code>lmNuUp</code></td><td><code>10.0</code></td><td>μ-Erhöhungsfaktor bei schlechtem Schritt</td></tr>
+      <tr><td><code>lmNuDown</code></td><td><code>3.0</code></td><td>μ-Reduktionsfaktor bei gutem Schritt</td></tr>
+      <tr><td><code>lmMuMax</code></td><td><code>1e20</code></td><td>Obere Schranke für μ</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<section id="verhalten">
+  <h2>Konvergenzverhalten</h2>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>Situation</th><th>Verhalten</th><th>Empfehlung</th></tr></thead>
+    <tbody>
+      <tr><td>Schlecht konditioniert (κ &gt; 10¹²)</td><td><span class="badge b-ok">✅ Robust</span></td><td>Erste Wahl bei κ-Warnungen</td></tr>
+      <tr><td>Fast-singuläre Jacobi</td><td><span class="badge b-ok">✅ Erhöht μ und wiederholt</span></td><td>Automatische Recovery</td></tr>
+      <tr><td>Gut konditioniertes System</td><td><span class="badge b-warn">⚠️ Mehr Iterationen als Newton</span></td><td>→ NEWTON_SPARSE_ARMIJO bevorzugen</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<section id="grenzen">
+  <h2>Bekannte Grenzen</h2>
+  <div class="note amber">
+    <strong>Mehr Iterationen:</strong> LM konvergiert superlinear statt quadratisch —
+    typisch 20-50 Iterationen statt 3-5. Bei gut konditionierten Systemen ist
+    Newton-Sparse-Armijo schneller.
+  </div>
+  <div class="note amber">
+    <strong>Dichte Matrix:</strong> JᵀJ ist immer dicht — auch wenn J sparse ist.
+    Für sehr große Systeme kann das ein Problem sein.
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <span>CMDSolver Docs · Levenberg-Marquardt · v2.5</span>
+  <span>
+    <a href="solver_newton_sparse_armijo.html">← Newton-Sparse+Armijo</a> &nbsp;|&nbsp;
+    <a href="solver_broyden.html">Broyden →</a>
+  </span>
+</footer>
+</body>
+</html>

@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CMDSolver Docs — Troubleshooting</title>
+<link rel="stylesheet" href="docs.css">
+<style>
+  .symptom {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: 8px; overflow: hidden; margin-bottom: 1.5rem;
+  }
+  .symptom-header {
+    background: var(--bg3); padding: .8rem 1.2rem;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: .8rem;
+  }
+  .symptom-icon { font-size: 16px; }
+  .symptom-title { font-size: 14px; font-weight: 600; color: #e8ecf4; }
+  .symptom-body { padding: 1rem 1.2rem; }
+  .symptom-body p { max-width: none; margin-bottom: .6rem; }
+
+  .diag-step {
+    display: flex; gap: .8rem; align-items: flex-start;
+    padding: .6rem 0; border-bottom: 1px solid var(--border);
+    font-size: 13px;
+  }
+  .diag-step:last-child { border-bottom: none; }
+  .diag-arrow { color: var(--accent); font-family: var(--mono);
+                font-size: 12px; margin-top: 2px; flex-shrink: 0; }
+  .diag-content { color: var(--text2); flex: 1; }
+  .diag-content strong { color: #e8ecf4; display: block; margin-bottom: .2rem; }
+
+  .faq-q {
+    font-size: 14px; font-weight: 500; color: #e8ecf4;
+    margin: 1.4rem 0 .5rem; padding-left: .8rem;
+    border-left: 3px solid var(--accent);
+  }
+  .faq-a { font-size: 13px; color: var(--text2); line-height: 1.7;
+            margin-bottom: 1rem; }
+
+  .quick-ref {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: 8px; padding: 1.2rem 1.4rem;
+  }
+  .quick-ref-title {
+    font-family: var(--mono); font-size: 11px; color: var(--text3);
+    letter-spacing: .1em; text-transform: uppercase; margin-bottom: .8rem;
+  }
+  .qr-row {
+    display: flex; gap: 1rem; padding: .5rem 0;
+    border-bottom: 1px solid var(--border); font-size: 13px;
+  }
+  .qr-row:last-child { border-bottom: none; }
+  .qr-sym { min-width: 200px; font-family: var(--mono); font-size: 12px; color: var(--warn); }
+  .qr-sol { color: var(--text2); }
+</style>
+</head>
+<body>
+
+<div class="doc-header">
+  <div class="breadcrumb">
+    <a href="index.html">CMDSolver Docs</a>
+    <span>›</span><span>Troubleshooting</span>
+  </div>
+  <span class="doc-badge overview">Hilfe</span>
+</div>
+
+<div class="hero">
+  <div class="hero-sub">Troubleshooting &amp; FAQ</div>
+  <h1>Probleme lösen</h1>
+  <p class="tagline">
+    Häufige Probleme mit Symptom, Diagnose und konkreter Lösung —
+    von Konvergenzfehlern über Parse-Probleme bis zu Performance-Fragen.
+  </p>
+</div>
+
+<nav>
+  <a href="#konvergenz">Konvergenz</a>
+  <a href="#parser">Parser-Fehler</a>
+  <a href="#kappa">Konditionszahl</a>
+  <a href="#nan">NaN / Divergenz</a>
+  <a href="#performance">Performance</a>
+  <a href="#faq">FAQ</a>
+  <a href="#quickref">Schnellreferenz</a>
+</nav>
+
+<main>
+
+<!-- ── Konvergenz ── -->
+<section id="konvergenz">
+  <h2>Konvergenzprobleme</h2>
+
+  <div class="symptom">
+    <div class="symptom-header">
+      <span class="symptom-icon">❌</span>
+      <span class="symptom-title">Solver meldet NOT_CONVERGED — keine Fehlermeldung</span>
+    </div>
+    <div class="symptom-body">
+      <div class="diag-step">
+        <span class="diag-arrow">→ 1</span>
+        <div class="diag-content">
+          <strong>Schlechter Startvektor?</strong>
+          Diagnose-Modus aktivieren: <code>-DI</code> lässt <code>InitialValueAnalyzer</code>
+          die Startwerte optimieren. Oft reicht das.
+          <pre style="margin-top:.5rem;font-size:11px">java cmd.CASSolver -I:model.cas -DI</pre>
+        </div>
+      </div>
+      <div class="diag-step">
+        <span class="diag-arrow">→ 2</span>
+        <div class="diag-content">
+          <strong>Startvektor inspizieren:</strong>
+          <code>-DV:start.txt</code> schreibt den tatsächlichen Startvektor vor Iteration 0.
+          Physikalisch plausibel? Temperatur &gt; 0K? Druck &gt; 0Pa?
+          <pre style="margin-top:.5rem;font-size:11px">java cmd.CASSolver -I:model.cas -S:NEWTON_ARMIJO -DV:start.txt</pre>
+        </div>
+      </div>
+      <div class="diag-step">
+        <span class="diag-arrow">→ 3</span>
+        <div class="diag-content">
+          <strong>Andere Solver versuchen:</strong>
+          <code>-TEST</code> zeigt alle 7 Solver. Konvergiert einer davon → Startwert-Problem.
+          Konvergiert keiner → Modell-Problem.
+        </div>
+      </div>
+      <div class="diag-step">
+        <span class="diag-arrow">→ 4</span>
+        <div class="diag-content">
+          <strong>Levenberg-Marquardt als robustere Alternative:</strong>
+          Bei κ-Warnungen im Log immer LM versuchen.
+          <pre style="margin-top:.5rem;font-size:11px">java cmd.CASSolver -I:model.cas -S:LEVENBERG_MARQUARDT -DI</pre>
+        </div>
+      </div>
+      <div class="diag-step">
+        <span class="diag-arrow">→ 5</span>
+        <div class="diag-content">
+          <strong>Homotopie als letztes Mittel:</strong>
+          <pre style="margin-top:.5rem;font-size:11px">java cmd.CASSolver -I:model.cas -S:HOMOTOPY -SH:CRITICAL -SH:INNER=LEVENBERG_MARQUARDT</pre>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="symptom">
+    <div class="symptom-header">
+      <span class="symptom-icon">🔄</span>
+      <span class="symptom-title">Solver iteriert bis maxIter ohne Verbesserung (fsum stagniert)</span>
+    </div>
+    <div class="symptom-body">
+      <div class="diag-step">
+        <span class="diag-arrow">→ 1</span>
+        <div class="diag-content">
+          <strong>fsum-Verlauf im Log prüfen:</strong>
+          Sinkt fsum gar nicht? → Schlechter Startvektor oder falsches Vorzeichen in Gleichung.
+          Sinkt fsum anfangs, stagniert dann? → Möglicherweise zwei Lösungen oder nahezu singuläre Jacobi.
+        </div>
+      </div>
+      <div class="diag-step">
+        <span class="diag-arrow">→ 2</span>
+        <div class="diag-content">
+          <strong>Residuen-Normierung aktivieren:</strong>
+          Bei gemischten Einheiten (Pa + kg/s) kann eine Gleichung dominieren.
+          <code>-SN</code> normiert auf Startwert-Residuen.
+          <pre style="margin-top:.5rem;font-size:11px">java cmd.CASSolver -I:model.cas -SN</pre>
+        </div>
+      </div>
+      <div class="diag-step">
+        <span class="diag-arrow">→ 3</span>
+        <div class="diag-content">
+          <strong>Gleichgewicht prüfen:</strong>
+          n freie Variablen = n Gleichungen? Log zeigt beim Start:
+          <code>Starting ... [n=X, maxIter=100, ...]</code> — X muss der Anzahl freier Variablen entsprechen.
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Parser-Fehler ── -->
+<section id="parser">
+  <h2>Parser-Fehler</h2>
+
+  <div class="symptom">
+    <div class="symptom-header">
+      <span class="symptom-icon">⚠️</span>
+      <span class="symptom-title">ParseError: "Variable not found" oder stille Fehler</span>
+    </div>
+    <div class="symptom-body">
+      <div class="diag-step">
+        <span class="diag-arrow">→ 1</span>
+        <div class="diag-content">
+          <strong>ParseErrors im SolverResult prüfen:</strong>
+          <pre style="margin-top:.5rem;font-size:11px">SolverResult r = api.solve();
+r.getParseErrors().forEach(e -> System.err.println(e.format()));</pre>
+          Jeder ParseError enthält Zeilennummer und Kontext.
+        </div>
+      </div>
+      <div class="diag-step">
+        <span class="diag-arrow">→ 2</span>
+        <div class="diag-content">
+          <strong>Variablenname-Tippfehler:</strong>
+          CMDSolver ist case-insensitiv — aber Punkt-Notation muss exakt stimmen.
+          <code>PARTM.F060.PS</code> ≠ <code>PARTM.F060.Ps</code> (Letzteres würde nach toUpperCase zu ersterem).
+        </div>
+      </div>
+      <div class="diag-step">
+        <span class="diag-arrow">→ 3</span>
+        <div class="diag-content">
+          <strong>Variable deklariert aber nicht in Gleichung:</strong>
+          Freie Variable ohne Gleichung → System ist unterbestimmt.
+          Jede freie Variable braucht genau eine Gleichung die sie "bestimmt".
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="symptom">
+    <div class="symptom-header">
+      <span class="symptom-icon">⚠️</span>
+      <span class="symptom-title">INITIALIZE-Block Override wird ignoriert</span>
+    </div>
+    <div class="symptom-body">
+      <div class="diag-step">
+        <span class="diag-arrow">→ 1</span>
+        <div class="diag-content">
+          <strong>Syntax für Mehrfach-Punktnamen:</strong>
+          Für <code>PARTM.F060.PS.Upper = ...</code> muss der vollständige Name
+          vor dem letzten Punkt stehen. Der Parser verwendet <code>lastIndexOf('.')</code>.
+          <pre style="margin-top:.5rem;font-size:11px">INITIALIZE
+  PARTM.F060.PS = 100000;          // Startwert
+  PARTM.F060.PS.Upper = 200000;   // Upper-Bound
+  PARTM.F060.PS.Lower = 50000;    // Lower-Bound
+ENDINIT</pre>
+        </div>
+      </div>
+      <div class="diag-step">
+        <span class="diag-arrow">→ 2</span>
+        <div class="diag-content">
+          <strong>initStructSwitches vor INITIALIZE:</strong>
+          Strukturelle IF-Bedingungen (VAR.SPEC==FIXED) müssen vor dem INITIALIZE-Block
+          ausgewertet werden. Das macht <code>EqnSystem</code> automatisch — wenn der
+          Aufruf fehlt (z.B. bei direktem EqnData-Aufruf) funktioniert INITIALIZE nicht.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="symptom">
+    <div class="symptom-header">
+      <span class="symptom-icon">🔴</span>
+      <span class="symptom-title">Kompilierfehler: hunderte Fehler nach Datei-Update</span>
+    </div>
+    <div class="symptom-body">
+      <div class="diag-step">
+        <span class="diag-arrow">→ 1</span>
+        <div class="diag-content">
+          <strong>Versionsmischung:</strong> Wahrscheinlichste Ursache. Dateien aus v2.3 und v2.4+
+          dürfen nicht gemischt werden. v2.4's <code>EqnSysReader</code> ruft
+          <code>ParseError</code>-Methoden auf die in v2.3's <code>SystemData</code> fehlen.
+          <strong>Lösung:</strong> Alle Dateien aus demselben ZIP kopieren.
+        </div>
+      </div>
+      <div class="diag-step">
+        <span class="diag-arrow">→ 2</span>
+        <div class="diag-content">
+          <strong>Doppelte Klassendeklaration:</strong>
+          <pre style="margin-top:.5rem;font-size:11px">grep -c "^public class EqnData" EqnData.java  // muss 1 ergeben</pre>
+          Wenn 2: Javadoc steht nach statt vor <code>public class</code>.
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Konditionszahl ── -->
+<section id="kappa">
+  <h2>Konditionszahl-Warnungen</h2>
+
+  <div class="symptom">
+    <div class="symptom-header">
+      <span class="symptom-icon">⚠️</span>
+      <span class="symptom-title">Log: "kappa=4.62e+11 [POOR] — ill-conditioned Jacobian"</span>
+    </div>
+    <div class="symptom-body">
+      <p>Konditionszahl κ misst wie empfindlich das System auf kleine Änderungen reagiert.
+      κ &gt; 10⁸ ist problematisch, κ &gt; 10¹² gefährlich für Newton.</p>
+
+      <div class="diag-step">
+        <span class="diag-arrow">→ 1</span>
+        <div class="diag-content">
+          <strong>Ursachen für hohes κ:</strong>
+          Gemischte Einheiten (Pa ~ 10⁵, kg/s ~ 1, dimensionslos ~ 10⁻³) erzeugen
+          riesige Spanne in der Jacobi. Verschiedene Größenordnungen werden direkt
+          im Jacobi-Eintrag sichtbar.
+        </div>
+      </div>
+      <div class="diag-step">
+        <span class="diag-arrow">→ 2</span>
+        <div class="diag-content">
+          <strong>Sofortmaßnahme: Levenberg-Marquardt:</strong>
+          LM ist robust bis κ ~ 10²⁵. Einfach Solver wechseln:
+          <pre style="margin-top:.5rem;font-size:11px">java cmd.CASSolver -I:model.cas -S:LEVENBERG_MARQUARDT</pre>
+        </div>
+      </div>
+      <div class="diag-step">
+        <span class="diag-arrow">→ 3</span>
+        <div class="diag-content">
+          <strong>Mittelfristig: Gleichungen normieren:</strong>
+          Gleichungen in Pa durch 1e5 teilen, kg/s-Gleichungen durch 1 lassen.
+          Das reduziert die Spanne in der Jacobi und verbessert κ um 2–4 Größenordnungen.
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── NaN ── -->
+<section id="nan">
+  <h2>NaN und Divergenz</h2>
+
+  <div class="symptom">
+    <div class="symptom-header">
+      <span class="symptom-icon">💥</span>
+      <span class="symptom-title">Log: "NaN detected — treating as divergence"</span>
+    </div>
+    <div class="symptom-body">
+      <div class="diag-step">
+        <span class="diag-arrow">→ 1</span>
+        <div class="diag-content">
+          <strong>Physikalisch unmöglicher Zwischenwert:</strong>
+          Eine Gleichung hat einen Wert außerhalb des physikalischen Bereichs erzeugt —
+          z.B. negative Temperatur in SQRT(T), Division durch Null.
+          PhysicalProjector fängt viele Fälle, aber nicht alle.
+        </div>
+      </div>
+      <div class="diag-step">
+        <span class="diag-arrow">→ 2</span>
+        <div class="diag-content">
+          <strong>Bounds strenger setzen:</strong>
+          Lower-Bounds für T (≥ 1K), p (≥ 1Pa), Flächen (≥ 1e-6 m²) verhindern
+          physikalisch unmögliche Zwischenwerte. PhysicalProjector projiziert nur
+          auf User-Bounds wenn diese enger sind als die physikalischen Defaults.
+        </div>
+      </div>
+      <div class="diag-step">
+        <span class="diag-arrow">→ 3</span>
+        <div class="diag-content">
+          <strong>Armijo-Liniensuche hilft:</strong>
+          <code>NEWTON_SPARSE_ARMIJO</code> halbiert den Schritt wenn der Versuchspunkt
+          NaN erzeugt. Ohne Armijo (<code>NEWTON_SPARSE</code>) kann NaN sofort auftreten.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="symptom">
+    <div class="symptom-header">
+      <span class="symptom-icon">📊</span>
+      <span class="symptom-title">Homotopie meldet fsum = NaN</span>
+    </div>
+    <div class="symptom-body">
+      <p>Das ist <strong>normal</strong>. Der Homotopie-Solver gibt kein fsum über
+      den Standard-Kanal aus — er hat eine eigene interne Konvergenzprüfung über
+      den Pfadfortschritt t → 1. Nur der <code>isConverged()</code>-Status ist maßgeblich.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ── Performance ── -->
+<section id="performance">
+  <h2>Performance-Probleme</h2>
+
+  <div class="symptom">
+    <div class="symptom-header">
+      <span class="symptom-icon">🐢</span>
+      <span class="symptom-title">Solver ist sehr langsam bei großem System (n &gt; 200)</span>
+    </div>
+    <div class="symptom-body">
+      <div class="diag-step">
+        <span class="diag-arrow">→ 1</span>
+        <div class="diag-content">
+          <strong>Sparse-LU verwenden:</strong>
+          <code>NEWTON_ARMIJO</code> verwendet dichte LU (O(n³)).
+          <code>NEWTON_SPARSE_ARMIJO</code> verwendet GSPAR Sparse-LU (O(nnz)) — bis 10× schneller.
+        </div>
+      </div>
+      <div class="diag-step">
+        <span class="diag-arrow">→ 2</span>
+        <div class="diag-content">
+          <strong>Broyden-Sparse für Parameterstudien:</strong>
+          Wenn viele ähnliche Betriebspunkte gelöst werden: <code>BROYDEN_SPARSE</code>
+          spart Jacobi-Neuaufbauten. ~9ms vs ~30ms für SimpleSystem.
+        </div>
+      </div>
+      <div class="diag-step">
+        <span class="diag-arrow">→ 3</span>
+        <div class="diag-content">
+          <strong>BatchRunner für Parameterstudien:</strong>
+          CSV-Datei mit allen Betriebspunkten → <code>-I:studie.csv</code>.
+          Läuft alle Punkte sequenziell mit Warm-Start-Option.
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── FAQ ── -->
+<section id="faq">
+  <h2>Häufige Fragen (FAQ)</h2>
+
+  <div class="faq-q">Wie viele Gleichungen kann CMDSolver lösen?</div>
+  <div class="faq-a">
+    Theoretisch unbegrenzt. Praktisch getestet bis ~600 Gleichungen (623-Gleichungen Benchmark).
+    Mit GSPAR Sparse-LU sind 1000–2000 Gleichungen realistisch. Bei n &gt; 2000 wird
+    GMRES als linearer Solver benötigt (Roadmap R-02).
+  </div>
+
+  <div class="faq-q">Warum ist die Jacobi dicht obwohl das System sparse aussieht?</div>
+  <div class="faq-a">
+    In thermodynamischen Modellen hängen viele Variablen über physikalische Zusammenhänge
+    zusammen — Gaszusammensetzung beeinflusst cp beeinflusst κ beeinflusst Schallgeschwindigkeit
+    beeinflusst Machzahl usw. Das erzeugt trotzdem eine relativ dünn besetzte Jacobi
+    (5–15% Besetzung) — GSPAR Sparse-LU ist dennoch deutlich schneller als dichte LU.
+  </div>
+
+  <div class="faq-q">Kann ich CMDSolver in einem Multi-Thread-Kontext verwenden?</div>
+  <div class="faq-a">
+    Ja — eine <code>SolverAPI</code>-Instanz pro Thread. Instanzen sind nicht thread-sicher
+    untereinander, aber mehrere unabhängige Instanzen können parallel laufen.
+    Der interne Jacobi-Aufbau ist aktuell nicht parallelisiert
+    (<code>PARALLEL_JACOBI_THRESHOLD = 99999</code>).
+  </div>
+
+  <div class="faq-q">Warum hat die CAS-Datei Semikolon am Ende jeder Gleichung?</div>
+  <div class="faq-a">
+    Das Semikolon ist das Gleichungsende-Zeichen — der Parser behandelt es als Abschluss
+    der Residuumsform <code>LHS − (RHS) = 0</code>. Ohne Semikolon kann der Parser
+    nicht unterscheiden ob die Zeile weitergeht. In der AS-REAL-Kurzform ist das Semikolon
+    ebenfalls obligatorisch.
+  </div>
+
+  <div class="faq-q">Was bedeutet "Fixed" vs "Free" für eine Variable?</div>
+  <div class="faq-a">
+    <strong>Fixed:</strong> Die Variable ist eine bekannte Randbedingung — ihr Wert ist
+    vorgegeben und wird vom Solver nicht verändert. <strong>Free:</strong> Die Variable
+    ist eine Unbekannte die der Solver bestimmt. Anzahl Free-Variablen muss gleich
+    Anzahl der Gleichungen sein.
+  </div>
+
+  <div class="faq-q">Kann ich die Lösung eines Betriebspunkts als Startvektor für den nächsten verwenden?</div>
+  <div class="faq-a">
+    Mit der <code>-DV:</code> Option wird der aktuelle Startvektor in eine Datei geschrieben
+    die dann mit <code>-U:</code> als Startvektor für den nächsten Lauf verwendet werden kann.
+    SolverState Warm-Start (Roadmap R-14) wird das automatisieren.
+  </div>
+
+  <div class="faq-q">Warum funktionieren ABS(), ROUND() und TRUNCATE() manchmal schlecht mit Newton?</div>
+  <div class="faq-a">
+    Diese Funktionen sind an Knicken und Sprüngen nicht differenzierbar. Newton braucht
+    glatte Ableitungen. An den Unstetigkeitsstellen (ABS bei 0, ROUND bei .5) ist die
+    symbolische Ableitung undefiniert und die numerische Ableitung ungenau. Als Alternative:
+    glatte Approximationen verwenden, z.B. <code>ABS(x) ≈ SQRT(x^2 + ε)</code> mit
+    kleinem ε &gt; 0.
+  </div>
+
+  <div class="faq-q">Wie debugge ich eine Gleichung die immer NaN liefert?</div>
+  <div class="faq-a">
+    Startvektor mit <code>-DV:start.txt</code> speichern, Werte manuell in einer
+    Tabellenkalkulation nachrechnen. Welche Variable hat einen unmöglichen Wert?
+    Dann Bounds für diese Variable strenger setzen und <code>-DI</code> aktivieren.
+  </div>
+</section>
+
+<!-- ── Schnellreferenz ── -->
+<section id="quickref">
+  <h2>Schnellreferenz — Symptom → Lösung</h2>
+
+  <div class="quick-ref">
+    <div class="quick-ref-title">Häufige Symptome</div>
+
+    <div class="qr-row">
+      <span class="qr-sym">NOT_CONVERGED</span>
+      <span class="qr-sol">→ <code>-DI</code> → <code>-S:LEVENBERG_MARQUARDT</code> → <code>-S:HOMOTOPY -SH:CRITICAL</code></span>
+    </div>
+    <div class="qr-row">
+      <span class="qr-sym">κ &gt; 10¹² Warnung</span>
+      <span class="qr-sol">→ <code>-S:LEVENBERG_MARQUARDT</code> — immer</span>
+    </div>
+    <div class="qr-row">
+      <span class="qr-sym">NaN detected</span>
+      <span class="qr-sol">→ Bounds prüfen, <code>NEWTON_SPARSE_ARMIJO</code> (hat Backtracking)</span>
+    </div>
+    <div class="qr-row">
+      <span class="qr-sym">fsum stagniert</span>
+      <span class="qr-sol">→ <code>-SN</code> (Residuen-Normierung), Gleichungsformulierung prüfen</span>
+    </div>
+    <div class="qr-row">
+      <span class="qr-sym">ParseError Zeilennummer</span>
+      <span class="qr-sol">→ <code>result.getParseErrors().forEach(e -> print(e.format()))</code></span>
+    </div>
+    <div class="qr-row">
+      <span class="qr-sym">INITIALIZE-Block ignoriert</span>
+      <span class="qr-sol">→ Syntax: <code>VAR.Lower = x;</code> und <code>VAR.Upper = x;</code> mit Semikolon</span>
+    </div>
+    <div class="qr-row">
+      <span class="qr-sym">150+ Kompilierfehler</span>
+      <span class="qr-sol">→ Versionsmischung — alle Dateien aus einem ZIP kopieren</span>
+    </div>
+    <div class="qr-row">
+      <span class="qr-sym">isCallEqn() undefined</span>
+      <span class="qr-sol">→ Nach EqnData-Refactoring verloren — aus v2.5 ZIP wiederherstellen</span>
+    </div>
+    <div class="qr-row">
+      <span class="qr-sym">Solver zu langsam</span>
+      <span class="qr-sol">→ <code>-S:NEWTON_SPARSE_ARMIJO</code> oder <code>-S:BROYDEN_SPARSE</code></span>
+    </div>
+    <div class="qr-row">
+      <span class="qr-sym">Homotopie fsum=NaN</span>
+      <span class="qr-sol">→ Normal — nur <code>isConverged()</code> ist maßgeblich</span>
+    </div>
+    <div class="qr-row">
+      <span class="qr-sym">Doppelte Klasse EqnData</span>
+      <span class="qr-sol">→ Javadoc muss VOR <code>public class</code> stehen</span>
+    </div>
+    <div class="qr-row">
+      <span class="qr-sym">System.out in Framework</span>
+      <span class="qr-sol">→ SolverLogger Handler registrieren (R-16) — System.out ist bereinigt ab v2.3</span>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <span>CMDSolver Docs · Troubleshooting &amp; FAQ · v2.5</span>
+  <span>
+    <a href="examples.html">← Beispiele</a> &nbsp;|&nbsp;
+    <a href="index.html">← Übersicht</a>
+  </span>
+</footer>
+</body>
+</html>

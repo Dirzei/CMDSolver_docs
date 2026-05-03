@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CMDSolver Docs — Solver Optionen</title>
+<link rel="stylesheet" href="docs.css">
+<style>
+  .arg-block {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: 8px; padding: 1rem 1.4rem; margin-bottom: 1rem;
+  }
+  .arg-sig {
+    font-family: var(--mono); font-size: 13px; color: var(--accent);
+    font-weight: 500; margin-bottom: .4rem;
+  }
+  .arg-desc { font-size: 13px; color: var(--text2); margin-bottom: .6rem; }
+  .arg-example { font-family: var(--mono); font-size: 11.5px; color: var(--ok); }
+  .arg-solver-tags { display: flex; gap: .4rem; flex-wrap: wrap; margin-top: .5rem; }
+  .arg-tag {
+    font-family: var(--mono); font-size: 10px; padding: 2px 7px;
+    border-radius: 3px; background: rgba(74,158,255,.08);
+    border: 1px solid rgba(74,158,255,.15); color: var(--text2);
+  }
+  .arg-tag.all { color: var(--ok); border-color: rgba(62,207,142,.2);
+                 background: rgba(62,207,142,.06); }
+  .arg-tag.exclusive { color: var(--warn); border-color: rgba(240,160,48,.2);
+                       background: rgba(240,160,48,.06); }
+</style>
+</head>
+<body>
+
+<div class="doc-header">
+  <div class="breadcrumb">
+    <a href="index.html">CMDSolver Docs</a>
+    <span>›</span><span>Solver Optionen</span>
+  </div>
+  <span class="doc-badge overview">Referenz</span>
+</div>
+
+<div class="hero">
+  <div class="hero-sub">Kapitel 3</div>
+  <h1>Solver Optionen<br>CLI Referenz</h1>
+  <p class="tagline">
+    Vollständige Referenz aller Kommandozeilenargumente — allgemeine Optionen
+    die für alle Solver gelten, und solver-spezifische Parameter.
+  </p>
+</div>
+
+<nav>
+  <a href="#aufruf">Aufruf</a>
+  <a href="#allgemein">Allgemein</a>
+  <a href="#solver-wahl">Solver-Wahl</a>
+  <a href="#homotopie">Homotopie</a>
+  <a href="#broyden">Broyden</a>
+  <a href="#diagnose">Diagnose</a>
+  <a href="#batch">Batch</a>
+  <a href="#uebersicht">Übersicht</a>
+</nav>
+
+<main>
+
+<!-- Aufruf -->
+<section id="aufruf">
+  <h2>Grundaufruf</h2>
+
+  <pre>java CASSolver -I:&lt;modelldatei&gt; [optionen]
+java CASSolver -I:model.cas -S:NEWTON_SPARSE_ARMIJO -DI
+java CASSolver -I:model.cas -S:HOMOTOPY -SH:STEPS=50 -SH:DS=0.02 -SH:INNER=LEVENBERG_MARQUARDT
+java CASSolver -I:model.csv -BA                          <span class="cmt">// Batch-Modus</span>
+java CASSolver -h                                        <span class="cmt">// Hilfe</span>
+java CASSolver -I:model.cas -TEST                        <span class="cmt">// alle Solver testen</span></pre>
+
+  <div class="note blue">
+    <strong>Argumente sind case-insensitiv.</strong> <code>-S:NEWTON_ARMIJO</code>
+    und <code>-s:newton_armijo</code> sind gleichwertig. Pfade folgen dem
+    Betriebssystem (Windows: Backslash oder Forward-Slash).
+  </div>
+</section>
+
+<!-- Allgemeine Optionen -->
+<section id="allgemein">
+  <h2>Allgemeine Optionen — für alle Solver</h2>
+
+  <div class="arg-block">
+    <div class="arg-sig">-I:&lt;datei&gt;</div>
+    <div class="arg-desc">
+      Eingabedatei. Unterstützte Formate: <code>.cas</code> (Gleichungssystem),
+      <code>.dat</code> (Gleichungssystem), <code>.csv</code> (Batch-Parameterstudie).
+    </div>
+    <div class="arg-example">-I:model.cas &nbsp;&nbsp; -I:C:\Work\nozzle.cas</div>
+    <div class="arg-solver-tags"><span class="arg-tag all">Alle Solver</span></div>
+  </div>
+
+  <div class="arg-block">
+    <div class="arg-sig">-S:&lt;solver&gt;</div>
+    <div class="arg-desc">
+      Solver-Auswahl. Standard: <code>NEWTON_ARMIJO</code>.
+    </div>
+    <div class="arg-example">-S:NEWTON_SPARSE_ARMIJO &nbsp;&nbsp; -S:LEVENBERG_MARQUARDT &nbsp;&nbsp; -S:HOMOTOPY</div>
+    <div class="arg-solver-tags">
+      <span class="arg-tag">NEWTON_ARMIJO</span>
+      <span class="arg-tag">NEWTON_SPARSE</span>
+      <span class="arg-tag">NEWTON_SPARSE_ARMIJO</span>
+      <span class="arg-tag">LEVENBERG_MARQUARDT</span>
+      <span class="arg-tag">BROYDEN</span>
+      <span class="arg-tag">BROYDEN_SPARSE</span>
+      <span class="arg-tag">HOMOTOPY</span>
+    </div>
+  </div>
+
+  <div class="arg-block">
+    <div class="arg-sig">-U:&lt;datei&gt;</div>
+    <div class="arg-desc">
+      Variable-Update-Datei — überschreibt Startwerte, Bounds und Status
+      aus der CAS-Datei. Format pro Zeile:
+      <br><code>Name:VAR; Value:1.0; Status:Fixed; Lower:0.0; Upper:2.0; Unit:m/s; Descr:text</code>
+    </div>
+    <div class="arg-example">-U:betriebspunkt.txt</div>
+    <div class="arg-solver-tags"><span class="arg-tag all">Alle Solver</span></div>
+  </div>
+
+  <div class="arg-block">
+    <div class="arg-sig">-SC:&lt;strategie&gt;</div>
+    <div class="arg-desc">
+      Skalierungsstrategie für die Jacobi-Matrix. Standard: <code>NONE</code>.
+      <br><code>NONE</code> — keine Skalierung
+      <br><code>DIAGONAL</code> — Skalierung über Jacobi-Diagonale
+      <br><code>UNIT_INTERVAL</code> — Skalierung über Variablen-Bounds
+    </div>
+    <div class="arg-example">-SC:DIAGONAL &nbsp;&nbsp; -SC:UNIT_INTERVAL</div>
+    <div class="arg-solver-tags"><span class="arg-tag all">Alle Solver</span></div>
+  </div>
+
+  <div class="arg-block">
+    <div class="arg-sig">-SN</div>
+    <div class="arg-desc">
+      Residuen-Normierung (N3-Modus) aktivieren. Berechnet fsum als
+      <code>Σ|Fᵢ(x)|/|Fᵢ(x₀)|</code> statt <code>Σ|Fᵢ(x)|</code>.
+      Empfohlen bei Systemen mit sehr unterschiedlichen Gleichungsgrößenordnungen
+      (z.B. Pa-Gleichungen neben kg/s-Gleichungen).
+    </div>
+    <div class="arg-example">-SN</div>
+    <div class="arg-solver-tags"><span class="arg-tag all">Alle Solver</span></div>
+  </div>
+
+  <div class="arg-block">
+    <div class="arg-sig">-TEST</div>
+    <div class="arg-desc">
+      Test-Modus: alle 7 Solver werden nacheinander auf demselben Modell
+      ausgeführt und verglichen. Startwerte werden für jeden Solver zurückgesetzt.
+      Nützlich für Solver-Auswahl und Performance-Vergleich.
+    </div>
+    <div class="arg-example">java CASSolver -I:model.cas -TEST</div>
+    <div class="arg-solver-tags"><span class="arg-tag all">Alle Solver</span></div>
+  </div>
+
+  <div class="arg-block">
+    <div class="arg-sig">-h / --help</div>
+    <div class="arg-desc">
+      Zeigt die vollständige Hilfe mit allen Argumenten und verfügbaren Solvern.
+    </div>
+    <div class="arg-example">java CASSolver -h</div>
+    <div class="arg-solver-tags"><span class="arg-tag all">Alle Solver</span></div>
+  </div>
+</section>
+
+<!-- Solver-Wahl Parameter -->
+<section id="solver-wahl">
+  <h2>Allgemeine Solver-Parameter</h2>
+
+  <p>Diese Parameter gelten für alle direkten Solver (Newton, LM, Broyden) —
+  nicht für Homotopie (die hat eigene <code>-SH:</code> Parameter).</p>
+
+  <div class="note blue">
+    <strong>Hinweis:</strong> Toleranz und maximale Iterationen werden über
+    <code>SolverConfig</code> gesetzt — aktuell nicht direkt über CLI-Argumente
+    konfigurierbar. Standard-Werte: <code>tol=1e-7</code>, <code>maxIter=100</code>.
+    Über <code>SolverAPI</code> sind diese Werte programmtisch setzbar.
+  </div>
+
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>Parameter</th><th>Default</th><th>Gilt für</th><th>Beschreibung</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><code>tolerance</code></td><td><code>1e-7</code></td>
+        <td>Alle direkten Solver</td>
+        <td>Konvergenzschwelle: ||F(x)|| &lt; tolerance</td>
+      </tr>
+      <tr>
+        <td><code>maxIter</code></td><td><code>100</code></td>
+        <td>Alle direkten Solver</td>
+        <td>Maximale Iterationen vor Abbruch</td>
+      </tr>
+      <tr>
+        <td><code>armijoAlphaInit</code></td><td><code>1.0</code></td>
+        <td>NEWTON_ARMIJO, NEWTON_SPARSE_ARMIJO</td>
+        <td>Initialer Schrittweiten-Faktor α</td>
+      </tr>
+      <tr>
+        <td><code>armijoAlphaMin</code></td><td><code>1e-4</code></td>
+        <td>NEWTON_ARMIJO, NEWTON_SPARSE_ARMIJO</td>
+        <td>Minimales α vor Abbruch der Liniensuche</td>
+      </tr>
+      <tr>
+        <td><code>armijoRho</code></td><td><code>0.5</code></td>
+        <td>NEWTON_ARMIJO, NEWTON_SPARSE_ARMIJO</td>
+        <td>Reduktionsfaktor pro Backtracking-Schritt</td>
+      </tr>
+      <tr>
+        <td><code>armijoC1</code></td><td><code>1e-4</code></td>
+        <td>NEWTON_ARMIJO, NEWTON_SPARSE_ARMIJO</td>
+        <td>Wolfe-Bedingungskonstante c₁</td>
+      </tr>
+      <tr>
+        <td><code>lmMuInit</code></td><td><code>1e-6</code></td>
+        <td>LEVENBERG_MARQUARDT</td>
+        <td>Initialer μ-Faktor (× max Diagonale JᵀJ)</td>
+      </tr>
+      <tr>
+        <td><code>lmNuUp</code></td><td><code>2.0</code></td>
+        <td>LEVENBERG_MARQUARDT</td>
+        <td>μ-Erhöhungsfaktor bei schlechtem Schritt</td>
+      </tr>
+      <tr>
+        <td><code>lmNuDown</code></td><td><code>5.0</code></td>
+        <td>LEVENBERG_MARQUARDT</td>
+        <td>μ-Reduktionsfaktor bei gutem Schritt</td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<!-- Homotopie -->
+<section id="homotopie">
+  <h2>Homotopie-Optionen  <code style="font-size:12px">-SH:...</code></h2>
+
+  <div class="note amber">
+    <strong>Nur für <code>-S:HOMOTOPY</code></strong> — alle <code>-SH:</code>
+    Argumente werden ignoriert wenn ein anderer Solver gewählt ist.
+  </div>
+
+  <div class="arg-block">
+    <div class="arg-sig">-SH:STEPS=&lt;n&gt;</div>
+    <div class="arg-desc">
+      Anzahl der Homotopie-Schritte (Pfadpunkte). Standard: 10.
+      Mehr Schritte = kleinere Einzelschritte = robuster aber langsamer.
+      Bei komplexen Systemen: 50–100.
+    </div>
+    <div class="arg-example">-SH:STEPS=50</div>
+    <div class="arg-solver-tags"><span class="arg-tag exclusive">Nur HOMOTOPY</span></div>
+  </div>
+
+  <div class="arg-block">
+    <div class="arg-sig">-SH:DS=&lt;x&gt;</div>
+    <div class="arg-desc">
+      Initiale Schrittweite Δt entlang des Homotopie-Pfades. Standard: 0.1.
+      Bei numerisch schwierigen Systemen (nahe Ma=1, Phasenübergang): 0.02.
+    </div>
+    <div class="arg-example">-SH:DS=0.02 &nbsp;&nbsp; -SH:DS=0.05</div>
+    <div class="arg-solver-tags"><span class="arg-tag exclusive">Nur HOMOTOPY</span></div>
+  </div>
+
+  <div class="arg-block">
+    <div class="arg-sig">-SH:INNER=&lt;solver&gt;</div>
+    <div class="arg-desc">
+      Innerer Korrektor-Solver für jeden Homotopie-Schritt. Standard: NEWTON_ARMIJO.
+      Bei schlecht konditionierten Systemen (κ > 10¹²): LEVENBERG_MARQUARDT.
+    </div>
+    <div class="arg-example">-SH:INNER=LEVENBERG_MARQUARDT &nbsp;&nbsp; -SH:INNER=NEWTON_SPARSE_ARMIJO</div>
+    <div class="arg-solver-tags"><span class="arg-tag exclusive">Nur HOMOTOPY</span></div>
+  </div>
+
+  <div class="arg-block">
+    <div class="arg-sig">-SH:CRITICAL</div>
+    <div class="arg-desc">
+      Vorkonfigurierte Einstellung für kritische Systeme (z.B. Strömung nahe Ma=1,
+      Phasenübergänge). Setzt automatisch: STEPS=50, DS=0.02, DSMAX=0.1, ITER_TARGET=3.
+    </div>
+    <div class="arg-example">-SH:CRITICAL</div>
+    <div class="arg-solver-tags"><span class="arg-tag exclusive">Nur HOMOTOPY</span></div>
+  </div>
+
+  <h3>Vollständiges Beispiel</h3>
+  <pre>java CASSolver -I:nozzle.cas \
+  -S:HOMOTOPY \
+  -SH:INNER=LEVENBERG_MARQUARDT \
+  -SH:STEPS=50 \
+  -SH:DS=0.02</pre>
+</section>
+
+<!-- Broyden -->
+<section id="broyden">
+  <h2>Broyden-Optionen  <code style="font-size:12px">-SB:...</code></h2>
+
+  <div class="note amber">
+    <strong>Nur für <code>-S:BROYDEN</code> und <code>-S:BROYDEN_SPARSE</code></strong>
+  </div>
+
+  <div class="arg-block">
+    <div class="arg-sig">-SB:RESET=&lt;n&gt;</div>
+    <div class="arg-desc">
+      Jacobi-Reset-Intervall — alle n Iterationen wird die Jacobi vollständig
+      neu berechnet statt durch Rang-1-Update aktualisiert. Standard: 25.
+      Kleinere Werte: robuster aber langsamer. Größere Werte: schneller aber
+      mehr Akkumulationsfehler.
+    </div>
+    <div class="arg-example">-SB:RESET=10 &nbsp;&nbsp; -SB:RESET=50</div>
+    <div class="arg-solver-tags"><span class="arg-tag exclusive">Nur BROYDEN / BROYDEN_SPARSE</span></div>
+  </div>
+
+  <div class="arg-block">
+    <div class="arg-sig">-SB:KAPPA=&lt;x&gt;</div>
+    <div class="arg-desc">
+      Konditionszahl-Schwellwert für erzwungenen Reset. Standard: 1e10.
+      Wenn κ(J) diesen Wert überschreitet, wird die Jacobi sofort neu
+      aufgebaut unabhängig vom Reset-Intervall.
+    </div>
+    <div class="arg-example">-SB:KAPPA=1e8</div>
+    <div class="arg-solver-tags"><span class="arg-tag exclusive">Nur BROYDEN / BROYDEN_SPARSE</span></div>
+  </div>
+
+  <div class="arg-block">
+    <div class="arg-sig">-SB:WARMKAPPA=&lt;x&gt;</div>
+    <div class="arg-desc">
+      Konditionszahl-Schwellwert für Warm-Start bei Parameterstudien.
+      Wenn der Startvektor vom vorherigen BatchRunner-Run übernommen wird,
+      wird die Jacobi nur neu aufgebaut wenn κ diesen Wert überschreitet.
+    </div>
+    <div class="arg-example">-SB:WARMKAPPA=1e6</div>
+    <div class="arg-solver-tags"><span class="arg-tag exclusive">Nur BROYDEN / BROYDEN_SPARSE</span></div>
+  </div>
+</section>
+
+<!-- Diagnose -->
+<section id="diagnose">
+  <h2>Diagnose- und Debug-Optionen</h2>
+
+  <div class="arg-block">
+    <div class="arg-sig">-DI</div>
+    <div class="arg-desc">
+      Diagnose-Modus: Führt vor dem eigentlichen Solve einen
+      <code>InitialValueAnalyzer</code>-Durchlauf durch. Optimiert Startwerte
+      automatisch — besonders nützlich wenn viele Variablen schlecht initialisiert sind.
+      Der Solver startet dann mit einem besseren Startvektor.
+    </div>
+    <div class="arg-example">java CASSolver -I:model.cas -DI</div>
+    <div class="arg-solver-tags"><span class="arg-tag all">Alle Solver</span></div>
+  </div>
+
+  <div class="arg-block">
+    <div class="arg-sig">-DV:&lt;datei&gt;</div>
+    <div class="arg-desc">
+      Startvektor-Dump: Schreibt alle Variablenwerte vor Iteration 0 in eine
+      Textdatei im <code>-U:</code>-Format. Nützlich für Debugging — der Dump
+      kann direkt als <code>-U:</code>-Datei wiederverwendet werden.
+    </div>
+    <div class="arg-example">-DV:startvektor.txt</div>
+    <div class="arg-solver-tags">
+      <span class="arg-tag exclusive">Nur NEWTON_ARMIJO</span>
+    </div>
+  </div>
+</section>
+
+<!-- Batch -->
+<section id="batch">
+  <h2>Batch-Optionen</h2>
+
+  <div class="arg-block">
+    <div class="arg-sig">-I:&lt;datei.csv&gt;</div>
+    <div class="arg-desc">
+      Batch-Modus: Wenn die Eingabedatei eine <code>.csv</code>-Datei ist,
+      wird automatisch BatchRunner aktiviert. Die CSV enthält eine Zeile pro
+      Betriebspunkt mit Variablenwerten. Die zugehörige <code>.cas</code>-Datei
+      wird automatisch gesucht (gleiches Verzeichnis, gleicher Name).
+    </div>
+    <div class="arg-example">java CASSolver -I:parameterstudie.csv</div>
+    <div class="arg-solver-tags"><span class="arg-tag all">Alle Solver</span></div>
+  </div>
+
+  <div class="arg-block">
+    <div class="arg-sig">-BA</div>
+    <div class="arg-desc">
+      Batch-Ausgabe: Alle Variablen in die Batch-Ausgabedatei schreiben —
+      auch fixierte Variablen. Standard: nur freie Variablen.
+    </div>
+    <div class="arg-example">java CASSolver -I:studie.csv -BA</div>
+    <div class="arg-solver-tags"><span class="arg-tag all">Alle Solver (nur Batch)</span></div>
+  </div>
+</section>
+
+<!-- Übersicht -->
+<section id="uebersicht">
+  <h2>Vollständige Übersicht — Solver und ihre Optionen</h2>
+
+  <div class="tbl-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th>Option</th>
+        <th>Newton<br>Armijo</th>
+        <th>Newton<br>Sparse</th>
+        <th>Newton<br>Sparse+A</th>
+        <th>LM</th>
+        <th>Broyden</th>
+        <th>Broyden<br>Sparse</th>
+        <th>Homotopie</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>-I: -S: -U:</code></td>
+        <td class="center">✅</td><td class="center">✅</td><td class="center">✅</td>
+        <td class="center">✅</td><td class="center">✅</td><td class="center">✅</td><td class="center">✅</td>
+      </tr>
+      <tr>
+        <td><code>-SC: -SN -DI -TEST</code></td>
+        <td class="center">✅</td><td class="center">✅</td><td class="center">✅</td>
+        <td class="center">✅</td><td class="center">✅</td><td class="center">✅</td><td class="center">✅</td>
+      </tr>
+      <tr>
+        <td><code>-DV: Startvektor-Dump</code></td>
+        <td class="center">✅</td><td class="center">—</td><td class="center">—</td>
+        <td class="center">—</td><td class="center">—</td><td class="center">—</td><td class="center">—</td>
+      </tr>
+      <tr>
+        <td><code>-SH:STEPS -SH:DS -SH:INNER -SH:CRITICAL</code></td>
+        <td class="center">—</td><td class="center">—</td><td class="center">—</td>
+        <td class="center">—</td><td class="center">—</td><td class="center">—</td><td class="center">✅</td>
+      </tr>
+      <tr>
+        <td><code>-SB:RESET -SB:KAPPA -SB:WARMKAPPA</code></td>
+        <td class="center">—</td><td class="center">—</td><td class="center">—</td>
+        <td class="center">—</td><td class="center">✅</td><td class="center">✅</td><td class="center">—</td>
+      </tr>
+      <tr>
+        <td>Armijo-Parameter</td>
+        <td class="center">✅</td><td class="center">—</td><td class="center">✅</td>
+        <td class="center">—</td><td class="center">✅</td><td class="center">—</td><td class="center">—</td>
+      </tr>
+      <tr>
+        <td>LM μ-Parameter</td>
+        <td class="center">—</td><td class="center">—</td><td class="center">—</td>
+        <td class="center">✅</td><td class="center">—</td><td class="center">—</td><td class="center">—</td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Schnellreferenz — häufigste Kombinationen</h3>
+  <pre><span class="cmt">// Standard (empfohlen für die meisten Systeme)</span>
+java CASSolver -I:model.cas
+
+<span class="cmt">// Mit schlechten Startwerten</span>
+java CASSolver -I:model.cas -DI
+
+<span class="cmt">// Großes System, guter Startvektor</span>
+java CASSolver -I:model.cas -S:NEWTON_SPARSE_ARMIJO
+
+<span class="cmt">// Schlecht konditioniert (κ-Warnungen im Log)</span>
+java CASSolver -I:model.cas -S:LEVENBERG_MARQUARDT
+
+<span class="cmt">// Newton scheitert, LM scheitert</span>
+java CASSolver -I:model.cas -S:HOMOTOPY -SH:INNER=LEVENBERG_MARQUARDT -SH:STEPS=50 -SH:DS=0.02
+
+<span class="cmt">// Parameterstudie</span>
+java CASSolver -I:studie.csv -S:BROYDEN_SPARSE
+
+<span class="cmt">// Solver vergleichen</span>
+java CASSolver -I:model.cas -TEST
+
+<span class="cmt">// Startvektor analysieren</span>
+java CASSolver -I:model.cas -DV:start.txt -S:NEWTON_ARMIJO</pre>
+</section>
+
+</main>
+
+<footer>
+  <span>CMDSolver Docs · Solver Optionen · v2.5</span>
+  <span>
+    <a href="solver_comparison.html">← Vergleichsmatrix</a> &nbsp;|&nbsp;
+    <a href="parser_syntax.html">Parser →</a>
+  </span>
+</footer>
+</body>
+</html>

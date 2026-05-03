@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CMDSolver Docs — Parser Syntax</title>
+<link rel="stylesheet" href="docs.css">
+<style>
+  .syntax-block {
+    background: var(--bg3); border: 1px solid var(--border);
+    border-left: 3px solid var(--teal);
+    border-radius: 6px; padding: 1rem 1.2rem;
+    margin: .8rem 0 1rem; font-family: var(--mono); font-size: 12px;
+    line-height: 1.9; white-space: pre;
+  }
+  .kw-list {
+    display: flex; flex-wrap: wrap; gap: .4rem; margin: .6rem 0 1rem;
+  }
+  .kw-chip {
+    font-family: var(--mono); font-size: 11px;
+    padding: 3px 10px; border-radius: 4px;
+    background: rgba(45,212,191,.08);
+    border: 1px solid rgba(45,212,191,.2);
+    color: var(--teal);
+  }
+  .kw-chip.ctrl { background: rgba(167,139,250,.08);
+                  border-color: rgba(167,139,250,.2); color: var(--purple); }
+  .kw-chip.op   { background: rgba(240,160,48,.08);
+                  border-color: rgba(240,160,48,.2); color: var(--warn); }
+  .kw-chip.fn   { background: rgba(74,158,255,.08);
+                  border-color: rgba(74,158,255,.2); color: var(--accent); }
+
+  .cas-example {
+    background: #0a1520; border: 1px solid var(--border);
+    border-radius: 8px; overflow: hidden; margin: 1rem 0 1.5rem;
+  }
+  .cas-header {
+    background: var(--bg3); padding: .5rem 1rem;
+    font-family: var(--mono); font-size: 10px; color: var(--text3);
+    letter-spacing: .1em; text-transform: uppercase;
+    border-bottom: 1px solid var(--border);
+  }
+  .cas-body {
+    padding: 1rem 1.2rem;
+    font-family: var(--mono); font-size: 12px;
+    line-height: 1.85; overflow-x: auto;
+    white-space: pre;
+  }
+  .cas-kw   { color: var(--purple); }
+  .cas-str  { color: var(--ok); }
+  .cas-num  { color: var(--warn); }
+  .cas-cmt  { color: var(--text3); font-style: italic; }
+  .cas-var  { color: #a8c8f0; }
+  .cas-attr { color: var(--teal); }
+</style>
+</head>
+<body>
+
+<div class="doc-header">
+  <div class="breadcrumb">
+    <a href="index.html">CMDSolver Docs</a>
+    <span>›</span><span>Parser Syntax</span>
+  </div>
+  <span class="doc-badge overview">Referenz</span>
+</div>
+
+<div class="hero">
+  <div class="hero-sub">Kapitel 4</div>
+  <h1>CAS-Dateiformat<br>Parser Syntax Referenz</h1>
+  <p class="tagline">
+    Vollständige Referenz des CAS-Dateiformats — Sektionen, Variablendeklaration,
+    Gleichungen, Kontrollstrukturen, Operatoren und mathematische Funktionen.
+  </p>
+</div>
+
+<nav>
+  <a href="#struktur">Dateistruktur</a>
+  <a href="#variable">Variable</a>
+  <a href="#initialize">Initialize</a>
+  <a href="#procedure">Procedure</a>
+  <a href="#gleichungen">Gleichungen</a>
+  <a href="#kontrolle">Kontrollstrukturen</a>
+  <a href="#operatoren">Operatoren</a>
+  <a href="#funktionen">Funktionen</a>
+  <a href="#kommentare">Kommentare</a>
+  <a href="#beispiel">Vollständiges Beispiel</a>
+</nav>
+
+<main>
+
+<!-- Dateistruktur -->
+<section id="struktur">
+  <h2>Dateistruktur — Überblick</h2>
+
+  <p>
+    Eine CAS-Datei besteht aus mehreren Sektionen die in beliebiger Reihenfolge
+    auftreten können. Der Parser ist <strong>case-insensitiv</strong> — Schlüsselwörter
+    können groß oder klein geschrieben werden.
+  </p>
+
+  <div class="syntax-block">
+<span class="cas-cmt">// ── Sektion 1: Prozedurendeklaration ──────────────────</span>
+<span class="cas-kw">PROCEDURE</span> <span class="cas-var">prozedurName</span>
+<span class="cas-kw">CALL:</span> <span class="cas-var">BUILT_IN_FUNCTION_NAME</span>;
+<span class="cas-kw">INPUTS:</span>  REAL, REAL, ...;
+<span class="cas-kw">OUTPUTS:</span> REAL;
+<span class="cas-kw">END</span>
+
+<span class="cas-cmt">// ── Sektion 2: Variablendeklaration ───────────────────</span>
+<span class="cas-kw">VARIABLE</span> <span class="cas-var">VARIABLENNAME</span>
+<span class="cas-kw">LOWER:</span>  <span class="cas-num">0.0</span>;
+<span class="cas-kw">VALUE:</span>  <span class="cas-num">100.0</span>;
+<span class="cas-kw">UPPER:</span>  <span class="cas-num">500.0</span>;
+<span class="cas-kw">UNIT:</span>   <span class="cas-str">"Pa"</span>;
+<span class="cas-kw">END</span>
+
+<span class="cas-cmt">// oder Kurzschreibweise:</span>
+<span class="cas-var">NAME.SUBNAME</span> <span class="cas-kw">AS REAL</span> (<span class="cas-attr">Description:</span> <span class="cas-str">"Text"</span>, <span class="cas-attr">Lower:</span> <span class="cas-num">0</span>, <span class="cas-attr">Value:</span> <span class="cas-num">1</span>, <span class="cas-attr">Upper:</span> <span class="cas-num">10</span>, <span class="cas-attr">Spec:</span> Fixed, <span class="cas-attr">Unit:</span> <span class="cas-str">"m"</span>);
+
+<span class="cas-cmt">// ── Sektion 3: Startwert-Overrides ────────────────────</span>
+<span class="cas-kw">INITIALIZE</span>
+  VAR = <span class="cas-num">123.4</span>;
+  VAR.Lower = <span class="cas-num">0.0</span>;
+  VAR.Upper = <span class="cas-num">500.0</span>;
+<span class="cas-kw">ENDINIT</span>
+
+<span class="cas-cmt">// ── Sektion 4: Gleichungen ────────────────────────────</span>
+<span class="cas-var">VAR_A</span> = <span class="cas-var">VAR_B</span> * <span class="cas-num">2.5</span> + SQRT(<span class="cas-var">VAR_C</span>);
+  </div>
+
+  <div class="note blue">
+    <strong>Parsing-Reihenfolge:</strong> Der Parser liest die Datei zweimal —
+    erst werden alle Variablen und Prozeduren erfasst, dann werden die Gleichungen
+    interpretiert. Die physische Reihenfolge in der Datei spielt für den Parser
+    keine Rolle.
+  </div>
+</section>
+
+<!-- Variable -->
+<section id="variable">
+  <h2>Variablendeklaration</h2>
+
+  <h3>Langform — VARIABLE Block</h3>
+  <div class="cas-example">
+    <div class="cas-header">Syntax — VARIABLE Block</div>
+    <div class="cas-body">
+<span class="cas-kw">VARIABLE</span> <span class="cas-var">PARTM.F060.PT</span>
+<span class="cas-kw">LOWER:</span>  <span class="cas-num">1000.0</span>;
+<span class="cas-kw">VALUE:</span>  <span class="cas-num">196273.07</span>;
+<span class="cas-kw">UPPER:</span>  <span class="cas-num">300000.0</span>;
+<span class="cas-kw">UNIT:</span>   <span class="cas-str">"Pa"</span>;
+<span class="cas-kw">END</span>
+    </div>
+  </div>
+
+  <h3>Kurzform — AS REAL Inline-Syntax</h3>
+  <div class="cas-example">
+    <div class="cas-header">Syntax — AS REAL (empfohlen für moderne Modelle)</div>
+    <div class="cas-body">
+<span class="cas-var">PARTM.F060.PT</span> <span class="cas-kw">AS REAL</span> (
+  <span class="cas-attr">Description:</span> <span class="cas-str">"Total pressure at station 060"</span>,
+  <span class="cas-attr">Lower:</span>  <span class="cas-num">1000.0</span>,
+  <span class="cas-attr">Value:</span>  <span class="cas-num">196273.07</span>,
+  <span class="cas-attr">Upper:</span>  <span class="cas-num">300000.0</span>,
+  <span class="cas-attr">Spec:</span>   Fixed,
+  <span class="cas-attr">Unit:</span>   <span class="cas-str">"Pa"</span>,
+  <span class="cas-attr">Latex:</span>  <span class="cas-str">"P_{T,060}"</span>
+);
+    </div>
+  </div>
+
+  <h3>Variablen-Attribute</h3>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>Attribut</th><th>Typ</th><th>Pflicht</th><th>Beschreibung</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><code>Lower</code></td><td>Double</td><td>Empfohlen</td>
+        <td>Untere physikalische Schranke. PhysicalProjector verwendet diesen Wert.</td>
+      </tr>
+      <tr>
+        <td><code>Value</code></td><td>Double</td><td>Ja</td>
+        <td>Startwert für den Solver. Guter Startwert beschleunigt Konvergenz erheblich.</td>
+      </tr>
+      <tr>
+        <td><code>Upper</code></td><td>Double</td><td>Empfohlen</td>
+        <td>Obere physikalische Schranke.</td>
+      </tr>
+      <tr>
+        <td><code>Spec</code></td><td><code>Fixed</code> / <code>Free</code></td><td>Ja</td>
+        <td><strong>Fixed:</strong> bekannter Wert (Randbedingung). <strong>Free:</strong> Unbekannte die der Solver bestimmt.</td>
+      </tr>
+      <tr>
+        <td><code>Unit</code></td><td>String</td><td>Nein</td>
+        <td>Einheit als String in Anführungszeichen. Nur dokumentarisch — kein Unit-Check.</td>
+      </tr>
+      <tr>
+        <td><code>Description</code></td><td>String</td><td>Nein</td>
+        <td>Beschreibungstext. Erscheint in result.out.</td>
+      </tr>
+      <tr>
+        <td><code>Latex</code></td><td>String</td><td>Nein</td>
+        <td>LaTeX-Symbol für Dokumentation (z.B. <code>"P_{T,060}"</code>). Nicht vom Solver verwendet.</td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Variablennamen — QNAME-Konvention</h3>
+  <p>
+    CMDSolver unterstützt Mehrfach-Punkt-Namen (Qualified Names) für hierarchische
+    Modellstrukturen. Der Punkt ist kein Operator sondern Teil des Namens:
+  </p>
+  <div class="syntax-block">
+PARTM.F060.PT    <span class="cas-cmt">← gültiger Variablenname (keine Operatoren)</span>
+GLOBAL.PIVALUE   <span class="cas-cmt">← hierarchisch: Modul.Variable</span>
+GEOM.RJETPIPE    <span class="cas-cmt">← hierarchisch: Bereich.Größe</span>
+AMB.PS           <span class="cas-cmt">← hierarchisch: Station.Größe</span>
+  </div>
+
+  <div class="note amber">
+    <strong>Bugfix B27/B28 (v2.3):</strong> Bounds-Overrides im INITIALIZE-Block
+    für Mehrfach-Punkt-Namen werden korrekt via <code>lastIndexOf('.')</code>
+    extrahiert. <code>PARTM.F060.PS.Upper = ...</code> setzt korrekt den Upper-Bound
+    von <code>PARTM.F060.PS</code>.
+  </div>
+
+  <h3>Array-Variablen</h3>
+  <div class="cas-example">
+    <div class="cas-header">Array-Deklaration</div>
+    <div class="cas-body">
+<span class="cas-var">ARRAY_VAR[5]</span> <span class="cas-kw">AS REAL</span> (<span class="cas-attr">Value:</span> <span class="cas-num">0.0</span>, <span class="cas-attr">Spec:</span> Free, <span class="cas-attr">Unit:</span> <span class="cas-str">"m"</span>);
+<span class="cas-cmt">// Erzeugt: ARRAY_VAR[0], ARRAY_VAR[1], ..., ARRAY_VAR[4]</span>
+    </div>
+  </div>
+
+  <h3>INTEGERPARAMETER — Konstante (neu in v2.10)</h3>
+  <p>
+    INTEGERPARAMETER definiert eine ganzzahlige Konstante die beim Parsing als
+    Präprozessor-Macro überall im Modell substituiert wird — in Arraygrenzen,
+    FOR-Schleifen und Gleichungen.
+  </p>
+  <div class="cas-example">
+    <div class="cas-header">INTEGERPARAMETER Syntax</div>
+    <div class="cas-body">
+<span class="cas-cmt">// Deklaration</span>
+<span class="cas-var">NSTAGES</span> <span class="cas-kw">AS INTEGERPARAMETER</span> (<span class="cas-num">5</span>);
+
+<span class="cas-cmt">// Verwendung in Array-Deklaration</span>
+<span class="cas-var">STAGE_TEMP[NSTAGES]</span> <span class="cas-kw">AS REAL</span> (<span class="cas-attr">Value:</span> <span class="cas-num">300</span>, <span class="cas-attr">Spec:</span> Free, <span class="cas-attr">Unit:</span> <span class="cas-str">"K"</span>);
+
+<span class="cas-cmt">// Verwendung in FOR-Schleife</span>
+<span class="cas-kw">FOR</span> (i = <span class="cas-num">0</span>:NSTAGES)
+  <span class="cas-var">STAGE_TEMP[i]</span> = <span class="cas-var">T_INLET</span> - i * <span class="cas-var">DELTA_T</span>;
+<span class="cas-kw">END</span>
+
+<span class="cas-cmt">// Verwendung in Gleichungen</span>
+<span class="cas-var">TOTAL_STAGES</span> = NSTAGES * <span class="cas-num">1.0</span>;  <span class="cas-cmt">// wird zu: TOTAL_STAGES = 5 * 1.0</span>
+    </div>
+  </div>
+  <div class="note blue">
+    <strong>Substitution:</strong> INTEGERPARAMETER werden als Wortgrenzen-sicheres
+    Macro substituiert — <code>NSTAGES_OLD</code> wird nicht verändert wenn
+    <code>NSTAGES</code> definiert ist.
+  </div>
+</section>
+
+<!-- Initialize -->
+<section id="initialize">
+  <h2>INITIALIZE Block</h2>
+
+  <p>
+    Der INITIALIZE-Block überschreibt Startwerte, Lower- und Upper-Bounds
+    nach dem initialen Parsing. Er wird <strong>nach</strong> der
+    Variablendeklaration ausgewertet — nützlich um Bounds dynamisch
+    aus anderen Variablen zu berechnen.
+  </p>
+
+  <div class="cas-example">
+    <div class="cas-header">INITIALIZE Block Syntax</div>
+    <div class="cas-body">
+<span class="cas-kw">INITIALIZE</span>
+  <span class="cas-cmt">// Startwert setzen</span>
+  <span class="cas-var">PARTM.F060.PS</span> = <span class="cas-var">AMB.PS</span> * <span class="cas-num">1.5</span>;
+
+  <span class="cas-cmt">// Lower-Bound überschreiben</span>
+  <span class="cas-var">PARTM.F060.PS</span>.Lower = <span class="cas-var">AMB.PS</span> * <span class="cas-num">0.5</span>;
+
+  <span class="cas-cmt">// Upper-Bound überschreiben</span>
+  <span class="cas-var">PARTM.F060.PS</span>.Upper = <span class="cas-var">AMB.PS</span> * <span class="cas-num">4.5</span>;
+
+  <span class="cas-cmt">// Konstante</span>
+  <span class="cas-var">GLOBAL.PIVALUE</span> = <span class="cas-num">3.14159265358979</span>;
+<span class="cas-kw">ENDINIT</span>
+    </div>
+  </div>
+
+  <div class="note blue">
+    <strong>Auswertungsreihenfolge:</strong> INITIALIZE-Ausdrücke werden
+    in Dateireihenfolge ausgewertet. Spätere Zeilen können frühere überschreiben.
+    Expressions auf der rechten Seite können andere Variablen referenzieren —
+    deren Werte stammen aus der Variablendeklaration.
+  </div>
+</section>
+
+<!-- Procedure -->
+<section id="procedure">
+  <h2>PROCEDURE — Built-in Funktionen einbinden</h2>
+
+  <p>
+    Prozeduren verbinden CAS-Variablen mit den thermodynamischen Built-in
+    Funktionen aus <code>BIfunctions.java</code>. Die Deklaration definiert
+    Eingang und Ausgang; der Aufruf erfolgt über <code>CALL</code>.
+  </p>
+
+  <div class="cas-example">
+    <div class="cas-header">Prozedur-Deklaration + Aufruf</div>
+    <div class="cas-body">
+<span class="cas-cmt">// Deklaration (am Dateianfang)</span>
+<span class="cas-kw">PROCEDURE</span> <span class="cas-var">pCPOFT</span>
+<span class="cas-kw">CALL:</span>    <span class="cas-var">CPOFTNOZ</span>;     <span class="cas-cmt">← Name der BIfunction</span>
+<span class="cas-kw">INPUTS:</span>  REAL, REAL, REAL;
+<span class="cas-kw">OUTPUTS:</span> REAL;
+<span class="cas-kw">END</span>
+
+<span class="cas-cmt">// Verwendung im Gleichungsteil</span>
+<span class="cas-kw">CALL</span>(<span class="cas-var">PARTM.F060.CP</span>) = <span class="cas-var">pCPOFT</span>(<span class="cas-var">PARTM.F060.TT</span>, <span class="cas-var">PARTM.F060.WGR</span>, <span class="cas-var">PARTM.F060.FAR</span>);
+    </div>
+  </div>
+
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>Prozedur-Schlüsselwort</th><th>Bedeutung</th></tr></thead>
+    <tbody>
+      <tr><td><code>PROCEDURE name</code></td><td>Beginnt Prozedurendeklaration</td></tr>
+      <tr><td><code>CALL: FUNCNAME;</code></td><td>Name der Built-in Funktion (aus BIfunctions)</td></tr>
+      <tr><td><code>INPUTS: REAL, REAL, ...;</code></td><td>Anzahl und Typ der Eingaben</td></tr>
+      <tr><td><code>OUTPUTS: REAL;</code></td><td>Anzahl und Typ der Ausgaben (aktuell nur 1)</td></tr>
+      <tr><td><code>END</code></td><td>Beendet Prozedurendeklaration</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<!-- Gleichungen -->
+<section id="gleichungen">
+  <h2>Gleichungen</h2>
+
+  <h3>Grundform</h3>
+  <p>
+    Jede Gleichung hat die Form <code>LHS = RHS;</code> und wird vom Parser
+    in die Residuumsform <code>LHS − (RHS)</code> umgewandelt.
+    Das Semikolon am Ende ist obligatorisch.
+  </p>
+
+  <div class="cas-example">
+    <div class="cas-header">Gleichungs-Beispiele</div>
+    <div class="cas-body">
+<span class="cas-cmt">// Einfache Gleichung</span>
+<span class="cas-var">PARTM.F060.GAMMAT</span> = <span class="cas-var">PARTM.F060.CPT</span> / (<span class="cas-var">PARTM.F060.CPT</span> - <span class="cas-var">PARTM.F060.RGAS</span>);
+
+<span class="cas-cmt">// Mit mathematischen Funktionen</span>
+<span class="cas-var">PARTM.F060.Q</span> = <span class="cas-var">PARTM.F060.W</span> * SQRT(<span class="cas-var">PARTM.F060.TT</span>) / <span class="cas-var">PARTM.F060.PT</span>;
+
+<span class="cas-cmt">// Potenz</span>
+<span class="cas-var">PARTM.F060.PS</span> = <span class="cas-var">PARTM.F060.PT</span> * (<span class="cas-num">1</span> - (<span class="cas-var">PARTM.F060.GAMMAT</span> - <span class="cas-num">1</span>) / <span class="cas-num">2</span>) ^ <span class="cas-var">EXP1</span>;
+
+<span class="cas-cmt">// CALL-Gleichung (Built-in Funktion)</span>
+<span class="cas-kw">CALL</span>(<span class="cas-var">PARTM.F060.CP</span>) = <span class="cas-var">pCPOFT</span>(<span class="cas-var">PARTM.F060.TT</span>, <span class="cas-var">PARTM.F060.WGR</span>, <span class="cas-var">PARTM.F060.FAR</span>);
+    </div>
+  </div>
+
+  <h3>Residuumsform</h3>
+  <div class="math-block">
+    <div class="eq"><span class="hi">CAS-Gleichung:</span>    X = A * B + C;</div>
+    <div class="eq"><span class="hi">Residuumsform:</span>    F(x) = X − (A * B + C)</div>
+    <div class="eq"><span class="hi">Solver-Ziel:</span>      F(x) = 0  →  X = A * B + C ✓</div>
+  </div>
+</section>
+
+<!-- Kontrollstrukturen -->
+<section id="kontrolle">
+  <h2>Kontrollstrukturen</h2>
+
+  <h3>IF / ELSE / ELSEIF / ENDIF</h3>
+  <div class="cas-example">
+    <div class="cas-header">IF-Block Syntax</div>
+    <div class="cas-body">
+<span class="cas-kw">IF</span> (<span class="cas-var">VAR_A</span> &gt; <span class="cas-num">0.5</span>)
+  <span class="cas-var">RESULT</span> = <span class="cas-var">VAR_A</span> * <span class="cas-num">2.0</span>;
+<span class="cas-kw">ELSE</span>
+  <span class="cas-var">RESULT</span> = <span class="cas-var">VAR_A</span> * <span class="cas-num">0.5</span>;
+<span class="cas-kw">ENDIF</span>
+
+<span class="cas-cmt">// ELSEIF — wird durch Pre-Processing expandiert</span>
+<span class="cas-kw">IF</span> (<span class="cas-var">MODE</span> == <span class="cas-num">1</span>)
+  <span class="cas-var">OUT</span> = <span class="cas-var">IN_A</span>;
+<span class="cas-kw">ELSEIF</span> (<span class="cas-var">MODE</span> == <span class="cas-num">2</span>)
+  <span class="cas-var">OUT</span> = <span class="cas-var">IN_B</span>;
+<span class="cas-kw">ELSE</span>
+  <span class="cas-var">OUT</span> = <span class="cas-var">IN_C</span>;
+<span class="cas-kw">ENDIF</span>
+    </div>
+  </div>
+
+  <div class="note blue">
+    <strong>ELSEIF-Expansion (v2.3):</strong> ELSEIF wird durch Pre-Processing
+    in verschachtelte IF/ELSE-Blöcke expandiert. Mehrfaches ELSEIF ist möglich.
+  </div>
+
+  <h3>Struktureller IF — VAR.SPEC Bedingung</h3>
+  <p>
+    Eine spezielle IF-Form wertet den Status (Fixed/Free) einer Variable
+    zur Parse-Zeit aus — nicht zur Laufzeit. Das erlaubt unterschiedliche
+    Gleichungsstrukturen je nach Modellkonfiguration:
+  </p>
+  <div class="cas-example">
+    <div class="cas-header">Struktureller IF (VAR.SPEC)</div>
+    <div class="cas-body">
+<span class="cas-kw">IF</span> (<span class="cas-var">GLOBAL.STATICSWITCH</span>.SPEC == FIXED)
+  <span class="cas-cmt">// Diese Gleichung gilt wenn STATICSWITCH fixiert ist</span>
+  <span class="cas-var">PARTM.F080.PS</span> = <span class="cas-var">PARTM.F060.PS</span>;
+<span class="cas-kw">ELSE</span>
+  <span class="cas-cmt">// Diese Gleichung gilt wenn STATICSWITCH frei ist</span>
+  <span class="cas-var">PARTM.F080.PS</span> = <span class="cas-var">PARTM.F060.PS</span> * <span class="cas-var">GLOBAL.STATICSWITCH</span>;
+<span class="cas-kw">ENDIF</span>
+    </div>
+  </div>
+
+  <h3>FOR — Array-Expansion</h3>
+  <div class="cas-example">
+    <div class="cas-header">FOR-Schleife</div>
+    <div class="cas-body">
+<span class="cas-kw">FOR</span> (<span class="cas-var">i</span> = <span class="cas-num">0</span>:<span class="cas-num">4</span>)
+  <span class="cas-var">ARRAY_VAR[i]</span> = <span class="cas-var">BASE_VAR</span> * (<span class="cas-var">i</span> + <span class="cas-num">1</span>);
+<span class="cas-kw">END</span>
+<span class="cas-cmt">// Expandiert zu 5 Gleichungen: ARRAY_VAR[0]=..., ARRAY_VAR[1]=..., etc.</span>
+    </div>
+  </div>
+</section>
+
+<!-- Operatoren -->
+<section id="operatoren">
+  <h2>Operatoren</h2>
+
+  <h3>Arithmetische Operatoren</h3>
+  <div class="kw-list">
+    <span class="kw-chip op">+  Addition</span>
+    <span class="kw-chip op">-  Subtraktion</span>
+    <span class="kw-chip op">*  Multiplikation</span>
+    <span class="kw-chip op">/  Division</span>
+    <span class="kw-chip op">^  Potenz</span>
+    <span class="kw-chip op">( )  Klammerung</span>
+  </div>
+
+  <h3>Vergleichsoperatoren (in IF-Bedingungen)</h3>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>Operator</th><th>Fortran-Stil</th><th>Bedeutung</th></tr></thead>
+    <tbody>
+      <tr><td><code>==</code></td><td><code>.EQ.</code></td><td>Gleich</td></tr>
+      <tr><td><code>!=</code> oder <code>&lt;&gt;</code></td><td><code>.NE.</code></td><td>Ungleich</td></tr>
+      <tr><td><code>&lt;</code></td><td><code>.LT.</code></td><td>Kleiner als</td></tr>
+      <tr><td><code>&lt;=</code></td><td><code>.LE.</code></td><td>Kleiner gleich</td></tr>
+      <tr><td><code>&gt;</code></td><td><code>.GT.</code></td><td>Größer als</td></tr>
+      <tr><td><code>&gt;=</code></td><td><code>.GE.</code></td><td>Größer gleich</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Logische Operatoren</h3>
+  <div class="kw-list">
+    <span class="kw-chip op">AND</span>
+    <span class="kw-chip op">OR</span>
+    <span class="kw-chip op">NOT</span>
+  </div>
+</section>
+
+<!-- Funktionen -->
+<section id="funktionen">
+  <h2>Mathematische Funktionen</h2>
+
+  <p>
+    Diese Funktionen können direkt in Gleichungen verwendet werden.
+    Sie werden vom Parser in CASprzak-Syntax übersetzt und symbolisch differenziert.
+    Reihenfolge in der FUNC_MAP garantiert korrekte Übersetzung (längere Matches vor kürzeren).
+  </p>
+
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>CAS-Name</th><th>Alias</th><th>Mathematik</th><th>CASprzak</th></tr></thead>
+    <tbody>
+      <tr><td><code>SQRT</code></td><td>—</td><td>√x</td><td>\sqrt</td></tr>
+      <tr><td><code>EXP</code></td><td>—</td><td>eˣ</td><td>\exp</td></tr>
+      <tr><td><code>LN</code></td><td><code>LOGE</code></td><td>ln(x)</td><td>\ln</td></tr>
+      <tr><td><code>LOG10</code></td><td>—</td><td>log₁₀(x)</td><td>\log</td></tr>
+      <tr><td><code>SIN</code></td><td><code>SINUS</code></td><td>sin(x)</td><td>\sin</td></tr>
+      <tr><td><code>COS</code></td><td><code>COSINUS</code></td><td>cos(x)</td><td>\cos</td></tr>
+      <tr><td><code>TAN</code></td><td><code>TANGENS</code></td><td>tan(x)</td><td>\tan</td></tr>
+      <tr><td><code>ASIN</code></td><td><code>ASINUS</code></td><td>arcsin(x)</td><td>\asin</td></tr>
+      <tr><td><code>ACOS</code></td><td><code>ACOSINUS</code></td><td>arccos(x)</td><td>\acos</td></tr>
+      <tr><td><code>ATAN</code></td><td><code>ATANGENS</code></td><td>arctan(x)</td><td>\atan</td></tr>
+      <tr><td><code>SINH</code></td><td>—</td><td>sinh(x)</td><td>\sinh</td></tr>
+      <tr><td><code>COSH</code></td><td>—</td><td>cosh(x)</td><td>\cosh</td></tr>
+      <tr><td><code>TANH</code></td><td>—</td><td>tanh(x)</td><td>\tanh</td></tr>
+      <tr><td><code>ASINH</code></td><td>—</td><td>arsinh(x)</td><td>\asinh</td></tr>
+      <tr><td><code>ACOSH</code></td><td>—</td><td>arcosh(x)</td><td>\acosh</td></tr>
+      <tr><td><code>ATANH</code></td><td>—</td><td>artanh(x)</td><td>\atanh</td></tr>
+      <tr><td><code>ABS</code></td><td>—</td><td>|x|</td><td>\abs</td></tr>
+      <tr><td><code>ROUND</code></td><td>—</td><td>round(x)</td><td>\round</td></tr>
+      <tr><td><code>TRUNCATE</code></td><td>—</td><td>⌊x⌋ (floor)</td><td>\floor</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="note amber">
+    <strong>Hinweis zu ABS, ROUND, TRUNCATE:</strong> Diese Funktionen sind nicht
+    überall differenzierbar — an Knicken und Sprüngen ist die symbolische Ableitung
+    undefiniert. Der Solver kann an solchen Stellen Probleme haben.
+    Falls möglich, glattere Alternativen verwenden.
+  </div>
+
+  <h3>Sonderfunktionen — binäre Expansion (neu in v2.10)</h3>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>CAS-Syntax</th><th>Expansion</th><th>Hinweis</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><code>SQR(x)</code></td>
+        <td><code>(x)^2</code></td>
+        <td>Quadrat — überall differenzierbar</td>
+      </tr>
+      <tr>
+        <td><code>MIN(a,b)</code></td>
+        <td><code>0.5*(a+b-ABS(a-b))</code></td>
+        <td>Knick bei a=b — Newton kann dort langsamer werden</td>
+      </tr>
+      <tr>
+        <td><code>MAX(a,b)</code></td>
+        <td><code>0.5*(a+b+ABS(a-b))</code></td>
+        <td>Knick bei a=b — Newton kann dort langsamer werden</td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="note blue">
+    <strong>MIN/MAX Alternative bei Newton-Problemen:</strong>
+    Bei Konvergenzproblemen an der Knickstelle glattere Approximation verwenden:
+    <code>MIN(a,b) ≈ 0.5*(a+b-SQRT((a-b)^2+0.001))</code>
+  </div>
+</section>
+
+<!-- Kommentare -->
+<section id="kommentare">
+  <h2>Kommentare</h2>
+
+  <div class="cas-example">
+    <div class="cas-header">Kommentar-Syntax</div>
+    <div class="cas-body">
+<span class="cas-cmt">// Zeilenkommentar — alles bis Zeilenende</span>
+
+<span class="cas-cmt">/* Blockkommentar
+   über mehrere Zeilen */</span>
+
+<span class="cas-var">RESULT</span> = <span class="cas-var">A</span> + <span class="cas-var">B</span>; <span class="cas-cmt">// Kommentar am Zeilenende</span>
+    </div>
+  </div>
+</section>
+
+<!-- Vollständiges Beispiel -->
+<section id="beispiel">
+  <h2>Vollständiges Beispiel — Düsensegment</h2>
+
+  <div class="cas-example">
+    <div class="cas-header">Beispiel: Isentrope Düsenströmung (vereinfacht)</div>
+    <div class="cas-body">
+<span class="cas-cmt">/* Isentrope Düsenströmung — vereinfachtes Segment
+   Unbekannte: PS, GAMMA, CP (3 Gleichungen, 3 Unbekannte) */</span>
+
+<span class="cas-cmt">// ── Prozedurendeklaration ─────────────────────────────</span>
+<span class="cas-kw">PROCEDURE</span> <span class="cas-var">pCPOFT</span>
+<span class="cas-kw">CALL:</span>    CPOFTNOZ;
+<span class="cas-kw">INPUTS:</span>  REAL, REAL, REAL;
+<span class="cas-kw">OUTPUTS:</span> REAL;
+<span class="cas-kw">END</span>
+
+<span class="cas-cmt">// ── Variablen ─────────────────────────────────────────</span>
+<span class="cas-var">NOZ.PT</span>   <span class="cas-kw">AS REAL</span> (<span class="cas-attr">Description:</span> <span class="cas-str">"Total pressure"</span>,    <span class="cas-attr">Lower:</span> <span class="cas-num">1000</span>,  <span class="cas-attr">Value:</span> <span class="cas-num">200000</span>, <span class="cas-attr">Upper:</span> <span class="cas-num">500000</span>, <span class="cas-attr">Spec:</span> Fixed, <span class="cas-attr">Unit:</span> <span class="cas-str">"Pa"</span>);
+<span class="cas-var">NOZ.TT</span>   <span class="cas-kw">AS REAL</span> (<span class="cas-attr">Description:</span> <span class="cas-str">"Total temperature"</span>, <span class="cas-attr">Lower:</span> <span class="cas-num">200</span>,   <span class="cas-attr">Value:</span> <span class="cas-num">800</span>,    <span class="cas-attr">Upper:</span> <span class="cas-num">2000</span>,   <span class="cas-attr">Spec:</span> Fixed, <span class="cas-attr">Unit:</span> <span class="cas-str">"K"</span>);
+<span class="cas-var">NOZ.FAR</span>  <span class="cas-kw">AS REAL</span> (<span class="cas-attr">Description:</span> <span class="cas-str">"Fuel air ratio"</span>,    <span class="cas-attr">Lower:</span> <span class="cas-num">0</span>,     <span class="cas-attr">Value:</span> <span class="cas-num">0.025</span>,  <span class="cas-attr">Upper:</span> <span class="cas-num">0.1</span>,    <span class="cas-attr">Spec:</span> Fixed, <span class="cas-attr">Unit:</span> <span class="cas-str">"none"</span>);
+<span class="cas-var">NOZ.WGR</span>  <span class="cas-kw">AS REAL</span> (<span class="cas-attr">Description:</span> <span class="cas-str">"Water gas ratio"</span>,   <span class="cas-attr">Lower:</span> <span class="cas-num">0</span>,     <span class="cas-attr">Value:</span> <span class="cas-num">0</span>,      <span class="cas-attr">Upper:</span> <span class="cas-num">0.1</span>,    <span class="cas-attr">Spec:</span> Fixed, <span class="cas-attr">Unit:</span> <span class="cas-str">"none"</span>);
+<span class="cas-var">NOZ.CP</span>   <span class="cas-kw">AS REAL</span> (<span class="cas-attr">Description:</span> <span class="cas-str">"Specific heat"</span>,     <span class="cas-attr">Lower:</span> <span class="cas-num">700</span>,   <span class="cas-attr">Value:</span> <span class="cas-num">1150</span>,   <span class="cas-attr">Upper:</span> <span class="cas-num">2000</span>,   <span class="cas-attr">Spec:</span> Free,  <span class="cas-attr">Unit:</span> <span class="cas-str">"J/kgK"</span>);
+<span class="cas-var">NOZ.GAMMA</span><span class="cas-kw">AS REAL</span> (<span class="cas-attr">Description:</span> <span class="cas-str">"Isentr. exponent"</span>,  <span class="cas-attr">Lower:</span> <span class="cas-num">1.0</span>,   <span class="cas-attr">Value:</span> <span class="cas-num">1.35</span>,   <span class="cas-attr">Upper:</span> <span class="cas-num">2.0</span>,    <span class="cas-attr">Spec:</span> Free,  <span class="cas-attr">Unit:</span> <span class="cas-str">"none"</span>);
+<span class="cas-var">NOZ.PS</span>   <span class="cas-kw">AS REAL</span> (<span class="cas-attr">Description:</span> <span class="cas-str">"Static pressure"</span>,  <span class="cas-attr">Lower:</span> <span class="cas-num">1000</span>,  <span class="cas-attr">Value:</span> <span class="cas-num">100000</span>, <span class="cas-attr">Upper:</span> <span class="cas-num">300000</span>, <span class="cas-attr">Spec:</span> Free,  <span class="cas-attr">Unit:</span> <span class="cas-str">"Pa"</span>);
+<span class="cas-var">NOZ.RGAS</span> <span class="cas-kw">AS REAL</span> (<span class="cas-attr">Description:</span> <span class="cas-str">"Gas constant"</span>,     <span class="cas-attr">Lower:</span> <span class="cas-num">200</span>,   <span class="cas-attr">Value:</span> <span class="cas-num">287</span>,    <span class="cas-attr">Upper:</span> <span class="cas-num">1000</span>,   <span class="cas-attr">Spec:</span> Fixed, <span class="cas-attr">Unit:</span> <span class="cas-str">"J/kgK"</span>);
+
+<span class="cas-cmt">// ── Gleichungen ───────────────────────────────────────</span>
+
+<span class="cas-cmt">// Gleichung 1: cp via Built-in Funktion</span>
+<span class="cas-kw">CALL</span>(<span class="cas-var">NOZ.CP</span>) = <span class="cas-var">pCPOFT</span>(<span class="cas-var">NOZ.TT</span>, <span class="cas-var">NOZ.WGR</span>, <span class="cas-var">NOZ.FAR</span>);
+
+<span class="cas-cmt">// Gleichung 2: Isentropenexponent aus cp und Rgas</span>
+<span class="cas-var">NOZ.GAMMA</span> = <span class="cas-var">NOZ.CP</span> / (<span class="cas-var">NOZ.CP</span> - <span class="cas-var">NOZ.RGAS</span>);
+
+<span class="cas-cmt">// Gleichung 3: Statischer Druck (isentrop, Ma=0.8 angenommen)</span>
+<span class="cas-var">NOZ.PS</span> = <span class="cas-var">NOZ.PT</span> * (<span class="cas-num">1</span> - ((<span class="cas-var">NOZ.GAMMA</span> - <span class="cas-num">1</span>) / <span class="cas-num">2</span>) * <span class="cas-num">0.64</span>) ^ (<span class="cas-var">NOZ.GAMMA</span> / (<span class="cas-var">NOZ.GAMMA</span> - <span class="cas-num">1</span>));
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <span>CMDSolver Docs · Parser Syntax · v2.5</span>
+  <span>
+    <a href="solver_options.html">← Solver Optionen</a> &nbsp;|&nbsp;
+    <a href="bifunctions_reference.html">BIfunctions →</a>
+  </span>
+</footer>
+</body>
+</html>

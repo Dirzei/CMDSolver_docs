@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CMDSolver Docs — Entwicklungsgeschichte & Bug Fix Log</title>
+<link rel="stylesheet" href="docs.css">
+<style>
+  /* ── Timeline ── */
+  .timeline { position: relative; padding-left: 2rem; }
+  .timeline::before {
+    content: ''; position: absolute; left: 0; top: 0; bottom: 0;
+    width: 2px; background: var(--border2);
+  }
+  .phase {
+    position: relative; margin-bottom: 2.5rem;
+    padding: 1.2rem 1.4rem;
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: 8px;
+  }
+  .phase::before {
+    content: ''; position: absolute; left: -2.5rem; top: 1.5rem;
+    width: 12px; height: 12px; border-radius: 50%;
+    background: var(--accent); border: 2px solid var(--bg);
+  }
+  .phase.new::before { background: var(--ok); }
+  .phase-label {
+    font-family: var(--mono); font-size: 10px; color: var(--text3);
+    letter-spacing: .12em; text-transform: uppercase; margin-bottom: .3rem;
+    display: flex; align-items: center; gap: .6rem;
+  }
+  .phase-title { font-size: 15px; font-weight: 600; color: #e8ecf4; margin-bottom: .7rem; }
+  .phase-body { font-size: 13px; color: var(--text2); line-height: 1.75; }
+  .phase-body ul { padding-left: 1.2rem; margin-top: .4rem; }
+  .phase-body li { margin-bottom: .3rem; }
+  .new-badge {
+    font-family: var(--mono); font-size: 10px; padding: 2px 7px;
+    border-radius: 3px; background: rgba(62,207,142,.1);
+    border: 1px solid rgba(62,207,142,.2); color: var(--ok);
+  }
+
+  /* ── Bug Log ── */
+  .bug-section-title {
+    font-family: var(--mono); font-size: 11px; color: var(--text3);
+    letter-spacing: .1em; text-transform: uppercase;
+    padding: .5rem 0; border-bottom: 1px solid var(--border);
+    margin: 1.5rem 0 1rem;
+  }
+  .bug-entry {
+    display: grid; grid-template-columns: 80px 1fr;
+    gap: 0; border-bottom: 1px solid var(--border);
+    padding: .9rem 0;
+  }
+  .bug-entry:last-child { border-bottom: none; }
+  .bug-id-col {
+    font-family: var(--mono); font-size: 11px;
+    padding-right: 1rem; padding-top: 2px;
+  }
+  .bug-id-col.critical { color: var(--err); }
+  .bug-id-col.parser   { color: var(--warn); }
+  .bug-id-col.thermo   { color: var(--accent); }
+  .bug-id-col.refactor { color: var(--purple); }
+  .bug-id-col.resolved { color: var(--ok); }
+  .bug-content {}
+  .bug-title-line { font-size: 13px; font-weight: 500; color: #e8ecf4; margin-bottom: .3rem; }
+  .bug-detail { font-size: 12.5px; color: var(--text2); line-height: 1.65; }
+  .status-chip {
+    display: inline-block; font-family: var(--mono); font-size: 10px;
+    padding: 1px 7px; border-radius: 3px; margin-left: .5rem;
+    vertical-align: middle;
+  }
+  .s-fixed    { background: rgba(62,207,142,.1);  color: var(--ok);   border: 1px solid rgba(62,207,142,.2); }
+  .s-open     { background: rgba(240,160,48,.1);  color: var(--warn); border: 1px solid rgba(240,160,48,.2); }
+  .s-resolved { background: rgba(74,158,255,.1);  color: var(--accent);border: 1px solid rgba(74,158,255,.2);}
+</style>
+</head>
+<body>
+
+<div class="doc-header">
+  <div class="breadcrumb">
+    <a href="index.html">CMDSolver Docs</a>
+    <span>›</span><span>Entwicklung &amp; Bugs</span>
+  </div>
+  <span class="doc-badge overview">Kapitel 8</span>
+</div>
+
+<div class="hero">
+  <div class="hero-sub">Kapitel 8</div>
+  <h1>Entwicklungsgeschichte<br>&amp; Bug Fix Log</h1>
+  <p class="tagline">
+    Alle Entwicklungsphasen von der monolithischen Ursprungsversion bis v2.5 —
+    und der vollständige Bug Fix Log mit allen behobenen und offenen Problemen.
+  </p>
+  <div class="hero-stats">
+    <div class="stat"><span class="stat-val">9</span><span class="stat-lbl">Phasen</span></div>
+    <div class="stat"><span class="stat-val">27+</span><span class="stat-lbl">Bugfixes</span></div>
+    <div class="stat"><span class="stat-val">4</span><span class="stat-lbl">Offene Punkte</span></div>
+  </div>
+</div>
+
+<nav>
+  <a href="#geschichte">Geschichte</a>
+  <a href="#buglog">Bug Fix Log</a>
+  <a href="#offen">Offene Punkte</a>
+</nav>
+
+<main>
+
+<!-- ── Entwicklungsgeschichte ── -->
+<section id="geschichte">
+  <h2>Entwicklungsgeschichte</h2>
+
+  <div class="timeline">
+
+    <div class="phase">
+      <div class="phase-label">Phase 1 — Ursprung</div>
+      <div class="phase-title">Monolithischer Solver</div>
+      <div class="phase-body">
+        <p>Die ursprüngliche Codebasis bestand aus einem einzigen <code>EqnSystem.java</code>
+        mit eingebettetem Parsing, Jacobi-Aufbau und Newton-Iteration. Der Solver verwendete
+        gedämpftes Newton ohne Liniensuche.</p>
+        <ul>
+          <li>GUI-gekoppelt: Solver-Code importierte Swing-Klassen (<code>HTMLDocument</code>, <code>JTextPane</code>)</li>
+          <li>Fixe Dämpfung (0.5–1.0) statt adaptiver Liniensuche</li>
+          <li>Alle Variablen per Name-String verfolgt — Aliases nicht getrennt</li>
+          <li>Keine Exception-Hierarchie — Fehler als Flags zurückgegeben</li>
+          <li>Broyden-Variante (<code>NewtonBroydenGMRES</code>) als separate Klasse mit GMRES</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="phase">
+      <div class="phase-label">Phase 2 — Strukturierung</div>
+      <div class="phase-title">Strukturelles Refactoring</div>
+      <div class="phase-body">
+        <p>Systematisches Refactoring trennte Verantwortlichkeiten in eigenständige Klassen:</p>
+        <ul>
+          <li><code>InitGuessApplier</code> aus <code>EqnSystem.run()</code> extrahiert</li>
+          <li><code>EqnSysReaderGui</code> vom Backend <code>EqnSysReader</code> getrennt</li>
+          <li><code>SolverLogger</code> als zentralisierte Logging-Fassade eingeführt</li>
+          <li>Exception-Hierarchie: <code>ParseException</code>, <code>SingularJacobianException</code>, <code>NaNException</code></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="phase">
+      <div class="phase-label">Phase 3 — Strategy Pattern</div>
+      <div class="phase-title">Strategy Pattern und neue Solver</div>
+      <div class="phase-body">
+        <p>Der Solver wurde mit dem Strategy-Pattern umgeschrieben:</p>
+        <ul>
+          <li>Interface <code>SolverStrategy</code> mit <code>solve(SystemData, boolean)</code></li>
+          <li>Neue Solver: NewtonArmijoSolver, LevenbergMarquardtSolver, BroydenSolver, HomotopySolver</li>
+          <li><code>AbstractSolver</code> liefert gemeinsame Infrastruktur (Iteration, Jacobi-Aufbau)</li>
+          <li><code>SolverConfig</code> (Builder-Pattern) kapselt alle Parameter</li>
+          <li><code>SolverFactory</code> mappt <code>SolverType</code> → <code>SolverStrategy</code></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="phase">
+      <div class="phase-label">Phase 4 — GSPAR</div>
+      <div class="phase-title">GSPAR Sparse-LU Solver Port</div>
+      <div class="phase-body">
+        <p>Der 3.259-zeilige Fortran GSPAR-Code (Grund, WIAS Berlin, ~1994) wurde nach Java
+        portiert in vier neue Klassen: <code>SparseMatrix</code>, <code>GSPARWorkspace</code>,
+        <code>GSPAR</code>, <code>GSPARPseudoCode</code>. Sechs Bugs aus dem originalen Fortran
+        (vier von Borchardt dokumentiert, zwei unabhängig gefunden) wurden beim Portieren behoben.
+        Zwei neue GSPAR-basierte Solver: <code>GSPARSolver</code> und <code>NewtonArmijoGSPARSolver</code>.</p>
+      </div>
+    </div>
+
+    <div class="phase">
+      <div class="phase-label">Phase 5 — Stabilisierung</div>
+      <div class="phase-title">Bug-Fixing und Stabilisierung</div>
+      <div class="phase-body">
+        <p>Über 20 Bugs wurden identifiziert und behoben. Die kritischsten:
+        BF-01 (InitGuessApplier HashMap.replace), BF-02 (evaluateF-Timing),
+        BF-03 (Jacobi Race Condition), BF-04 (Variable Scaling), BF-05 (GSPAR DLSOLA).
+        Parallel: BroydenGSPARSolver, adaptive Reset/Checkpoint Strategie.</p>
+      </div>
+    </div>
+
+    <div class="phase">
+      <div class="phase-label">Phase 6 — INITIALIZE Fix</div>
+      <div class="phase-title">INITIALIZE-Block Fix · BatchRunner · InitialValueAnalyzer</div>
+      <div class="phase-body">
+        <p>Kritischer Bug: <code>parseStructIfCondition()</code> extrahierte Variablennamen
+        mit <code>line.split("[.]")</code> — bei <code>PARTM.F060.PT.SPEC</code> ergab das 4 Teile
+        statt 2, alle IF(VAR.SPEC==FIXED) Blöcke wurden übersprungen. Fix: <code>lastIndexOf(".spec")</code>.
+        Nach dem Fix konvergierte NozzleSystem_4_fixed in 6 Iterationen.</p>
+        <ul>
+          <li>Neu: <code>InitialValueAnalyzer</code> (<code>-DI</code>) für Startwertoptimierung</li>
+          <li>Neu: Batch-Modus via CSV-Input mit Warm-Start (<code>BatchRunner</code>)</li>
+          <li>Neu: <code>PhysicalProjector</code> respektiert User-Bounds über physikalische Defaults</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="phase new">
+      <div class="phase-label"><span class="new-badge">NEU</span> Phase 7 — v2.3</div>
+      <div class="phase-title">SolverAPI · Logging-Bereinigung · Javadoc · ELSEIF</div>
+      <div class="phase-body">
+        <ul>
+          <li><strong>SolverAPI</strong>: programmatischer Einstiegspunkt ohne main() — Method-Chaining</li>
+          <li><strong>SolverResult</strong>: Ergebnisobjekt mit getValue(), writeToFile(), getParseErrors()</li>
+          <li><strong>Logging</strong>: 128× System.out → SolverLogger in EqnData, EqnSysReader, SystemData</li>
+          <li><strong>GUI-Dependency</strong> entfernt: ComponentHelper.isNumeric() inline in EqnSysReader/Condition</li>
+          <li><strong>Javadoc</strong>: EqnData (51 Einträge), SystemData (57), Condition</li>
+          <li><strong>ELSEIF-Expansion</strong>: Pre-Processing expandiert ELSEIF in verschachtelte IF/ELSE</li>
+          <li><strong>Bugfix B27/B28</strong>: lastIndexOf für Mehrfach-Punktnamen im INITIALIZE-Block</li>
+          <li><strong>FUNC_MAP</strong> (erste Version): if-Kette im Funktionsnamenmapping</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="phase new">
+      <div class="phase-label"><span class="new-badge">NEU</span> Phase 8 — v2.4</div>
+      <div class="phase-title">ParseError-Infrastruktur</div>
+      <div class="phase-body">
+        <ul>
+          <li><strong>ParseError.java</strong>: typisierter Fehler mit Severity (ERROR/WARNING/INFO), Zeilennummer, Kontext</li>
+          <li><strong>EqnSysReaderDataBlock</strong>: addError()/addWarning()/addInfo() statt nur setError(true)</li>
+          <li><strong>SystemData</strong>: getParseErrors(), getErrors(), getWarnings(), hasErrors(), hasWarnings(), formatParseErrors()</li>
+          <li><strong>SolverResult</strong>: getParseErrors(), hasParseErrors() — ParseErrors bei failure() durchgereicht</li>
+          <li><strong>SolverAPI</strong>: failure() gibt ParseError-Liste an SolverResult weiter</li>
+          <li>28 setError(true)-Stellen → addError(lCount, message, line)</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="phase new">
+      <div class="phase-label"><span class="new-badge">NEU</span> Phase 9 — v2.5</div>
+      <div class="phase-title">LinkedHashMap Refactoring · Output-Writer</div>
+      <div class="phase-body">
+        <ul>
+          <li><strong>FUNC_MAP</strong> (LinkedHashMap): 50-zeilige if-Kette → statische LinkedHashMap, Reihenfolge garantiert</li>
+          <li><strong>FUNC_SPLIT_REGEX</strong>: automatisch aus FUNC_MAP generiert — neue Funktion = 1 Zeile</li>
+          <li><strong>Output-Writer</strong>: writeToWriter(Writer) für GUI/JTextArea, formatAsString() für programmatische Nutzung</li>
+          <li><strong>writeFormatted()</strong>: gemeinsame Formatierungslogik für alle write-Methoden</li>
+          <li>Bugfix: isCallEqn() nach FUNC_MAP-Einbau wiederhergestellt</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="phase new">
+      <div class="phase-label"><span class="new-badge">NEU</span> Phase 10 — v2.6 bis v2.10</div>
+      <div class="phase-title">Bugfixes · Javadoc · CAS-Erweiterungen · GUI-Vorbereitung</div>
+      <div class="phase-body">
+        <ul>
+          <li><strong>v2.6 — Bugfix FUNC_MAP Wortgrenzen:</strong> Regex-Substitution verhindert Korrumpierung von Variablennamen die Funktionsnamen enthalten (z.B. EXPANDER, LNFAR)</li>
+          <li><strong>v2.7 — Javadoc:</strong> Alle 14 undokumentierten Klassen vollständig dokumentiert (Variable, VarDef, ProcDef, ForDef, DerivResult, OutputVariable, DerivativeMatrix, MatrixSimple, StructCondition, SolverException, EqnSysReaderDataBlock, BIfunctions, ThermoConstants, EqnSystem)</li>
+          <li><strong>v2.8 — R-07/R-08/R-13:</strong> Inline-Kommentare in CAS-Gleichungszeilen, SQR(x)→x² Expansion, relatives Abbruchkriterium toleranceRelative</li>
+          <li><strong>v2.9 — GUI-Vorbereitung:</strong> SolverAPI.addLogHandler() für JTextArea-Integration, SolverResultTableModel für JTable-Anzeige</li>
+          <li><strong>v2.10 — Mittelfristige Roadmap:</strong> Homotopie Tangenten-Prädiktor (R-03), MIN/MAX Expansion (R-06), INTEGERPARAMETER (R-09), BatchRunner Warm-Start verifiziert (R-14), SolverResultTableModel befüllt (R-20), setToleranceRelative() (R-21)</li>
+        </ul>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ── Bug Fix Log ── -->
+<section id="buglog">
+  <h2>Bug Fix Log</h2>
+
+  <div class="note blue">
+    IDs BF-01 bis BF-12 stammen aus der ursprünglichen Dokumentation (Phasen 1–6).
+    B27, B28 und neuere wurden in v2.3–v2.5 behoben. IDs ohne Präfix sind interne Bezeichnungen.
+  </div>
+
+  <!-- Kritische Bugs -->
+  <div class="bug-section-title">🔴 Kritische Bugs (BF-01 bis BF-05)</div>
+
+  <div class="bug-entry">
+    <div class="bug-id-col critical">BF-01</div>
+    <div class="bug-content">
+      <div class="bug-title-line">InitGuessApplier — Falscher Map-Key (Name statt Alias) <span class="status-chip s-fixed">FIXED</span></div>
+      <div class="bug-detail">
+        Die values-HashMap verwendet Variable-Aliases (z.B. <code>\x_0</code>) als Keys, nicht Variablennamen.
+        <code>InitGuessApplier</code> rief <code>values.replace(varName, value)</code> auf — da varName nie ein Map-Key ist,
+        tat replace() lautlos nichts. Alle INIT-Block-Werte wurden ignoriert.
+        <br><strong>Fix:</strong> <code>values.replace(varAlias, value)</code>
+      </div>
+    </div>
+  </div>
+
+  <div class="bug-entry">
+    <div class="bug-id-col critical">BF-02</div>
+    <div class="bug-content">
+      <div class="bug-title-line">evaluateF() nach statt vor applyStep() aufgerufen <span class="status-chip s-fixed">FIXED</span></div>
+      <div class="bug-detail">
+        Das Residuum fsum wurde aus dem alten f-Vektor (vor dem Schritt) berechnet, sodass der
+        Konvergenzmonitor eingefroren wirkte.
+        <br><strong>Fix:</strong> evaluateF() wird jetzt nach jedem applyStep() aufgerufen.
+      </div>
+    </div>
+  </div>
+
+  <div class="bug-entry">
+    <div class="bug-id-col critical">BF-03</div>
+    <div class="bug-content">
+      <div class="bug-title-line">Jacobi-Parallelisierung Race Condition <span class="status-chip s-fixed">FIXED (deaktiviert)</span></div>
+      <div class="bug-detail">
+        <code>MatrixSimple.setValueAt()</code> ist nicht thread-safe. Parallele Jacobi-Konstruktion
+        (Schwellwert n &gt; 50) verursachte stille Datenverfälschung — non-deterministisch.
+        <br><strong>Fix:</strong> <code>PARALLEL_JACOBI_THRESHOLD = 99999</code> (deaktiviert).
+        Re-Aktivierung erfordert thread-safe MatrixSimple.
+      </div>
+    </div>
+  </div>
+
+  <div class="bug-entry">
+    <div class="bug-id-col critical">BF-04</div>
+    <div class="bug-content">
+      <div class="bug-title-line">Variable Scaling auf values-Map angewendet <span class="status-chip s-fixed">FIXED (deaktiviert)</span></div>
+      <div class="bug-detail">
+        <code>VariableScaler.scaleValues()</code> modifizierte dieselbe values-Map die evaluateF() liest.
+        Thermodynamische Funktionen empfingen skalierte Werte (p≈1 Pa statt 100.000 Pa) → sofort NaN.
+        <br><strong>Fix:</strong> scaleValues()-Aufruf entfernt. Skalierung erfordert vollständige Architektur-Überarbeitung.
+      </div>
+    </div>
+  </div>
+
+  <div class="bug-entry">
+    <div class="bug-id-col critical">BF-05</div>
+    <div class="bug-content">
+      <div class="bug-title-line">GSPAR DLSOLA — Rückwärtssubstitution überschrieben <span class="status-chip s-fixed">FIXED</span></div>
+      <div class="bug-detail">
+        Originales Fortran DLSOLA hatte <code>X(I)=B(I)</code> nach Aufruf von DLSOLK,
+        das Rückwärtssubstitutionsergebnis mit dem Vorwärtssubstitutionsergebnis überschreib.
+        <br><strong>Fix:</strong> Fehlerhafte Kopieranweisung entfernt.
+      </div>
+    </div>
+  </div>
+
+  <!-- Parser Bugs -->
+  <div class="bug-section-title">🟡 Parser Bugs (BF-06 bis BF-09, B27–B28)</div>
+
+  <div class="bug-entry">
+    <div class="bug-id-col parser">BF-06</div>
+    <div class="bug-content">
+      <div class="bug-title-line">Array-Variable: False Positive bei Unit-Annotation <span class="status-chip s-fixed">FIXED</span></div>
+      <div class="bug-detail">
+        <code>EqnSysReader</code> prüfte <code>line.contains("[")</code> auf der gesamten Zeile —
+        Unit-Annotationen wie <code>AS REAL(Unit:[m/s])</code> lösten fälschlich Array-Erkennung aus.
+        <br><strong>Fix:</strong> Nur den Teil vor " AS " prüfen.
+      </div>
+    </div>
+  </div>
+
+  <div class="bug-entry">
+    <div class="bug-id-col parser">BF-07</div>
+    <div class="bug-content">
+      <div class="bug-title-line">ATANGENS: Tippfehler im Token-Split-Pattern <span class="status-chip s-fixed">FIXED</span></div>
+      <div class="bug-detail">
+        <code>setEquation()</code> verwendete "ATANGES" (fehlendes N) im Regex-Split-Pattern.
+        Gleichungen mit ATANGENS wurden falsch tokenisiert.
+        <br><strong>Fix:</strong> An allen 3 Vorkommen zu "ATANGENS" korrigiert.
+      </div>
+    </div>
+  </div>
+
+  <div class="bug-entry">
+    <div class="bug-id-col parser">BF-08</div>
+    <div class="bug-content">
+      <div class="bug-title-line">initTmpProcDef — NullPointerException <span class="status-chip s-fixed">FIXED</span></div>
+      <div class="bug-detail">
+        <code>dataBlock.getTmpProcDef().setProcName(name)</code> — <code>getTmpProcDef()</code>
+        gab null zurück wenn vor dem ersten PROCEDURE-Block aufgerufen.
+        <br><strong>Fix:</strong> Neue Methode <code>initTmpProcDef(String name)</code>.
+      </div>
+    </div>
+  </div>
+
+  <div class="bug-entry">
+    <div class="bug-id-col parser">BF-09</div>
+    <div class="bug-content">
+      <div class="bug-title-line">finaliseParsedData — Doppelter finally-Block (Kompilierfehler) <span class="status-chip s-fixed">FIXED</span></div>
+      <div class="bug-detail">
+        Nach Inlining der finaliseParsedData()-Logik blieb ein verwaister zweiter finally-Block
+        außerhalb der umschließenden Methode — Kompilierfehler.
+        <br><strong>Fix:</strong> Entfernt.
+      </div>
+    </div>
+  </div>
+
+  <div class="bug-entry">
+    <div class="bug-id-col parser">B9</div>
+    <div class="bug-content">
+      <div class="bug-title-line">INITIALIZE StructConditional mit Punkt-Notation (kritisch) <span class="status-chip s-fixed">FIXED Phase 6</span></div>
+      <div class="bug-detail">
+        <code>parseStructIfCondition()</code> extrahierte Variablennamen mit <code>line.split("[.]")</code>
+        und prüfte length == 2. Bei <code>PARTM.F060.PT.SPEC==FIXED</code> ergab der Split 4 Teile →
+        alle 55 IF(VAR.SPEC==FIXED) Blöcke im INITIALIZE-Abschnitt wurden übersprungen.
+        NozzleSystem_4_fixed konvergierte nicht.
+        <br><strong>Fix:</strong> <code>lastIndexOf(".spec")</code> extrahiert den vollen Variablennamen.
+        Nach Fix: 6 Iterationen bis Konvergenz.
+      </div>
+    </div>
+  </div>
+
+  <div class="bug-entry">
+    <div class="bug-id-col parser">B10</div>
+    <div class="bug-content">
+      <div class="bug-title-line">initStructSwitches nur auf eqnData, nicht initData <span class="status-chip s-fixed">FIXED Phase 6</span></div>
+      <div class="bug-detail">
+        <code>initStructSwitches()</code> setzte Schalter nur für <code>getAllEqnData()</code>,
+        nicht für <code>getInitData()</code> (separate Liste).
+        <br><strong>Fix:</strong> Beide Listen werden durchlaufen. Außerdem muss initStructSwitches
+        vor InitGuessApplier aufgerufen werden.
+      </div>
+    </div>
+  </div>
+
+  <div class="bug-entry">
+    <div class="bug-id-col parser">B27</div>
+    <div class="bug-content">
+      <div class="bug-title-line">INITIALIZE: Bounds für Mehrfach-Punktnamen falsch extrahiert <span class="status-chip s-fixed">FIXED v2.3</span></div>
+      <div class="bug-detail">
+        <code>PARTM.F060.PS.Upper = ...</code> wurde falsch geparst — <code>split(".")</code> auf
+        <code>PARTM.F060.PS.Upper</code> ergab <code>parts[0] = "PARTM"</code> statt <code>"PARTM.F060.PS"</code>.
+        <br><strong>Fix:</strong> <code>lastIndexOf('.')</code> extrahiert alles vor dem letzten Punkt.
+      </div>
+    </div>
+  </div>
+
+  <div class="bug-entry">
+    <div class="bug-id-col parser">B28</div>
+    <div class="bug-content">
+      <div class="bug-title-line">INITIALIZE: Falsche Warnung bei normalem Mehrfach-Punktnamen <span class="status-chip s-fixed">FIXED v2.3</span></div>
+      <div class="bug-detail">
+        <code>PARTM.F060.PS = 100000;</code> im INITIALIZE-Block löste eine Warnung aus
+        weil der Code jeden Namen mit Punkt als potentiellen .Lower/.Upper-Versuch interpretierte.
+        <br><strong>Fix:</strong> Warnung nur ausgeben wenn <code>parts.length == 2</code>
+        (genau ein Punkt im Namen).
+      </div>
+    </div>
+  </div>
+
+  <!-- Thermodynamische Bugs -->
+  <div class="bug-section-title">🔵 Thermodynamische Bugs (BF-10 bis BF-12, B11)</div>
+
+  <div class="bug-entry">
+    <div class="bug-id-col thermo">BF-10</div>
+    <div class="bug-content">
+      <div class="bug-title-line">BIfunctions — Falscher Exponent im Düsen-Flächenverhältnis <span class="status-chip s-fixed">FIXED</span></div>
+      <div class="bug-detail">
+        <code>Math.pow(fac, (-fac))</code> verwendete <code>fac = 1 + (κ−1)/2·Ma²</code> als Exponent
+        statt des isentropen Exponenten <code>fac1 = (κ+1)/(2(κ−1))</code>.
+        <br><strong>Fix:</strong> <code>Math.pow(fac, (-fac1))</code>
+      </div>
+    </div>
+  </div>
+
+  <div class="bug-entry">
+    <div class="bug-id-col thermo">BF-11</div>
+    <div class="bug-content">
+      <div class="bug-title-line">ISA-Drucktabelle: Ziffernvertauscher <span class="status-chip s-fixed">FIXED</span></div>
+      <div class="bug-detail">
+        ISA-Druck bei ~20 km Höhe war 5474.583 statt 5474.853 Pa (Ziffernvertauscher).
+      </div>
+    </div>
+  </div>
+
+  <div class="bug-entry">
+    <div class="bug-id-col thermo">BF-12</div>
+    <div class="bug-content">
+      <div class="bug-title-line">ISA: Initialwert des Schichtindex <span class="status-chip s-fixed">FIXED</span></div>
+      <div class="bug-detail">
+        <code>int index = 1</code> verursachte die Verwendung der falschen Atmosphärenschicht
+        wenn die Höhe außerhalb des Tabellenbereichs lag.
+        <br><strong>Fix:</strong> <code>index = -1</code> (kein Default).
+      </div>
+    </div>
+  </div>
+
+  <div class="bug-entry">
+    <div class="bug-id-col thermo">B11</div>
+    <div class="bug-content">
+      <div class="bug-title-line">PhysicalProjector: lo=0 projiziert auf exakt 0 <span class="status-chip s-fixed">FIXED Phase 6</span></div>
+      <div class="bug-detail">
+        Bei User-Bound Lower=0 wurde auf 0 projiziert — für Variablen die im Nenner stehen
+        (CF, FF, RE) ist das singulär.
+        <br><strong>Fix:</strong> Physikalisches Minimum als Fallback; nie exakt 0.
+      </div>
+    </div>
+  </div>
+
+  <!-- Refactoring Bugs -->
+  <div class="bug-section-title">🟣 Refactoring-Bugs (v2.3–v2.5)</div>
+
+  <div class="bug-entry">
+    <div class="bug-id-col refactor">v2.3</div>
+    <div class="bug-content">
+      <div class="bug-title-line">EqnData: Javadoc innerhalb statt vor der Klasse <span class="status-chip s-fixed">FIXED v2.5</span></div>
+      <div class="bug-detail">
+        Klassen-Javadoc nach <code>public class EqnData {</code> eingefügt — Eclipse sah nested class.
+        Symptom: "The nested type EqnData cannot hide an enclosing type" + 150+ Folgefehler.
+        <br><strong>Fix:</strong> Javadoc vor <code>public class</code> verschoben.
+        <br><strong>Prüfbefehl:</strong> <code>grep -c "^public class EqnData" EqnData.java</code> → muss 1 ergeben.
+      </div>
+    </div>
+  </div>
+
+  <div class="bug-entry">
+    <div class="bug-id-col refactor">v2.3</div>
+    <div class="bug-content">
+      <div class="bug-title-line">EqnSysReader: Doppelter try-finally Block <span class="status-chip s-fixed">FIXED v2.5</span></div>
+      <div class="bug-detail">
+        Beim Refactoring von <code>parseEquationSystemFile()</code> blieb ein verwaister zweiter
+        finally-Block außerhalb des neuen Scopes.
+        Symptom: "stream cannot be resolved" + "Syntax error on token 'finally'".
+        <br><strong>Fix:</strong> Zweiten finally-Block entfernt.
+        <br><strong>Prüfbefehl:</strong> <code>grep -c "finally" EqnSysReader.java</code> → muss 1 ergeben.
+      </div>
+    </div>
+  </div>
+
+  <div class="bug-entry">
+    <div class="bug-id-col refactor">v2.5</div>
+    <div class="bug-content">
+      <div class="bug-title-line">isCallEqn() beim FUNC_MAP-Einbau entfernt <span class="status-chip s-fixed">FIXED v2.5</span></div>
+      <div class="bug-detail">
+        Beim Einfügen der statischen FUNC_MAP stand die Einfügestelle exakt an der Position
+        von <code>isCallEqn()</code> — die Methode wurde mitgelöscht.
+        Symptom: "isCallEqn() is undefined" in 15 Klassen.
+        <br><strong>Fix:</strong> Methode wiederhergestellt.
+      </div>
+    </div>
+  </div>
+
+  <!-- GSPAR Bugs -->
+  <div class="bug-section-title">🔵 GSPAR Fortran-Port Bugs (Intern, Phase 4)</div>
+
+  <div class="tbl-wrap">
+  <table>
+    <thead>
+      <tr><th>#</th><th>Routine</th><th>Original-Bug</th><th>Fix</th><th>Quelle</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>1</td><td><code>DLDPCY</code></td>
+        <td><code>j+(icr(j)+1)*2+1</code></td>
+        <td><code>+2</code></td>
+        <td>Borchardt 01.07.1998</td>
+      </tr>
+      <tr>
+        <td>2</td><td><code>DLLUGE</code></td>
+        <td><code>NWOR ≥ 10·N+4·MA</code></td>
+        <td><code>11·N+4·MA</code></td>
+        <td>Borchardt 10.06.1996</td>
+      </tr>
+      <tr>
+        <td>3</td><td><code>DLLUGB</code></td>
+        <td><code>KOSTEN = N·N</code></td>
+        <td><code>Integer.MAX_VALUE</code></td>
+        <td>Borchardt 10.06.1996</td>
+      </tr>
+      <tr>
+        <td>4</td><td><code>DLLUGE IPAR(9)</code></td>
+        <td><code>10·N+4·MLU</code></td>
+        <td><code>11·N+4·MLU</code></td>
+        <td>Borchardt 10.06.1996</td>
+      </tr>
+      <tr>
+        <td>5</td><td><code>DLSOLA</code></td>
+        <td><code>X(I)=B(I)</code> nach DLSOLK überschrieb Rückwärtssubstitution</td>
+        <td>Entfernt</td>
+        <td>Unabhängig</td>
+      </tr>
+      <tr>
+        <td>6</td><td><code>DLNORI</code></td>
+        <td>Fehlender <code>JE≠0</code> Guard vor <code>ILU[JE]</code></td>
+        <td>While-Loop Guard hinzugefügt</td>
+        <td>Unabhängig</td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<!-- ── Offene Punkte ── -->
+<section id="offen">
+  <h2>Offene Punkte (Open Issues)</h2>
+
+  <div class="tbl-wrap">
+  <table>
+    <thead>
+      <tr><th>ID</th><th>Thema</th><th>Status</th><th>Beschreibung</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>OI-01</td>
+        <td>Variable Scaling</td>
+        <td><span class="status-chip s-open">OFFEN</span></td>
+        <td>-SC:DIAGONAL und -SC:UNIT_INTERVAL sind geparst aber deaktiviert.
+        Skalierung muss konsistent durch gesamten Solve-Loop angewendet werden:
+        values-Map, Jacobi, Liniensuche, thermodynamische Funktionen.
+        Transformer-Pattern um evaluateF() ist die korrekte Lösung.</td>
+      </tr>
+      <tr>
+        <td>OI-02</td>
+        <td>GMRES Linearer Solver</td>
+        <td><span class="status-chip s-open">OFFEN</span></td>
+        <td>GMRES als innerer linearer Solver für stabilen Broyden-Betrieb bei
+        schlecht konditionierten Systemen. Pluggable Linear Solver Interface
+        ist bereits angelegt — GMRES würde als Alternative zu Gauß-Jordan
+        und GSPAR in computeStep() eingesetzt.</td>
+      </tr>
+      <tr>
+        <td>OI-03</td>
+        <td>Block-Strukturierte Hierarchische Variablennamen</td>
+        <td><span class="status-chip s-open">OFFEN</span></td>
+        <td>Parser unterstützt aktuell flache Variablennamen. Infrastruktur für
+        Punkt-Notation ist teilweise vorhanden. Offene Arbeit: LEX-basierter Parser
+        für SECTION…END Blöcke, automatisches Variablen-Präfixing, Block-trianguläre
+        Dekomposition (Tarjan SCC).</td>
+      </tr>
+      <tr>
+        <td>OI-04</td>
+        <td>Jacobi-Parallelisierung</td>
+        <td><span class="status-chip s-open">OFFEN</span></td>
+        <td>PARALLEL_JACOBI_THRESHOLD = 99999 deaktiviert parallel Jacobi-Aufbau.
+        Re-Aktivierung erfordert thread-safe MatrixSimple (per-row lokale Arrays
+        oder ConcurrentHashMap-basierter Speicher).</td>
+      </tr>
+      <tr>
+        <td>OI-05</td>
+        <td>Parser Error Reporting</td>
+        <td><span class="status-chip s-resolved">RESOLVED v2.4</span></td>
+        <td>ParseError-Infrastruktur implementiert: Severity, Zeilennummer, Kontext.
+        28 setError(true)-Stellen → addError(lCount, message, line).</td>
+      </tr>
+      <tr>
+        <td>OI-06</td>
+        <td>Broyden Quasi-Newton</td>
+        <td><span class="status-chip s-resolved">RESOLVED Phase 5</span></td>
+        <td>Adaptive Checkpoint/Rollback Strategie: bei κ > 10¹⁰ vollständiger
+        Jacobi-Neuaufbau. BroydenGSPARSolver als schnellste Variante.</td>
+      </tr>
+      <tr>
+        <td>OI-07</td>
+        <td>GSPAR Real-World Test</td>
+        <td><span class="status-chip s-resolved">RESOLVED v2.3</span></td>
+        <td>NozzleSystem_4_fixed.cas (303 Gleichungen) läuft mit NEWTON_SPARSE_ARMIJO.
+        GSPAR-Port ist produktionsreif.</td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <span>CMDSolver Docs · Entwicklungsgeschichte &amp; Bug Fix Log · v2.5</span>
+  <span>
+    <a href="lessons_learned.html">← Lessons Learned</a> &nbsp;|&nbsp;
+    <a href="index.html">← Übersicht</a>
+  </span>
+</footer>
+</body>
+</html>

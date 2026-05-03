@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CMDSolver Docs — Newton-Sparse+Armijo</title>
+<link rel="stylesheet" href="docs.css">
+</head>
+<body>
+
+<div class="doc-header">
+  <div class="breadcrumb">
+    <a href="index.html">CMDSolver Docs</a>
+    <span>›</span><span>Solver</span>
+    <span>›</span><span>Newton-Sparse+Armijo</span>
+  </div>
+  <span class="doc-badge solver">SolverType.NEWTON_SPARSE_ARMIJO</span>
+</div>
+
+<div class="hero">
+  <div class="hero-sub">Solver 3 von 7</div>
+  <h1>Newton-GSPAR<br>Sparse LU + Armijo</h1>
+  <p class="tagline">
+    Die beste Kombination: GSPAR Sparse-LU für Geschwindigkeit,
+    Armijo-Backtracking für Robustheit. Empfohlener Standard-Solver für
+    große Systeme. ★ Empfehlung
+  </p>
+  <div class="hero-stats">
+    <div class="stat"><span class="stat-val">3</span><span class="stat-lbl">Iter (SimpleSystem)</span></div>
+    <div class="stat"><span class="stat-val">3.16e-11</span><span class="stat-lbl">fsum</span></div>
+    <div class="stat"><span class="stat-val">~30ms</span><span class="stat-lbl">Laufzeit</span></div>
+    <div class="stat"><span class="stat-val">Sparse+Armijo</span><span class="stat-lbl">Jacobi-Typ</span></div>
+  </div>
+</div>
+
+<nav>
+  <a href="#theorie">Theorie</a>
+  <a href="#pseudocode">Pseudocode</a>
+  <a href="#dateien">Dateien</a>
+  <a href="#parameter">Parameter</a>
+  <a href="#verhalten">Verhalten</a>
+</nav>
+
+<main>
+
+<section id="theorie">
+  <h2>Theoretischer Kontext</h2>
+
+  <p>
+    NEWTON_SPARSE_ARMIJO kombiniert die Stärken von NEWTON_SPARSE und NEWTON_ARMIJO:
+  </p>
+
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>Komponente</th><th>Von</th><th>Vorteil</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>GSPAR Sparse-LU</td>
+        <td>NEWTON_SPARSE</td>
+        <td>O(nnz) statt O(n³) — bis zu 10× schneller bei großen Systemen</td>
+      </tr>
+      <tr>
+        <td>Armijo-Liniensuche</td>
+        <td>NEWTON_ARMIJO</td>
+        <td>Schrittweitendämpfung — vergrößerter Einzugsbereich</td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="math-block">
+    <div class="eq"><span class="hi">Schritt k:</span></div>
+    <div class="eq">  Δxₖ ← gspar_solve(J, −F(x))    <span class="cmt">← Sparse-LU, kein J⁻¹</span></div>
+    <div class="eq">  α ← armijo_search(x, Δx, F)     <span class="cmt">← Backtracking</span></div>
+    <div class="eq">  xₖ₊₁ = xₖ + α · Δxₖ</div>
+    <div class="eq"></div>
+    <div class="eq"><span class="hi">Vorteil gegenüber NEWTON_ARMIJO:</span></div>
+    <div class="eq">  Kein J⁻¹ berechnen — direkte LU-Lösung ist stabiler und schneller</div>
+  </div>
+
+  <div class="note green">
+    <strong>Warum dieser Solver als Standard empfohlen wird:</strong>
+    Er vereint quadratische Konvergenz (Newton), Geschwindigkeit (Sparse-LU)
+    und Robustheit (Armijo). Für die meisten thermodynamischen Systeme in
+    CMDSolver ist dies die optimale Wahl.
+  </div>
+</section>
+
+<section id="pseudocode">
+  <h2>Pseudocode</h2>
+<pre><span class="kw">function</span> <span class="fn">newton_sparse_armijo_solve</span>(F, x₀, tol, maxIter):
+    x ← InitGuessApplier(x₀)
+    f0sq_init ← ||F(x₀)||²    <span class="cmt">// für relative Konvergenz</span>
+
+    <span class="kw">for</span> k = 0 <span class="kw">to</span> maxIter:
+        J ← buildJacobian(F, x)        <span class="cmt">// parallel</span>
+        f ← F(x)
+
+        <span class="cmt">// ── GSPAR Sparse-LU ──</span>
+        Δx ← gspar_solve(J, −f)        <span class="cmt">// kein J⁻¹</span>
+
+        <span class="cmt">// ── Armijo-Backtracking ──</span>
+        α ← 1.0
+        f0sq ← ||f||²
+        <span class="kw">while</span> α > α_min:
+            x_try ← x + α · Δx
+            <span class="kw">if</span> ||F(x_try)||² ≤ f0sq + c₁·α·(−f0sq):
+                <span class="kw">break</span>
+            α ← α · 0.5
+
+        x ← x + α · Δx
+        x ← PhysicalProjector(x)
+
+        fsum ← Σ|Fᵢ(x)|
+        <span class="kw">if</span> fsum &lt; tol: <span class="kw">return</span> CONVERGED, x, k, fsum
+
+    <span class="kw">return</span> NOT_CONVERGED, x, maxIter, fsum</pre>
+</section>
+
+<section id="dateien">
+  <h2>Wichtige Dateien</h2>
+  <ul class="file-list">
+    <li>
+      <span class="file-icon">KERN</span>
+      <div class="file-desc">
+        <strong>NewtonArmijoGSPARSolver.java</strong>
+        Erbt von GSPARSolver, überschreibt <code>computeStep()</code> um
+        Armijo-Backtracking nach der GSPAR-LU-Lösung hinzuzufügen.
+        <br><code>apps/eqnParser/solver/NewtonArmijoGSPARSolver.java</code>
+      </div>
+    </li>
+    <li>
+      <span class="file-icon">BASIS</span>
+      <div class="file-desc">
+        <strong>GSPARSolver.java</strong>
+        Basisklasse — stellt GSPAR Sparse-LU bereit.
+        <br><code>apps/eqnParser/solver/GSPARSolver.java</code>
+      </div>
+    </li>
+    <li>
+      <span class="file-icon">SPARSE</span>
+      <div class="file-desc">
+        <strong>GSPAR.java</strong>
+        Sparse-LU Implementierung (CSR-Format, MIN_FILL-Pivotierung).
+        <br><code>apps/eqnParser/solver/gspar/GSPAR.java</code>
+      </div>
+    </li>
+  </ul>
+</section>
+
+<section id="parameter">
+  <h2>Parameter</h2>
+  <pre>java CASSolver -I:model.cas -S:NEWTON_SPARSE_ARMIJO</pre>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>Parameter</th><th>Default</th><th>Beschreibung</th></tr></thead>
+    <tbody>
+      <tr><td><code>tolerance</code></td><td><code>1e-7</code></td><td>Konvergenzschwelle</td></tr>
+      <tr><td><code>maxIter</code></td><td><code>100</code></td><td>Maximale Iterationen</td></tr>
+      <tr><td><code>armijoC1</code></td><td><code>1e-4</code></td><td>Armijo-Abstiegsbedingung</td></tr>
+      <tr><td><code>armijoRho</code></td><td><code>0.5</code></td><td>Schrittweiten-Reduktionsfaktor</td></tr>
+      <tr><td><code>armijoAlphaMin</code></td><td><code>1e-8</code></td><td>Minimales α vor Abbruch</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<section id="verhalten">
+  <h2>Konvergenzverhalten</h2>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>Situation</th><th>Verhalten</th></tr></thead>
+    <tbody>
+      <tr><td>Standardfall — empfohlener Solver</td><td><span class="badge b-ok">✅ Optimal</span></td></tr>
+      <tr><td>Große Systeme (n &gt; 200)</td><td><span class="badge b-ok">✅ Deutlich schneller als NEWTON_ARMIJO</span></td></tr>
+      <tr><td>Schlechter Startvektor</td><td><span class="badge b-warn">⚠️ Armijo hilft — aber nicht unbegrenzt</span></td></tr>
+      <tr><td>Schlecht konditioniert (κ &gt; 10¹²)</td><td><span class="badge b-warn">⚠️ → Levenberg-Marquardt</span></td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <span>CMDSolver Docs · Newton-Sparse+Armijo · v2.5</span>
+  <span>
+    <a href="solver_newton_sparse.html">← Newton-Sparse</a> &nbsp;|&nbsp;
+    <a href="solver_lm.html">Levenberg-Marquardt →</a>
+  </span>
+</footer>
+</body>
+</html>

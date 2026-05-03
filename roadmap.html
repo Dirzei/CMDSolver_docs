@@ -1,0 +1,1113 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CMDSolver Docs — Roadmap & Offene Punkte</title>
+<link rel="stylesheet" href="docs.css">
+<style>
+
+  /* ── Horizon bands ── */
+  .horizon {
+    display: inline-block; font-family: var(--mono); font-size: 10px;
+    padding: 2px 9px; border-radius: 3px; white-space: nowrap;
+    font-weight: 500;
+  }
+  .h-now  { background: rgba(255,92,92,.12);   color: var(--err);    border: 1px solid rgba(255,92,92,.25); }
+  .h-near { background: rgba(240,160,48,.12);  color: var(--warn);   border: 1px solid rgba(240,160,48,.25); }
+  .h-mid  { background: rgba(74,158,255,.12);  color: var(--accent); border: 1px solid rgba(74,158,255,.25); }
+  .h-far  { background: rgba(167,139,250,.12); color: var(--purple); border: 1px solid rgba(167,139,250,.25); }
+
+  /* ── Effort dots ── */
+  .effort { display: flex; gap: 3px; align-items: center; }
+  .pip { width: 9px; height: 9px; border-radius: 2px; }
+  .pip.on  { background: var(--ok); }
+  .pip.off { background: var(--border2); }
+
+  /* ── Impact badge ── */
+  .impact { font-family: var(--mono); font-size: 11px;
+            padding: 2px 8px; border-radius: 3px; }
+  .i-hi  { background: rgba(62,207,142,.1);  color: var(--ok);  border: 1px solid rgba(62,207,142,.25); }
+  .i-mid { background: rgba(240,160,48,.1);  color: var(--warn);border: 1px solid rgba(240,160,48,.25); }
+  .i-low { background: rgba(74,84,96,.1);    color: var(--text3);border: 1px solid var(--border2); }
+
+  /* ── Item cards ── */
+  .ri {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: 8px; padding: 1.2rem 1.4rem; margin-bottom: 1rem;
+  }
+  .ri-header {
+    display: flex; gap: .8rem; align-items: flex-start;
+    flex-wrap: wrap; margin-bottom: .7rem;
+  }
+  .ri-id {
+    font-family: var(--mono); font-size: 11px; color: var(--text3);
+    min-width: 50px; padding-top: 2px;
+  }
+  .ri-title { font-size: 14px; font-weight: 600; color: #e8ecf4; flex: 1; }
+  .ri-body  { font-size: 13px; color: var(--text2); line-height: 1.75; }
+  .ri-body p { margin-bottom: .5rem; max-width: none; }
+  .ri-meta {
+    display: flex; gap: .5rem; flex-wrap: wrap; margin-top: .8rem;
+    padding-top: .7rem; border-top: 1px solid var(--border);
+    align-items: center;
+  }
+  .ri-meta-lbl { font-size: 11px; color: var(--text3); margin-right: .2rem; }
+
+  /* ── Interaction warning ── */
+  .interaction {
+    background: rgba(167,139,250,.05); border-left: 3px solid var(--purple);
+    border-radius: 4px; padding: .5rem .9rem;
+    font-size: 12px; color: var(--text2); margin-top: .7rem;
+  }
+  .interaction strong { color: var(--purple); }
+
+  /* ── Summary matrix ── */
+  .matrix-wrap {
+    overflow-x: auto; border-radius: 8px;
+    border: 1px solid var(--border); margin-bottom: 2rem;
+  }
+  .matrix { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .matrix thead th {
+    background: var(--bg3); padding: 8px 12px; text-align: left;
+    font-size: 10px; letter-spacing: .08em; text-transform: uppercase;
+    color: var(--text2); border-bottom: 1px solid var(--border2);
+    white-space: nowrap;
+  }
+  .matrix tbody tr { border-bottom: 1px solid var(--border); }
+  .matrix tbody tr:last-child { border-bottom: none; }
+  .matrix tbody tr:hover { background: var(--bg3); }
+  .matrix td { padding: 8px 12px; vertical-align: middle; }
+  .matrix td:first-child { font-family: var(--mono); font-size: 11px;
+                            color: var(--text3); white-space: nowrap; }
+  .matrix td:nth-child(2) { color: #e8ecf4; font-weight: 500; }
+
+  /* ── Section color coding ── */
+  .ri.cat-solver  { border-left: 3px solid var(--accent); }
+  .ri.cat-parser  { border-left: 3px solid var(--warn); }
+  .ri.cat-arch    { border-left: 3px solid var(--ok); }
+  .ri.cat-cas     { border-left: 3px solid var(--teal); }
+  .ri.cat-perf    { border-left: 3px solid var(--purple); }
+  .ri.cat-gui     { border-left: 3px solid var(--err); }
+  /* ── Done badges ── */
+  .h-done { background: rgba(62,207,142,.12); color: var(--ok);
+            border: 1px solid rgba(62,207,142,.25); }
+  .done-row td { opacity: .7; }
+  .done-row td:first-child { color: var(--ok); }
+  .v-badge {
+    display: inline-block; font-family: var(--mono); font-size: 10px;
+    padding: 2px 7px; border-radius: 3px;
+    background: rgba(62,207,142,.1); color: var(--ok);
+    border: 1px solid rgba(62,207,142,.2);
+  }
+  .ri.done { border-left-color: var(--ok); opacity: .85; }
+  .ri.done .ri-title::after {
+    content: ' ✅'; font-size: 12px;
+  }
+
+</style>
+</head>
+<body>
+
+<div class="doc-header">
+  <div class="breadcrumb">
+    <a href="index.html">CMDSolver Docs</a>
+    <span>›</span><span>Roadmap</span>
+  </div>
+  <span class="doc-badge overview">Kapitel 9</span>
+</div>
+
+<div class="hero">
+  <div class="hero-sub">Kapitel 9</div>
+  <h1>Roadmap &amp;<br>Offene Punkte</h1>
+  <p class="tagline">
+    Priorisierte Entwicklungsplanung für CMDSolver — Stand v2.10 — Solver-Erweiterungen,
+    CAS-Dateierweiterungen, Performance, GUI-Vorbereitung und alternative Algorithmen.
+    Mit Zeithorizont, Aufwandsschätzung und Wechselwirkungsanalyse.
+  </p>
+  <div class="hero-stats">
+    <div class="stat"><span class="stat-val">18</span><span class="stat-lbl">Offene Punkte</span></div>
+    <div class="stat"><span class="stat-val">4</span><span class="stat-lbl">Zeithorizonte</span></div>
+    <div class="stat"><span class="stat-val">v2.5</span><span class="stat-lbl">Ausgangstand</span></div>
+  </div>
+</div>
+
+<nav>
+  <a href="#matrix">Überblick</a>
+  <a href="#solver">Solver</a>
+  <a href="#cas">CAS-Erweiterungen</a>
+  <a href="#parser">Parser</a>
+  <a href="#perf">Performance</a>
+  <a href="#arch">Architektur</a>
+  <a href="#gui">GUI-Vorbereitung</a>
+  <a href="#zeithorizont">Zeitplan</a>
+</nav>
+
+<main>
+
+<div class="note blue">
+  <strong>Zeithorizonte:</strong>
+  <span class="horizon h-now">Kurzfristig &lt;1 Woche</span> &nbsp;
+  <span class="horizon h-near">Mittelfristig 2–6 Wochen</span> &nbsp;
+  <span class="horizon h-mid">Langfristig 2–6 Monate</span> &nbsp;
+  <span class="horizon h-far">Vision &gt;6 Monate</span>
+  &nbsp;&nbsp;·&nbsp;&nbsp;
+  <strong>Aufwand:</strong>
+  <span class="effort" style="display:inline-flex">
+    <span class="pip on"></span><span class="pip off"></span><span class="pip off"></span>
+  </span> Gering &nbsp;
+  <span class="effort" style="display:inline-flex">
+    <span class="pip on"></span><span class="pip on"></span><span class="pip off"></span>
+  </span> Mittel &nbsp;
+  <span class="effort" style="display:inline-flex">
+    <span class="pip on"></span><span class="pip on"></span><span class="pip on"></span>
+  </span> Hoch
+  &nbsp;&nbsp;·&nbsp;&nbsp;
+  <strong>Status:</strong>
+  <span class="horizon h-done">✅ Umgesetzt</span>
+</div>
+
+<!-- ── Übersichtsmatrix ── -->
+<section id="matrix">
+  <h2>Übersichtsmatrix — alle 22 Punkte</h2>
+
+  <div class="matrix-wrap">
+  <table class="matrix">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Titel</th>
+        <th>Kategorie</th>
+        <th>Horizont</th>
+        <th>Aufwand</th>
+        <th>Impact</th>
+        <th>Status / Version</th>
+        <th>Datum</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- ── Umgesetzte Punkte ── -->
+      <tr class="done-row">
+        <td>R-06b</td><td>Bugfix FUNC_MAP Wortgrenzen (Variablennamen mit Funktionsnamen)</td>
+        <td>CAS / Parser</td>
+        <td><span class="horizon h-done">Umgesetzt</span></td>
+        <td><span class="effort"><span class="pip on"></span><span class="pip off"></span><span class="pip off"></span></span></td>
+        <td><span class="impact i-hi">Hoch</span></td>
+        <td><span class="v-badge">v2.6</span></td>
+        <td>02.05.2026</td>
+      </tr>
+      <tr class="done-row">
+        <td>R-07</td><td>CAS: Inline-Kommentare in Gleichungszeilen (//)</td>
+        <td>CAS</td>
+        <td><span class="horizon h-done">Umgesetzt</span></td>
+        <td><span class="effort"><span class="pip on"></span><span class="pip off"></span><span class="pip off"></span></span></td>
+        <td><span class="impact i-mid">Mittel</span></td>
+        <td><span class="v-badge">v2.8</span></td>
+        <td>02.05.2026</td>
+      </tr>
+      <tr class="done-row">
+        <td>R-08</td><td>CAS: SQR(x) = x² Expansion</td>
+        <td>CAS</td>
+        <td><span class="horizon h-done">Umgesetzt</span></td>
+        <td><span class="effort"><span class="pip on"></span><span class="pip off"></span><span class="pip off"></span></span></td>
+        <td><span class="impact i-mid">Mittel</span></td>
+        <td><span class="v-badge">v2.8</span></td>
+        <td>02.05.2026</td>
+      </tr>
+      <tr class="done-row">
+        <td>R-13</td><td>Relatives Abbruchkriterium (toleranceRelative)</td>
+        <td>Solver</td>
+        <td><span class="horizon h-done">Umgesetzt</span></td>
+        <td><span class="effort"><span class="pip on"></span><span class="pip off"></span><span class="pip off"></span></span></td>
+        <td><span class="impact i-mid">Mittel</span></td>
+        <td><span class="v-badge">v2.8</span></td>
+        <td>02.05.2026</td>
+      </tr>
+      <tr class="done-row">
+        <td>R-16</td><td>GUI: SolverLogger Handler für JTextArea</td>
+        <td>GUI</td>
+        <td><span class="horizon h-done">Umgesetzt</span></td>
+        <td><span class="effort"><span class="pip on"></span><span class="pip off"></span><span class="pip off"></span></span></td>
+        <td><span class="impact i-hi">Hoch</span></td>
+        <td><span class="v-badge">v2.9</span></td>
+        <td>02.05.2026</td>
+      </tr>
+      <tr class="done-row">
+        <td>R-17</td><td>GUI: SolverResultTableModel für JTable</td>
+        <td>GUI</td>
+        <td><span class="horizon h-done">Umgesetzt</span></td>
+        <td><span class="effort"><span class="pip on"></span><span class="pip on"></span><span class="pip off"></span></span></td>
+        <td><span class="impact i-hi">Hoch</span></td>
+        <td><span class="v-badge">v2.9</span></td>
+        <td>02.05.2026</td>
+      </tr>
+      <tr class="done-row">
+        <td>R-19</td><td>Javadoc — alle undokumentierten Klassen</td>
+        <td>Wartung</td>
+        <td><span class="horizon h-done">Umgesetzt</span></td>
+        <td><span class="effort"><span class="pip on"></span><span class="pip on"></span><span class="pip off"></span></span></td>
+        <td><span class="impact i-mid">Mittel</span></td>
+        <td><span class="v-badge">v2.7</span></td>
+        <td>02.05.2026</td>
+      </tr>
+      <!-- ── Offene Punkte ── -->
+      <tr>
+        <td>R-01</td><td>Jacobi-Equilibrierung (Sinkhorn-Knopp) — Raum-konsistente Architektur</td>
+        <td>Solver</td>
+        <td><span class="horizon h-far">Vision</span></td>
+        <td><span class="effort"><span class="pip on"></span><span class="pip on"></span><span class="pip on"></span></span></td>
+        <td><span class="impact i-hi">Hoch</span></td>
+        <td><span class="horizon h-now">Offen</span></td>
+        <td>—</td>
+      </tr>
+      <tr>
+        <td>R-02</td><td>GMRES Linearer Solver</td>
+        <td>Solver</td>
+        <td><span class="horizon h-mid">Langfristig</span></td>
+        <td><span class="effort"><span class="pip on"></span><span class="pip on"></span><span class="pip on"></span></span></td>
+        <td><span class="impact i-mid">Mittel</span></td>
+        <td><span class="horizon h-now">Offen</span></td>
+        <td>—</td>
+      </tr>
+      <tr>
+        <td>R-03</td><td>Homotopie: Tangenten-Prädiktor + adaptive Schrittweite</td>
+        <td>Solver</td>
+        <td><span class="horizon h-done">Umgesetzt</span></td>
+        <td><span class="effort"><span class="pip on"></span><span class="pip on"></span><span class="pip off"></span></span></td>
+        <td><span class="impact i-hi">Hoch</span></td>
+        <td><span class="v-badge">v2.10</span></td>
+        <td>03.05.2026</td>
+      </tr>
+      <tr>
+        <td>R-04</td><td>Trust-Region Solver</td>
+        <td>Solver</td>
+        <td><span class="horizon h-mid">Langfristig</span></td>
+        <td><span class="effort"><span class="pip on"></span><span class="pip on"></span><span class="pip on"></span></span></td>
+        <td><span class="impact i-mid">Mittel</span></td>
+        <td><span class="horizon h-now">Offen</span></td>
+        <td>—</td>
+      </tr>
+      <tr>
+        <td>R-05</td><td>Anderson Acceleration</td>
+        <td>Solver</td>
+        <td><span class="horizon h-far">Vision</span></td>
+        <td><span class="effort"><span class="pip on"></span><span class="pip on"></span><span class="pip off"></span></span></td>
+        <td><span class="impact i-mid">Mittel</span></td>
+        <td><span class="horizon h-now">Offen</span></td>
+        <td>—</td>
+      </tr>
+      <tr>
+        <td>R-06</td><td>CAS: MIN(a,b) / MAX(a,b)</td>
+        <td>CAS</td>
+        <td><span class="horizon h-done">Umgesetzt</span></td>
+        <td><span class="effort"><span class="pip on"></span><span class="pip on"></span><span class="pip off"></span></span></td>
+        <td><span class="impact i-hi">Hoch</span></td>
+        <td><span class="v-badge">v2.10</span></td>
+        <td>03.05.2026</td>
+      </tr>
+      <tr>
+        <td>R-09</td><td>CAS: INTEGERPARAMETER als echte Konstante</td>
+        <td>CAS</td>
+        <td><span class="horizon h-done">Umgesetzt</span></td>
+        <td><span class="effort"><span class="pip on"></span><span class="pip on"></span><span class="pip off"></span></span></td>
+        <td><span class="impact i-mid">Mittel</span></td>
+        <td><span class="v-badge">v2.10</span></td>
+        <td>03.05.2026</td>
+      </tr>
+      <tr>
+        <td>R-10</td><td>CAS: SECTION…END für hierarchische Blöcke</td>
+        <td>CAS / Parser</td>
+        <td><span class="horizon h-far">Vision</span></td>
+        <td><span class="effort"><span class="pip on"></span><span class="pip on"></span><span class="pip on"></span></span></td>
+        <td><span class="impact i-mid">Mittel</span></td>
+        <td><span class="horizon h-now">Offen</span></td>
+        <td>—</td>
+      </tr>
+      <tr>
+        <td>R-11</td><td>Parser: QNAME als eigener Token-Typ</td>
+        <td>Parser</td>
+        <td><span class="horizon h-far">Vision</span></td>
+        <td><span class="effort"><span class="pip on"></span><span class="pip on"></span><span class="pip on"></span></span></td>
+        <td><span class="impact i-low">Gering (langfristig)</span></td>
+        <td><span class="horizon h-now">Offen</span></td>
+        <td>—</td>
+      </tr>
+      <tr>
+        <td>R-12</td><td>Jacobi-Parallelisierung (Thread-sicheres MatrixSimple)</td>
+        <td>Performance</td>
+        <td><span class="horizon h-mid">Langfristig</span></td>
+        <td><span class="effort"><span class="pip on"></span><span class="pip on"></span><span class="pip off"></span></span></td>
+        <td><span class="impact i-hi">Hoch</span></td>
+        <td><span class="horizon h-now">Offen</span></td>
+        <td>—</td>
+      </tr>
+      <tr>
+        <td>R-14</td><td>SolverState Warm-Start für Parameterstudien</td>
+        <td>Architektur</td>
+        <td><span class="horizon h-done">Umgesetzt</span></td>
+        <td><span class="effort"><span class="pip on"></span><span class="pip on"></span><span class="pip off"></span></span></td>
+        <td><span class="impact i-hi">Hoch</span></td>
+        <td><span class="v-badge">v2.10</span></td>
+        <td>03.05.2026</td>
+      </tr>
+      <tr>
+        <td>R-15</td><td>Modulare Stream-Architektur (CONNECT-Syntax)</td>
+        <td>Architektur</td>
+        <td><span class="horizon h-far">Vision</span></td>
+        <td><span class="effort"><span class="pip on"></span><span class="pip on"></span><span class="pip on"></span></span></td>
+        <td><span class="impact i-hi">Hoch</span></td>
+        <td><span class="horizon h-now">Offen</span></td>
+        <td>—</td>
+      </tr>
+      <tr>
+        <td>R-18</td><td>ILU-Präkonditionierung für GSPAR/GMRES</td>
+        <td>Performance</td>
+        <td><span class="horizon h-far">Vision</span></td>
+        <td><span class="effort"><span class="pip on"></span><span class="pip on"></span><span class="pip on"></span></span></td>
+        <td><span class="impact i-low">Gering (Spezialfall)</span></td>
+        <td><span class="horizon h-now">Offen</span></td>
+        <td>—</td>
+      </tr>
+      <tr>
+        <td>R-20</td><td>SolverResultTableModel: Lower/Upper/Unit/Description befüllen</td>
+        <td>GUI</td>
+        <td><span class="horizon h-done">Umgesetzt</span></td>
+        <td><span class="effort"><span class="pip on"></span><span class="pip off"></span><span class="pip off"></span></span></td>
+        <td><span class="impact i-mid">Mittel</span></td>
+        <td><span class="v-badge">v2.10</span></td>
+        <td>03.05.2026</td>
+      </tr>
+      <tr>
+        <td>R-21</td><td>SolverAPI: setToleranceRelative() Methode</td>
+        <td>API</td>
+        <td><span class="horizon h-done">Umgesetzt</span></td>
+        <td><span class="effort"><span class="pip on"></span><span class="pip off"></span><span class="pip off"></span></span></td>
+        <td><span class="impact i-mid">Mittel</span></td>
+        <td><span class="v-badge">v2.10</span></td>
+        <td>03.05.2026</td>
+      </tr>
+      <tr>
+        <td>R-22</td><td>Dokumentation: Roadmap auf Stand v2.10 bringen</td>
+        <td>Dokumentation</td>
+        <td><span class="horizon h-done">Umgesetzt</span></td>
+        <td><span class="effort"><span class="pip on"></span><span class="pip off"></span><span class="pip off"></span></span></td>
+        <td><span class="impact i-mid">Mittel</span></td>
+        <td><span class="v-badge">v2.10-doc</span></td>
+        <td>03.05.2026</td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<!-- ── Solver ── -->
+<section id="solver">
+  <h2>Solver-Erweiterungen</h2>
+
+  <div class="ri cat-solver">
+    <div class="ri-header">
+      <span class="ri-id">R-01</span>
+      <span class="ri-title">Jacobi-Equilibrierung (Sinkhorn-Knopp) — Raum-konsistente Implementierung</span>
+    </div>
+    <div class="ri-body">
+      <p><strong>Experimentell untersucht in v2.11-Entwicklung.</strong> Der
+      <code>JacobiEquilibrator</code> (Sinkhorn-Knopp, 5 Iterationen) reduziert κ von
+      4.64e+11 auf <strong>4.0</strong> — theoretisch optimal. Aber die Implementierung
+      scheitert an einem fundamentalen Architektur-Problem: dem Raum-Konflikt.</p>
+
+      <h4 style="color:#e8ecf4;margin:.8rem 0 .4rem">Die 4 Räume im aktuellen Solve-Loop</h4>
+      <pre style="font-family:var(--mono);font-size:11px;background:var(--bg3);padding:.8rem 1rem;border-radius:6px;line-height:1.8">
+Originalraum x (Pa, K, kg/s)
+  → buildJacobian()          J im gemischten Raum
+  → equilibrator.apply()     J̃ = R·J·C,  f̃ = R·f (Kopie)
+  → computeStep() / GSPAR    löst J̃·dx̃ = -f̃
+  → equilibrator.unscale()   dx_orig = C·dx̃
+  → armijoStep()             ← nutzt ORIGINALES f  ← KONFLIKT
+  → applyStep()              x_neu = x + alpha·dx_orig
+  → evaluateF()              f_neu im Originalraum</pre>
+
+      <p>Armijo-Backtracking prüft ob <code>||F(x + alpha·dx)||</code> kleiner wird.
+      Das lineare System wurde mit <code>f̃ = R·f</code> gelöst — der Schritt
+      <code>dx_orig = C·dx̃</code> ist korrekt für die skalierte Gleichung, aber
+      wenn Armijo mit dem originalen <code>f</code> prüft, stimmen die Größenordnungen
+      nicht überein. Armijo reduziert alpha auf 6e-05 oder der Schritt macht kaum Fortschritt.</p>
+
+      <h4 style="color:#e8ecf4;margin:.8rem 0 .4rem">Was für eine korrekte Implementierung nötig wäre</h4>
+      <p>Ein einziger konsistenter skalierter Raum von Anfang bis Ende:</p>
+      <pre style="font-family:var(--mono);font-size:11px;background:var(--bg3);padding:.8rem 1rem;border-radius:6px;line-height:1.8">
+Skalierter Raum x̃ = D⁻¹·x
+  F̃(x̃) = R · F(D · x̃)     ← skalierte Residuenfunktion
+  J̃     = R · J · C         ← skalierte Jacobi
+  Armijo mit F̃(x̃)          ← konsistent!
+  dx_orig = C · dx̃          ← Rücktransformation am Ende</pre>
+
+      <p>Das erfordert dass <code>evaluateF()</code> in den skalierten Raum transformiert wird
+      — also dass BIfunctions (cpOfT, TsofAlt, MofCondiRatio) mit rücktransformierten
+      physikalischen Werten aufgerufen werden. Das ist ein fundamentales Architektur-Redesign.</p>
+
+      <h4 style="color:#e8ecf4;margin:.8rem 0 .4rem">Bereits vorhandene Infrastruktur</h4>
+      <p><code>JacobiEquilibrator.java</code> ist vollständig implementiert mit
+      <code>compute()</code>, <code>applyToJacobian()</code>, <code>applyToRhs()</code>
+      und <code>unscaleStep()</code>. Die Klasse ist korrekt — das Problem liegt
+      in der Integration in <code>AbstractSolver</code>.</p>
+    </div>
+    <div class="ri-meta">
+      <span class="ri-meta-lbl">Horizont:</span><span class="horizon h-far">Vision &gt;6 Monate</span>
+      <span class="ri-meta-lbl">Aufwand:</span><span class="effort"><span class="pip on"></span><span class="pip on"></span><span class="pip on"></span></span>
+      <span class="ri-meta-lbl">Impact:</span><span class="impact i-hi">Hoch</span>
+    </div>
+    <div class="interaction">
+      <strong>Wechselwirkung:</strong> Erfordert vollständiges Redesign von
+      <code>AbstractSolver</code> (Armijo muss im skalierten Raum arbeiten),
+      <code>evaluateF()</code> (Transformer-Pattern für BIfunctions),
+      <code>PhysicalProjector</code> (muss Originalraum-Bounds kennen).
+      Setzt voraus dass alle Subsysteme raum-bewusst werden — das ist der
+      größte einzelne Eingriff in der gesamten Roadmap.
+    </div>
+  </div>
+
+  <div class="ri cat-solver done">
+    <div class="ri-header">
+      <span class="ri-id">R-03</span>
+      <span class="ri-title">Homotopie: Echter Tangenten-Prädiktor + adaptive Schrittweite</span>
+    </div>
+    <div class="ri-body">
+      <p>Der aktuelle Homotopie-Prädiktor verwendet lineare Interpolation entlang des Pfades.
+      Ein echter Tangenten-Prädiktor berechnet den Tangentialvektor <code>dx/dt</code> aus
+      der erweiterten Jacobi [∂H/∂x | ∂H/∂t] via Nullraum-Berechnung. Das folgt dem Pfad
+      genauer und ermöglicht größere Schritte.</p>
+      <p>Die adaptive Schrittweite (bereits teilweise im Code) sollte vollständig aktiviert werden:
+      nach erfolgreichem Korrektor ds vergrößern, nach Misserfolg halbieren. Ein iterTarget
+      von 3–5 Korrektoriterationen als Steuerung ist bereits in <code>HomotopyConfig</code> vorgesehen.</p>
+      <p><strong>Nutzen:</strong> Verbesserte Konvergenz bei stark nichtlinearen Systemen
+      (NozzleSystem mit κ~10²³). Das ist der wahrscheinlichste einzelne Fix um
+      bisher nicht konvergierende Modelle zum Laufen zu bringen.</p>
+    </div>
+    <div class="ri-meta">
+      <span class="ri-meta-lbl">Horizont:</span><span class="horizon h-done">Umgesetzt v2.10 · 03.05.2026</span>
+      <span class="ri-meta-lbl">Aufwand:</span><span class="effort"><span class="pip on"></span><span class="pip on"></span><span class="pip off"></span></span>
+      <span class="ri-meta-lbl">Impact:</span><span class="impact i-hi">Hoch</span>
+    </div>
+    <div class="interaction">
+      <strong>Wechselwirkung:</strong> Nur <code>HomotopySolver.java</code> und <code>HomotopyConfig.java</code>.
+      Kein Eingriff in andere Solver. Kann unabhängig von R-01 und R-02 entwickelt werden.
+    </div>
+  </div>
+
+  <div class="ri cat-solver">
+    <div class="ri-header">
+      <span class="ri-id">R-02</span>
+      <span class="ri-title">GMRES Linearer Solver</span>
+    </div>
+    <div class="ri-body">
+      <p>GMRES (Generalized Minimal Residual) löst das lineare System J·Δx = −F
+      iterativ ohne die Jacobi explizit zu faktorisieren — nur Matrix-Vektor-Produkte J·v
+      sind nötig. Das ist besonders wertvoll für: (1) sehr große Systeme n &gt; 2000 wo
+      selbst GSPAR-LU zu teuer wird, und (2) als innerer Solver im Broyden-Verfahren
+      bei schlecht konditionierten Systemen.</p>
+      <p>Die Architektur ist vorbereitet: <code>computeStep()</code> in <code>AbstractSolver</code>
+      ist der natürliche Einfügepunkt. GMRES würde als alternative Implementierung von
+      <code>computeStep()</code> in einem neuen <code>GMRESSolver</code> eingesetzt.</p>
+    </div>
+    <div class="ri-meta">
+      <span class="ri-meta-lbl">Horizont:</span><span class="horizon h-mid">Langfristig 2–3 Monate</span>
+      <span class="ri-meta-lbl">Aufwand:</span><span class="effort"><span class="pip on"></span><span class="pip on"></span><span class="pip on"></span></span>
+      <span class="ri-meta-lbl">Impact:</span><span class="impact i-mid">Mittel</span>
+    </div>
+    <div class="interaction">
+      <strong>Wechselwirkung:</strong> Setzt R-01 (Skalierung) voraus da GMRES ohne Präkonditionierung
+      bei schlecht skalierten Systemen divergiert. Synergiert mit R-18 (ILU-Präkonditionierung).
+    </div>
+  </div>
+
+  <div class="ri cat-solver">
+    <div class="ri-header">
+      <span class="ri-id">R-04</span>
+      <span class="ri-title">Trust-Region Solver (Dogleg)</span>
+    </div>
+    <div class="ri-body">
+      <p>Trust-Region Methoden schränken den Newton-Schritt auf eine Kugel mit Radius Δ ein
+      und passen Δ adaptiv an. Das ist geometrisch intuitiverer als LM und hat bessere
+      theoretische Konvergenzeigenschaften. Der Dogleg-Algorithmus kombiniert Newton-Schritt
+      und Cauchy-Punkt (steiler Abstieg) und ist effizienter als reines Trust-Region.</p>
+      <p><strong>Vorteil gegenüber LM:</strong> Besseres Verhalten bei Systemen die von
+      near-singular zu well-conditioned wechseln — LM braucht viele Iterationen um μ
+      anzupassen, Trust-Region passt Δ schneller an.</p>
+      <p><strong>Implementierung:</strong> Neuer <code>TrustRegionSolver extends AbstractSolver</code>,
+      neuer <code>SolverType.TRUST_REGION</code>, Eintrag in <code>SolverFactory</code>.</p>
+    </div>
+    <div class="ri-meta">
+      <span class="ri-meta-lbl">Horizont:</span><span class="horizon h-mid">Langfristig 1–2 Monate</span>
+      <span class="ri-meta-lbl">Aufwand:</span><span class="effort"><span class="pip on"></span><span class="pip on"></span><span class="pip on"></span></span>
+      <span class="ri-meta-lbl">Impact:</span><span class="impact i-mid">Mittel</span>
+    </div>
+    <div class="interaction">
+      <strong>Wechselwirkung:</strong> Nur <code>solver/</code> Paket. Strategy-Pattern macht
+      Hinzufügen neuer Solver isoliert — kein Eingriff in Parser oder BIfunctions.
+      Kann parallel zu R-03 entwickelt werden.
+    </div>
+  </div>
+
+  <div class="ri cat-solver">
+    <div class="ri-header">
+      <span class="ri-id">R-05</span>
+      <span class="ri-title">Anderson Acceleration</span>
+    </div>
+    <div class="ri-body">
+      <p>Anderson Acceleration beschleunigt Fixpunkt-Iterationen durch Extrapolation aus
+      m vergangenen Iterationspunkten. Besonders effektiv wenn Modelle natürlich als
+      Fixpunkt-Iteration G(x) = x formuliert werden können — z.B. bei schwach
+      gekoppelten Modulen mit Stream-Variablen.</p>
+      <p>Für die aktuelle Gleichungsystem-Formulierung ist Anderson weniger direkt anwendbar,
+      aber für eine zukünftige modulare Stream-Architektur (R-15) wäre es die erste Wahl
+      als schneller Iterationsverbesserer zwischen den Modulen.</p>
+    </div>
+    <div class="ri-meta">
+      <span class="ri-meta-lbl">Horizont:</span><span class="horizon h-far">Vision &gt;6 Monate</span>
+      <span class="ri-meta-lbl">Aufwand:</span><span class="effort"><span class="pip on"></span><span class="pip on"></span><span class="pip off"></span></span>
+      <span class="ri-meta-lbl">Impact:</span><span class="impact i-mid">Mittel (abhängig von R-15)</span>
+    </div>
+    <div class="interaction">
+      <strong>Wechselwirkung:</strong> Setzt R-15 (modulare Stream-Architektur) voraus.
+      Vor R-15 hat Anderson wenig Mehrwert.
+    </div>
+  </div>
+
+  <div class="ri cat-solver">
+    <div class="ri-header">
+      <span class="ri-id">R-13</span>
+      <span class="ri-title">Relatives Abbruchkriterium</span>
+    </div>
+    <div class="ri-body">
+      <p>Aktuell bricht der Solver ab wenn <code>fsum &lt; tol_abs</code>. Bei schlecht
+      skalierten Systemen kann eine einzelne Pa-Gleichung (Residuum ~100) alle kg/s-Gleichungen
+      (Residuum ~0.001) dominieren. Ein relatives Kriterium würde das ausgleichen:</p>
+      <pre style="font-family:var(--mono);font-size:12px;background:var(--bg3);padding:.7rem 1rem;border-radius:6px;margin-top:.5rem">converged = fsum &lt; tol_abs
+         || (fsum / fsum_initial) &lt; tol_rel;  // z.B. 1e-4</pre>
+      <p><strong>Nutzen:</strong> Bessere Konvergenzdiagnose. Systeme die bei absolutem
+      Kriterium divergieren können mit relativem Kriterium konvergieren.</p>
+    </div>
+    <div class="ri-meta">
+      <span class="ri-meta-lbl">Horizont:</span><span class="horizon h-done">Umgesetzt v2.8 · 02.05.2026</span>
+      <span class="ri-meta-lbl">Aufwand:</span><span class="effort"><span class="pip on"></span><span class="pip off"></span><span class="pip off"></span></span>
+      <span class="ri-meta-lbl">Impact:</span><span class="impact i-mid">Mittel</span>
+    </div>
+    <div class="interaction">
+      <strong>Wechselwirkung:</strong> Nur <code>AbstractSolver.java</code>, Zeile der Konvergenzprüfung.
+      Neuer Parameter <code>toleranceRelative</code> in <code>SolverConfig</code>.
+      Kein Eingriff in andere Klassen.
+    </div>
+  </div>
+
+</section>
+
+<!-- ── CAS-Erweiterungen ── -->
+<section id="cas">
+  <h2>CAS-Dateierweiterungen</h2>
+
+  <div class="ri cat-cas done">
+    <div class="ri-header">
+      <span class="ri-id">R-06</span>
+      <span class="ri-title">MIN(a,b) / MAX(a,b) als binäre Funktionen</span>
+    </div>
+    <div class="ri-body">
+      <p>MIN und MAX sind in vielen thermodynamischen Modellen nützlich — z.B. um
+      Massenstrom-Limits, Druckgrenzen oder schaltende Regelcharakteristiken auszudrücken.
+      CASprzak unterstützt Min/Max intern, aber <code>EqnData</code> übersetzt sie
+      nicht aus der CAS-Syntax.</p>
+      <p><strong>Implementierung:</strong> Zwei Einträge in <code>FUNC_MAP</code> sind
+      allein nicht ausreichend da MIN/MAX binäre Funktionen mit zwei Argumenten sind —
+      die Token-Trennung in <code>FUNC_SPLIT_REGEX</code> müsste angepasst werden.
+      Alternativ: MIN/MAX als Hilfsvariablen via INITIALIZE formulieren.</p>
+      <p><strong>Kurzfristige Alternative:</strong> Benutzer können <code>MIN(a,b)</code>
+      durch <code>0.5*(a+b-ABS(a-b))</code> ausdrücken — das ist differenzierbar und
+      benötigt keine Parser-Änderung.</p>
+    </div>
+    <div class="ri-meta">
+      <span class="ri-meta-lbl">Horizont:</span><span class="horizon h-done">Umgesetzt v2.10 · 03.05.2026</span>
+      <span class="ri-meta-lbl">Aufwand:</span><span class="effort"><span class="pip on"></span><span class="pip on"></span><span class="pip off"></span></span>
+      <span class="ri-meta-lbl">Impact:</span><span class="impact i-hi">Hoch</span>
+    </div>
+    <div class="interaction">
+      <strong>Wechselwirkung:</strong> <code>EqnData.java</code> (FUNC_MAP), <code>EqnSysReader.java</code>
+      (Token-Trennung). Vorsicht: MIN/MAX sind nicht überall differenzierbar (Knick bei a=b) —
+      Solver kann an diesen Stellen Probleme haben. Dokumentieren.
+    </div>
+  </div>
+
+  <div class="ri cat-cas">
+    <div class="ri-header">
+      <span class="ri-id">R-07</span>
+      <span class="ri-title">Zeilenkommentare in Gleichungszeilen (// inline)</span>
+    </div>
+    <div class="ri-body">
+      <p>Aktuell werden <code>//</code>-Kommentare nur am Zeilenanfang unterstützt.
+      Kommentare hinter einer Gleichung — z.B. <code>X = A * B; // Massenerhaltung</code>
+      — werden nicht korrekt abgetrennt. Der Parser liest das Semikolon als Gleichungsende,
+      aber der Kommentar danach kann zu ParseWarnings führen.</p>
+      <p><strong>Fix:</strong> In <code>EqnSysReader.readLine()</code> vor dem eigentlichen
+      Parsing <code>//</code> als Zeilenende-Marker behandeln — alles dahinter abschneiden.
+      Achtung: <code>//</code> könnte in String-Literalen vorkommen (Unit-Annotationen).</p>
+    </div>
+    <div class="ri-meta">
+      <span class="ri-meta-lbl">Horizont:</span><span class="horizon h-now">Kurzfristig &lt;1 Tag</span>
+      <span class="ri-meta-lbl">Aufwand:</span><span class="effort"><span class="pip on"></span><span class="pip off"></span><span class="pip off"></span></span>
+      <span class="ri-meta-lbl">Impact:</span><span class="impact i-mid">Mittel</span>
+    </div>
+    <div class="interaction">
+      <strong>Wechselwirkung:</strong> Nur <code>EqnSysReader.java</code> — <code>readLine()</code> Methode.
+      Kein Eingriff in Parser-Logik oder Gleichungsverarbeitung.
+    </div>
+  </div>
+
+  <div class="ri cat-cas">
+    <div class="ri-header">
+      <span class="ri-id">R-08</span>
+      <span class="ri-title">SQR(x) = x² Expansion</span>
+    </div>
+    <div class="ri-body">
+      <p><code>SQR(x)</code> ist in der CAS-Syntax vorhanden aber in <code>FUNC_MAP</code>
+      als "nicht implementiert" markiert. CASprzak hat kein <code>\sqr</code> — aber
+      <code>SQR(x)</code> kann trivial als <code>(x)^2</code> expandiert werden, ähnlich
+      wie <code>TRUNCATE</code> als <code>floor</code> implementiert ist.</p>
+      <p><strong>Implementierung:</strong> Da SQR ein Argument hat aber einen binären Operator
+      erzeugt, ist ein einfacher Eintrag in FUNC_MAP nicht ausreichend. Stattdessen:
+      Regex-Ersetzung <code>SQR\(([^)]+)\)</code> → <code>(\1)^2</code> vor der FUNC_MAP-Übersetzung.</p>
+    </div>
+    <div class="ri-meta">
+      <span class="ri-meta-lbl">Horizont:</span><span class="horizon h-now">Kurzfristig &lt;1 Tag</span>
+      <span class="ri-meta-lbl">Aufwand:</span><span class="effort"><span class="pip on"></span><span class="pip off"></span><span class="pip off"></span></span>
+      <span class="ri-meta-lbl">Impact:</span><span class="impact i-mid">Mittel</span>
+    </div>
+    <div class="interaction">
+      <strong>Wechselwirkung:</strong> <code>EqnData.java</code> — <code>setEquation()</code>.
+      Vor der FUNC_MAP-Iteration einfügen. Kein Eingriff in andere Klassen.
+    </div>
+  </div>
+
+  <div class="ri cat-cas done">
+    <div class="ri-header">
+      <span class="ri-id">R-09</span>
+      <span class="ri-title">INTEGERPARAMETER als echte Konstante</span>
+    </div>
+    <div class="ri-body">
+      <p>INTEGERPARAMETER wird aktuell geparst aber nur begrenzt ausgewertet.
+      Für Modelle mit Array-Größen, FOR-Loop-Grenzen oder Schalter-Werten
+      die als Integer definiert werden, wäre eine vollständige Unterstützung nützlich:
+      INTEGERPARAMETER wird beim Parsing aufgelöst und überall wo der Name vorkommt
+      durch den Wert ersetzt — ähnlich einem Präprozessor-Macro.</p>
+      <p><strong>Nutzen:</strong> Modelle können parametrisch bezüglich Arraygröße
+      oder Stufenzahl definiert werden ohne manuelle String-Substitution.</p>
+    </div>
+    <div class="ri-meta">
+      <span class="ri-meta-lbl">Horizont:</span><span class="horizon h-done">Umgesetzt v2.10 · 03.05.2026</span>
+      <span class="ri-meta-lbl">Aufwand:</span><span class="effort"><span class="pip on"></span><span class="pip on"></span><span class="pip off"></span></span>
+      <span class="ri-meta-lbl">Impact:</span><span class="impact i-mid">Mittel</span>
+    </div>
+    <div class="interaction">
+      <strong>Wechselwirkung:</strong> <code>EqnSysReader.java</code> (Parsing),
+      <code>EqnSysReaderDataBlock.java</code> (Zustand), <code>EqnData.setEquation()</code>
+      (Substitution vor Gleichungsverarbeitung).
+    </div>
+  </div>
+
+  <div class="ri cat-cas">
+    <div class="ri-header">
+      <span class="ri-id">R-10</span>
+      <span class="ri-title">SECTION…END für hierarchische Modellblöcke</span>
+    </div>
+    <div class="ri-body">
+      <p>Für sehr große Modelle (500+ Variablen) wäre eine hierarchische Block-Struktur
+      wünschenswert — ähnlich wie Module in gPROMS oder Subsystems in ASPEN:
+      </p>
+      <pre style="font-family:var(--mono);font-size:11px;background:var(--bg3);padding:.7rem 1rem;border-radius:6px;margin-top:.5rem">SECTION MIXER
+  W_IN AS REAL (...);
+  W_OUT AS REAL (...);
+  W_IN = W_OUT;  // Variablen werden automatisch zu MIXER.W_IN etc.
+END SECTION</pre>
+      <p>Alle Variablen innerhalb eines SECTION-Blocks werden automatisch mit dem
+      Sektionsnamen präfixiert. Das macht die aktuelle Punkt-Notation
+      (<code>PARTM.F060.PS</code>) explizit statt konventionell.</p>
+    </div>
+    <div class="ri-meta">
+      <span class="ri-meta-lbl">Horizont:</span><span class="horizon h-far">Vision &gt;6 Monate</span>
+      <span class="ri-meta-lbl">Aufwand:</span><span class="effort"><span class="pip on"></span><span class="pip on"></span><span class="pip on"></span></span>
+      <span class="ri-meta-lbl">Impact:</span><span class="impact i-mid">Mittel</span>
+    </div>
+    <div class="interaction">
+      <strong>Wechselwirkung:</strong> Vollständige Überarbeitung von <code>EqnSysReader</code>
+      erforderlich. Setzt R-11 (QNAME Token-Typ) voraus. Große Wechselwirkung mit
+      allen Parser-Klassen. Abwärtskompatibel wenn SECTION optional bleibt.
+    </div>
+  </div>
+
+</section>
+
+<!-- ── Parser ── -->
+<section id="parser">
+  <h2>Parser-Verbesserungen</h2>
+
+  <div class="ri cat-parser">
+    <div class="ri-header">
+      <span class="ri-id">R-11</span>
+      <span class="ri-title">QNAME als eigener Token-Typ</span>
+    </div>
+    <div class="ri-body">
+      <p>Aktuell werden qualifizierte Namen (<code>PARTM.F060.PS</code>) als einfache
+      Strings behandelt. Das hat zu mehreren Bugs geführt (B27, B28, B9) weil der Parser
+      an verschiedenen Stellen unterschiedliche Split-Strategien verwendet um den
+      Variablennamen zu extrahieren.</p>
+      <p>Ein eigener QNAME-Token-Typ mit expliziten Feldern (prefix[], localName, suffix) würde
+      diese Bugs strukturell ausschließen. Der Parser würde QNAME einmal erkennen und
+      konsistent handhaben. Das ist die langfristig korrekte Lösung für die Bugklasse
+      "Punktnamen-Parsing".</p>
+    </div>
+    <div class="ri-meta">
+      <span class="ri-meta-lbl">Horizont:</span><span class="horizon h-far">Vision &gt;6 Monate</span>
+      <span class="ri-meta-lbl">Aufwand:</span><span class="effort"><span class="pip on"></span><span class="pip on"></span><span class="pip on"></span></span>
+      <span class="ri-meta-lbl">Impact:</span><span class="impact i-low">Gering kurzfristig / Hoch langfristig</span>
+    </div>
+    <div class="interaction">
+      <strong>Wechselwirkung:</strong> Vollständige Überarbeitung von <code>EqnSysReader</code>,
+      <code>EqnData</code>, <code>Variable</code>, <code>SystemData</code>. Sehr großer Eingriff —
+      nur sinnvoll zusammen mit R-10 (SECTION-Syntax).
+    </div>
+  </div>
+
+</section>
+
+<!-- ── Performance ── -->
+<section id="perf">
+  <h2>Performance</h2>
+
+  <div class="ri cat-perf">
+    <div class="ri-header">
+      <span class="ri-id">R-12</span>
+      <span class="ri-title">Jacobi-Parallelisierung (Thread-sicheres MatrixSimple)</span>
+    </div>
+    <div class="ri-body">
+      <p>Der Jacobi-Aufbau ist der teuerste Teil jeder Newton-Iteration — er berechnet
+      ∂Fᵢ/∂xⱼ für alle (i,j)-Paare sequenziell. Die Parallelisierung ist bereits
+      vorbereitet (<code>PARALLEL_JACOBI_THRESHOLD = 99999</code> deaktiviert sie)
+      aber <code>MatrixSimple.setValueAt()</code> ist nicht thread-sicher.</p>
+      <p><strong>Fix-Optionen:</strong><br>
+      Option A: Per-Row lokale Arrays — jeder Thread füllt eine Zeile, am Ende zusammenführen. O(n²) Speicher.<br>
+      Option B: <code>ConcurrentHashMap&lt;Integer, double[]&gt;</code> als Backing-Store — threadsicher by design.<br>
+      Option C: Für GSPAR: SparseMatrix direkt thread-sicher machen via Row-Locks.</p>
+      <p><strong>Nutzen:</strong> Bei n=500 Gleichungen und 8 Threads: 6–7× schnellerer
+      Jacobi-Aufbau. Der Gesamtspeedup liegt bei 3–5× da andere Teile (LU-Faktorisierung)
+      nicht parallelisierbar sind.</p>
+    </div>
+    <div class="ri-meta">
+      <span class="ri-meta-lbl">Horizont:</span><span class="horizon h-mid">Langfristig 3–6 Wochen</span>
+      <span class="ri-meta-lbl">Aufwand:</span><span class="effort"><span class="pip on"></span><span class="pip on"></span><span class="pip off"></span></span>
+      <span class="ri-meta-lbl">Impact:</span><span class="impact i-hi">Hoch</span>
+    </div>
+    <div class="interaction">
+      <strong>Wechselwirkung:</strong> <code>MatrixSimple.java</code> (oder neues <code>MatrixConcurrent</code>),
+      <code>AbstractSolver.buildJacobian()</code>, <code>DerivativeMatrix.java</code>.
+      Thread-Safety muss mit dem <code>-TEST</code> Modus ausgiebig getestet werden —
+      non-deterministische Fehler sind schwer zu finden.
+    </div>
+  </div>
+
+  <div class="ri cat-perf">
+    <div class="ri-header">
+      <span class="ri-id">R-18</span>
+      <span class="ri-title">ILU-Präkonditionierung für GSPAR/GMRES</span>
+    </div>
+    <div class="ri-body">
+      <p>Incomplete LU (ILU) verwendet die GSPAR-LU-Struktur als Präkonditionierer für
+      GMRES. Der Präkonditionierer P ≈ J macht das konditionierte System P⁻¹J·Δx besser
+      konditioniert — GMRES konvergiert in deutlich weniger Iterationen.</p>
+      <p>Da GSPAR bereits eine LU-Faktorisierung mit kontrollierbarem Fill-In liefert,
+      könnte die ILU(0)-Variante (kein zusätzlicher Fill-In) fast kostenfrei aus der
+      bestehenden GSPAR-Faktorisierung extrahiert werden.</p>
+    </div>
+    <div class="ri-meta">
+      <span class="ri-meta-lbl">Horizont:</span><span class="horizon h-far">Vision &gt;6 Monate</span>
+      <span class="ri-meta-lbl">Aufwand:</span><span class="effort"><span class="pip on"></span><span class="pip on"></span><span class="pip on"></span></span>
+      <span class="ri-meta-lbl">Impact:</span><span class="impact i-low">Gering (Spezialfall große Systeme)</span>
+    </div>
+    <div class="interaction">
+      <strong>Wechselwirkung:</strong> Setzt R-02 (GMRES) voraus. Eingriff in
+      <code>GSPAR.java</code> und <code>GSPARWorkspace.java</code>.
+    </div>
+  </div>
+
+</section>
+
+<!-- ── Architektur ── -->
+<section id="arch">
+  <h2>Architektur</h2>
+
+  <div class="ri cat-arch done">
+    <div class="ri-header">
+      <span class="ri-id">R-14</span>
+      <span class="ri-title">SolverState — Warm-Start für Parameterstudien</span>
+    </div>
+    <div class="ri-body">
+      <p>Aktuell startet jeder BatchRunner-Run mit denselben Startwerten aus der CAS-Datei.
+      Bei Parameterstudien über ähnliche Betriebspunkte wäre ein Warm-Start ideal:
+      der Lösungsvektor des vorherigen Punktes wird als Startvektor für den nächsten verwendet.</p>
+      <p><strong>Implementierung:</strong> Ein <code>SolverState</code>-Objekt kapselt
+      den letzten Lösungsvektor und wird an <code>SolverAPI.solve()</code> übergeben.
+      <code>InitGuessApplier</code> verwendet dann diesen Vektor statt der CAS-Defaults.
+      Der Broyden-Solver kann zusätzlich seine Jacobi-Approximation mitführen.</p>
+      <p><strong>Nutzen:</strong> Bei typischen Parameterstudien (Flugzustand-Sweep)
+      konvergiert Newton mit Warm-Start in 1–3 statt 5–15 Iterationen.</p>
+    </div>
+    <div class="ri-meta">
+      <span class="ri-meta-lbl">Horizont:</span><span class="horizon h-done">Umgesetzt v2.10 · 03.05.2026</span>
+      <span class="ri-meta-lbl">Aufwand:</span><span class="effort"><span class="pip on"></span><span class="pip on"></span><span class="pip off"></span></span>
+      <span class="ri-meta-lbl">Impact:</span><span class="impact i-hi">Hoch</span>
+    </div>
+    <div class="interaction">
+      <strong>Wechselwirkung:</strong> Neue Klasse <code>SolverState</code>,
+      Erweiterung von <code>SolverAPI</code> und <code>BatchRunner</code>,
+      Anpassung von <code>InitGuessApplier</code>. Kein Eingriff in Solver-Algorithmen.
+    </div>
+  </div>
+
+  <div class="ri cat-arch">
+    <div class="ri-header">
+      <span class="ri-id">R-15</span>
+      <span class="ri-title">Modulare Stream-Architektur (CONNECT-Syntax)</span>
+    </div>
+    <div class="ri-body">
+      <p>Für Gesamtsystem-Modelle aus mehreren Komponenten (Kompressor + Brennkammer + Turbine + Düse)
+      wäre eine modulare Verbindungssyntax wertvoll:</p>
+      <pre style="font-family:var(--mono);font-size:11px;background:var(--bg3);padding:.7rem 1rem;border-radius:6px;margin-top:.5rem">MODULE Compressor USES compressor.cas
+MODULE Combustor  USES combustor.cas
+CONNECT Compressor.PT_OUT = Combustor.PT_IN;
+CONNECT Compressor.TT_OUT = Combustor.TT_IN;</pre>
+      <p>Ein <code>SystemAssembler</code> würde alle Module laden, die CONNECT-Gleichungen
+      hinzufügen und ein gemeinsames <code>SystemData</code>-Objekt erzeugen das dann
+      normal von einem Solver gelöst wird.</p>
+      <p><strong>Vorteil:</strong> Module können wiederverwendet und unabhängig getestet werden.
+      Die Block-trianguläre Dekomposition (Tarjan SCC) kann Reihenfolge für sequentielle
+      Vorlösung bestimmen.</p>
+    </div>
+    <div class="ri-meta">
+      <span class="ri-meta-lbl">Horizont:</span><span class="horizon h-far">Vision &gt;6 Monate</span>
+      <span class="ri-meta-lbl">Aufwand:</span><span class="effort"><span class="pip on"></span><span class="pip on"></span><span class="pip on"></span></span>
+      <span class="ri-meta-lbl">Impact:</span><span class="impact i-hi">Hoch</span>
+    </div>
+    <div class="interaction">
+      <strong>Wechselwirkung:</strong> Neue Klasse <code>SystemAssembler</code>, neue CAS-Syntax
+      (erfordert Parser-Erweiterung), Namensraum-Management in <code>SystemData</code>.
+      Setzt R-10 (SECTION-Syntax) voraus. Größter einzelner Entwicklungsaufwand im Roadmap.
+    </div>
+  </div>
+
+</section>
+
+<!-- ── GUI ── -->
+<section id="gui">
+  <h2>GUI-Vorbereitung</h2>
+
+  <div class="note green">
+    <strong>Strategie:</strong> Keine eigene GUI-Implementierung — sondern die Basis so
+    vorbereiten dass eine GUI als dünner Layer über <code>SolverAPI</code> aufgebaut werden kann.
+    <code>SolverResult</code> mit <code>writeToWriter()</code> und <code>formatAsString()</code>
+    sind bereits in v2.5 implementiert. Die folgenden Punkte schließen die Lücke.
+  </div>
+
+  <div class="ri cat-gui">
+    <div class="ri-header">
+      <span class="ri-id">R-16</span>
+      <span class="ri-title">SolverLogger Handler für JTextArea</span>
+    </div>
+    <div class="ri-body">
+      <p>Der SolverLogger verwendet <code>java.util.logging</code> — das Handler-System
+      erlaubt es, Log-Einträge in beliebige Ziele zu routen. Ein GUI-Handler leitet
+      alle LOG.*-Ausgaben in eine <code>JTextArea</code> um:</p>
+      <pre style="font-family:var(--mono);font-size:11px;background:var(--bg3);padding:.7rem 1rem;border-radius:6px;margin-top:.5rem">Logger root = Logger.getLogger("apps.eqnParser");
+root.addHandler(new Handler() {
+    public void publish(LogRecord r) {
+        SwingUtilities.invokeLater(() ->
+            textArea.append(r.getMessage() + "\n"));
+    }
+    public void flush() {}
+    public void close() {}
+});</pre>
+      <p>Das ersetzt das alte System.out-Umpipping vollständig — keine globalen
+      Eingriffe, Thread-sicher via <code>invokeLater</code>, filterbar nach Severity.</p>
+    </div>
+    <div class="ri-meta">
+      <span class="ri-meta-lbl">Horizont:</span><span class="horizon h-near">Mittelfristig</span>
+      <span class="ri-meta-lbl">Aufwand:</span><span class="effort"><span class="pip on"></span><span class="pip off"></span><span class="pip off"></span></span>
+      <span class="ri-meta-lbl">Impact:</span><span class="impact i-hi">Hoch (für GUI)</span>
+    </div>
+    <div class="interaction">
+      <strong>Wechselwirkung:</strong> Kein Eingriff in CMDSolver-Code.
+      Der Handler wird in der GUI-Schicht registriert — CMDSolver selbst weiß
+      nichts davon. Perfekte Trennung.
+    </div>
+  </div>
+
+  <div class="ri cat-gui">
+    <div class="ri-header">
+      <span class="ri-id">R-17</span>
+      <span class="ri-title">SolverResult Ergebnis-Tabelle für GUI</span>
+    </div>
+    <div class="ri-body">
+      <p><code>SolverResult.getAllValues()</code> und <code>getRawOutput()</code> liefern
+      bereits alle Daten für eine Ergebnistabelle. Die GUI braucht ein
+      <code>TableModel</code> das auf diesen Daten basiert:</p>
+      <pre style="font-family:var(--mono);font-size:11px;background:var(--bg3);padding:.7rem 1rem;border-radius:6px;margin-top:.5rem">class SolverResultTableModel extends AbstractTableModel {
+    // Spalten: Name | Wert | Lower | Upper | Unit | Status | Konvergenz
+    // Daten aus result.getRawOutput()
+    // Filter: nur freie / alle / nur Warnings
+}</pre>
+      <p>ParseErrors könnten als separate Liste oder als farbig markierte Zeilen
+      in der Tabelle angezeigt werden (rot = ERROR, gelb = WARNING).</p>
+    </div>
+    <div class="ri-meta">
+      <span class="ri-meta-lbl">Horizont:</span><span class="horizon h-near">Mittelfristig</span>
+      <span class="ri-meta-lbl">Aufwand:</span><span class="effort"><span class="pip on"></span><span class="pip on"></span><span class="pip off"></span></span>
+      <span class="ri-meta-lbl">Impact:</span><span class="impact i-hi">Hoch (für GUI)</span>
+    </div>
+    <div class="interaction">
+      <strong>Wechselwirkung:</strong> Basiert auf <code>SolverResult</code> (v2.5 fertig)
+      und <code>OutputVariable</code>. Kein Eingriff in CMDSolver-Kern.
+      Gehört in <code>gui/</code> Paket.
+    </div>
+  </div>
+
+</section>
+
+<!-- ── Zeithorizont ── -->
+<section id="zeithorizont">
+  <h2>Empfohlener Zeitplan</h2>
+
+  <div class="note amber">
+    <strong>Grundsatz:</strong> Korrektheit vor Performance, Robustheit vor Funktionsumfang.
+    Kleine isolierte Punkte (R-07, R-08, R-13) immer zuerst — sie sind risikoarm
+    und schaffen sofort Wert.
+  </div>
+
+  <h3>Bereits umgesetzt (v2.6–v2.9)</h3>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>ID</th><th>Maßnahme</th><th>Version</th><th>Datum</th></tr></thead>
+    <tbody>
+      <tr><td><code>R-06b</code></td><td>Bugfix FUNC_MAP Wortgrenzen</td><td><span class="v-badge">v2.6</span></td><td>02.05.2026</td></tr>
+      <tr><td><code>R-19</code></td><td>Javadoc alle undokumentierten Klassen</td><td><span class="v-badge">v2.7</span></td><td>02.05.2026</td></tr>
+      <tr><td><code>R-07</code></td><td>Inline-Kommentare in Gleichungszeilen</td><td><span class="v-badge">v2.8</span></td><td>02.05.2026</td></tr>
+      <tr><td><code>R-08</code></td><td>SQR(x) = x² Expansion</td><td><span class="v-badge">v2.8</span></td><td>02.05.2026</td></tr>
+      <tr><td><code>R-13</code></td><td>Relatives Abbruchkriterium</td><td><span class="v-badge">v2.8</span></td><td>02.05.2026</td></tr>
+      <tr><td><code>R-16</code></td><td>SolverLogger GUI-Handler</td><td><span class="v-badge">v2.9</span></td><td>02.05.2026</td></tr>
+      <tr><td><code>R-17</code></td><td>SolverResultTableModel</td><td><span class="v-badge">v2.9</span></td><td>02.05.2026</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Kurzfristig — nächste 1–2 Wochen</h3>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>ID</th><th>Maßnahme</th><th>Aufwand</th><th>Begründung</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><code>R-23</code></td>
+        <td>Dokumentation: MIN/MAX, INTEGERPARAMETER, setToleranceRelative in Parser-Kapitel</td>
+        <td>½ Tag</td>
+        <td>Neue Features aus v2.10 in parser_syntax.html und api_reference.html dokumentieren</td>
+      </tr>
+      <tr>
+        <td><code>R-24</code></td>
+        <td>Homotopie: Arc-Length Parametrisierung aktivieren</td>
+        <td>1–2 Tage</td>
+        <td>Tangenten-Prädiktor (R-03) ist Basis — Arc-Length verhindert Umkehrpunkte</td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Mittelfristig — 2–6 Wochen</h3>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>ID</th><th>Maßnahme</th><th>Aufwand</th><th>Begründung</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><code>R-01</code></td>
+        <td>Variable Scaling — konsistente Architektur</td>
+        <td>4–6 Wochen</td>
+        <td>Transformer-Pattern um evaluateF() — kritisch für schlecht skalierte Systeme</td>
+      </tr>
+      <tr>
+        <td><code>R-12</code></td>
+        <td>Jacobi-Parallelisierung (Thread-sicheres MatrixSimple)</td>
+        <td>3–4 Wochen</td>
+        <td>Großer Performance-Gewinn bei n &gt; 200 — Thread-Safety sorgfältig testen</td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Langfristig — 2–6 Monate</h3>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>ID</th><th>Maßnahme</th><th>Aufwand</th><th>Begründung</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><code>R-01</code></td>
+        <td>Variable Scaling</td>
+        <td>4–6 Wochen</td>
+        <td>Architektur-Redesign nötig — vor GMRES implementieren</td>
+      </tr>
+      <tr>
+        <td><code>R-12</code></td>
+        <td>Jacobi-Parallelisierung</td>
+        <td>3–4 Wochen</td>
+        <td>Große Performance-Gewinne — Thread-Safety sorgfältig testen</td>
+      </tr>
+      <tr>
+        <td><code>R-04</code></td>
+        <td>Trust-Region Solver</td>
+        <td>4–6 Wochen</td>
+        <td>Ergänzt LM — robuster für wechselnde Konditionierung</td>
+      </tr>
+      <tr>
+        <td><code>R-02</code></td>
+        <td>GMRES</td>
+        <td>6–8 Wochen</td>
+        <td>Setzt R-01 voraus — für sehr große Systeme</td>
+      </tr>
+      <tr>
+        <td><code>R-17</code></td>
+        <td>GUI Ergebnis-Tabelle</td>
+        <td>2–3 Wochen</td>
+        <td>Wenn GUI-Entwicklung beginnt</td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Vision — ab 6 Monate</h3>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>ID</th><th>Maßnahme</th><th>Voraussetzung</th></tr></thead>
+    <tbody>
+      <tr><td><code>R-05</code></td><td>Anderson Acceleration</td><td>R-15</td></tr>
+      <tr><td><code>R-10</code></td><td>SECTION…END Syntax</td><td>R-11</td></tr>
+      <tr><td><code>R-11</code></td><td>QNAME Token-Typ</td><td>Grundlegendes Parser-Redesign</td></tr>
+      <tr><td><code>R-15</code></td><td>Modulare Stream-Architektur</td><td>R-10, R-11</td></tr>
+      <tr><td><code>R-18</code></td><td>ILU-Präkonditionierung</td><td>R-02</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+</section>
+
+</main>
+
+<footer>
+  <span>CMDSolver Docs · Roadmap &amp; Offene Punkte · Stand v2.10 · Mai 2026</span>
+  <span>
+    <a href="dev_history.html">← Entwicklungsgeschichte</a> &nbsp;|&nbsp;
+    <a href="index.html">← Übersicht</a>
+  </span>
+</footer>
+</body>
+</html>

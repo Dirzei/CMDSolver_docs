@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CMDSolver Docs — Mathematischer Überblick</title>
+<link rel="stylesheet" href="docs.css">
+</head>
+<body>
+
+<div class="doc-header">
+  <div class="breadcrumb">
+    <a href="index.html">CMDSolver Docs</a>
+    <span>›</span>
+    <span>Mathematischer Überblick</span>
+  </div>
+  <span class="doc-badge overview">Grundlagen</span>
+</div>
+
+<div class="hero">
+  <div class="hero-sub">Kapitel 1</div>
+  <h1>Mathematische Grundlagen<br>Nichtlineare Gleichungssysteme</h1>
+  <p class="tagline">
+    Überblick über numerische Lösungsverfahren für Systeme der Form F(x) = 0 —
+    implementierte und nicht implementierte Methoden im Kontext thermodynamischer Modelle.
+  </p>
+</div>
+
+<nav>
+  <a href="#problem">Das Problem</a>
+  <a href="#klassifikation">Klassifikation</a>
+  <a href="#implementiert">Implementiert</a>
+  <a href="#nicht-implementiert">Weitere Verfahren</a>
+  <a href="#wahl">Verfahrenswahl</a>
+</nav>
+
+<main>
+
+<!-- 1. Das Problem -->
+<section id="problem">
+  <h2>Das Problem — F(x) = 0</h2>
+
+  <p>
+    In thermodynamischen Modellen wie den Triebwerks- und Düsenmodellen von CMDSolver
+    entstehen <strong>nichtlineare algebraische Gleichungssysteme</strong>. Jede Gleichung
+    beschreibt eine physikalische Beziehung zwischen Variablen wie Druck, Temperatur,
+    Massenstrom oder Geometriegrößen.
+  </p>
+
+  <div class="math-block">
+    <div class="eq"><span class="hi">Gesucht:</span> x* ∈ ℝⁿ  so dass  F(x*) = 0</div>
+    <div class="eq"></div>
+    <div class="eq"><span class="hi">wobei:</span></div>
+    <div class="eq">  F: ℝⁿ → ℝⁿ    <span class="cmt">// n Gleichungen, n Unbekannte</span></div>
+    <div class="eq">  x = (x₁, …, xₙ)ᵀ  <span class="cmt">// freie Variablen (Druck, Temp, ...)</span></div>
+    <div class="eq">  Fᵢ(x) = 0     <span class="cmt">// i-te Gleichung als Residuum</span></div>
+    <div class="eq"></div>
+    <div class="eq"><span class="hi">Beispiel (Düsengleichung):</span></div>
+    <div class="eq">  F₁: FULLM.F080.W − FULLM.F060.W = 0      <span class="cmt">// Massenerhaltung</span></div>
+    <div class="eq">  F₂: FULLM.F080.PT − FULLM.F060.PT·η = 0  <span class="cmt">// Druckverhältnis</span></div>
+    <div class="eq">  F₃: FULLM.HTMAX − f(PT, TT, W, ...) = 0  <span class="cmt">// Thermodynamik</span></div>
+  </div>
+
+  <h3>Eigenschaften thermodynamischer Systeme</h3>
+  <p>
+    Die Gleichungssysteme in CMDSolver haben spezifische Eigenschaften die
+    die Wahl des Lösungsverfahrens stark beeinflussen:
+  </p>
+
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>Eigenschaft</th><th>Typischer Wert</th><th>Auswirkung</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>Systemgröße n</td>
+        <td>12 – 500+</td>
+        <td>Kleine Systeme: dichte LU. Große: Sparse-Methoden</td>
+      </tr>
+      <tr>
+        <td>Nichtlinearitätsgrad</td>
+        <td>Mittel bis hoch</td>
+        <td>Startvektornähe entscheidend für Konvergenz</td>
+      </tr>
+      <tr>
+        <td>Konditionszahl κ</td>
+        <td>10⁶ – 10²⁵</td>
+        <td>Hohe κ → Newton instabil → LM oder Homotopie</td>
+      </tr>
+      <tr>
+        <td>Physikalische Bounds</td>
+        <td>T ≥ 1K, p ≥ 1Pa</td>
+        <td>PhysicalProjector nach jedem Update nötig</td>
+      </tr>
+      <tr>
+        <td>Jacobi-Besetzung</td>
+        <td>Dünn besetzt (sparse)</td>
+        <td>Sparse-LU bis zu 10× schneller als dichte LU</td>
+      </tr>
+      <tr>
+        <td>Ableitungen</td>
+        <td>Symbolisch (CASprzak)</td>
+        <td>Exakt, kein Finite-Differenzen-Fehler</td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<!-- 2. Klassifikation -->
+<section id="klassifikation">
+  <h2>Klassifikation der Verfahren</h2>
+
+  <div class="flowchart">
+    <svg width="100%" viewBox="0 0 800 380" xmlns="http://www.w3.org/2000/svg"
+         font-family="IBM Plex Sans, sans-serif" font-size="12">
+
+      <!-- Root -->
+      <rect x="300" y="10" width="200" height="40" rx="8"
+            fill="#1a1e25" stroke="#4a9eff" stroke-width="1.5"/>
+      <text x="400" y="35" text-anchor="middle" fill="#4a9eff" font-weight="600">F(x) = 0 lösen</text>
+
+      <!-- Pfeile nach unten -->
+      <line x1="400" y1="50" x2="400" y2="78" stroke="#4a5568" stroke-width="1"/>
+
+      <!-- Hauptzweige -->
+      <line x1="150" y1="80" x2="650" y2="80" stroke="#2e3540" stroke-width="1"/>
+      <line x1="150" y1="80" x2="150" y2="108" stroke="#4a5568" stroke-width="1"/>
+      <line x1="400" y1="80" x2="400" y2="108" stroke="#4a5568" stroke-width="1"/>
+      <line x1="650" y1="80" x2="650" y2="108" stroke="#4a5568" stroke-width="1"/>
+
+      <!-- Kategorie 1: Newton-Typ -->
+      <rect x="50" y="110" width="200" height="40" rx="6"
+            fill="#13161b" stroke="#a78bfa" stroke-width="1.5"/>
+      <text x="150" y="135" text-anchor="middle" fill="#a78bfa">Newton-Typ</text>
+
+      <!-- Kategorie 2: Quasi-Newton -->
+      <rect x="300" y="110" width="200" height="40" rx="6"
+            fill="#13161b" stroke="#4a9eff" stroke-width="1.5"/>
+      <text x="400" y="135" text-anchor="middle" fill="#4a9eff">Quasi-Newton</text>
+
+      <!-- Kategorie 3: Globalisierung -->
+      <rect x="550" y="110" width="200" height="40" rx="6"
+            fill="#13161b" stroke="#3ecf8e" stroke-width="1.5"/>
+      <text x="650" y="135" text-anchor="middle" fill="#3ecf8e">Globalisierung</text>
+
+      <!-- Newton Untergruppen -->
+      <line x1="150" y1="150" x2="150" y2="178" stroke="#4a5568" stroke-width="1"/>
+      <line x1="80" y1="180" x2="220" y2="180" stroke="#2e3540" stroke-width="1"/>
+      <line x1="80" y1="180" x2="80" y2="208" stroke="#4a5568" stroke-width="1"/>
+      <line x1="220" y1="180" x2="220" y2="208" stroke="#4a5568" stroke-width="1"/>
+
+      <rect x="20" y="210" width="120" height="36" rx="4"
+            fill="#0f1520" stroke="#a78bfa" stroke-width="1"/>
+      <text x="80" y="230" text-anchor="middle" fill="#c8cdd6" font-size="11">Newton-Raphson</text>
+      <text x="80" y="243" text-anchor="middle" fill="#3ecf8e" font-size="10">✅ implementiert</text>
+
+      <rect x="160" y="210" width="120" height="36" rx="4"
+            fill="#0f1520" stroke="#a78bfa" stroke-width="1"/>
+      <text x="220" y="230" text-anchor="middle" fill="#c8cdd6" font-size="11">LM / Gauss-Newton</text>
+      <text x="220" y="243" text-anchor="middle" fill="#3ecf8e" font-size="10">✅ implementiert</text>
+
+      <!-- Newton Weitere -->
+      <line x1="150" y1="246" x2="150" y2="274" stroke="#4a5568" stroke-width="1"/>
+      <line x1="80" y1="276" x2="220" y2="276" stroke="#2e3540" stroke-width="1"/>
+      <line x1="80" y1="276" x2="80" y2="304" stroke="#4a5568" stroke-width="1"/>
+      <line x1="220" y1="276" x2="220" y2="304" stroke="#4a5568" stroke-width="1"/>
+
+      <rect x="20" y="306" width="120" height="36" rx="4"
+            fill="#0f1520" stroke="#2e3540" stroke-width="1"/>
+      <text x="80" y="326" text-anchor="middle" fill="#7a8496" font-size="11">Trust-Region</text>
+      <text x="80" y="339" text-anchor="middle" fill="#f0a030" font-size="10">○ nicht impl.</text>
+
+      <rect x="160" y="306" width="120" height="36" rx="4"
+            fill="#0f1520" stroke="#2e3540" stroke-width="1"/>
+      <text x="220" y="326" text-anchor="middle" fill="#7a8496" font-size="11">GMRES/Krylov</text>
+      <text x="220" y="339" text-anchor="middle" fill="#f0a030" font-size="10">○ nicht impl.</text>
+
+      <!-- Quasi-Newton -->
+      <line x1="400" y1="150" x2="400" y2="208" stroke="#4a5568" stroke-width="1"/>
+      <rect x="340" y="210" width="120" height="36" rx="4"
+            fill="#0f1520" stroke="#4a9eff" stroke-width="1"/>
+      <text x="400" y="230" text-anchor="middle" fill="#c8cdd6" font-size="11">Broyden</text>
+      <text x="400" y="243" text-anchor="middle" fill="#3ecf8e" font-size="10">✅ implementiert</text>
+
+      <line x1="400" y1="246" x2="400" y2="304" stroke="#4a5568" stroke-width="1"/>
+      <rect x="340" y="306" width="120" height="36" rx="4"
+            fill="#0f1520" stroke="#2e3540" stroke-width="1"/>
+      <text x="400" y="326" text-anchor="middle" fill="#7a8496" font-size="11">Anderson Acc.</text>
+      <text x="400" y="339" text-anchor="middle" fill="#f0a030" font-size="10">○ nicht impl.</text>
+
+      <!-- Globalisierung -->
+      <line x1="650" y1="150" x2="650" y2="178" stroke="#4a5568" stroke-width="1"/>
+      <line x1="590" y1="180" x2="710" y2="180" stroke="#2e3540" stroke-width="1"/>
+      <line x1="590" y1="180" x2="590" y2="208" stroke="#4a5568" stroke-width="1"/>
+      <line x1="710" y1="180" x2="710" y2="208" stroke="#4a5568" stroke-width="1"/>
+
+      <rect x="530" y="210" width="120" height="36" rx="4"
+            fill="#0f1520" stroke="#3ecf8e" stroke-width="1"/>
+      <text x="590" y="230" text-anchor="middle" fill="#c8cdd6" font-size="11">Homotopie</text>
+      <text x="590" y="243" text-anchor="middle" fill="#3ecf8e" font-size="10">✅ implementiert</text>
+
+      <rect x="660" y="210" width="120" height="36" rx="4"
+            fill="#0f1520" stroke="#2e3540" stroke-width="1"/>
+      <text x="720" y="230" text-anchor="middle" fill="#7a8496" font-size="11">Fixpunkt-Iter.</text>
+      <text x="720" y="243" text-anchor="middle" fill="#f0a030" font-size="10">○ nicht impl.</text>
+
+    </svg>
+  </div>
+</section>
+
+<!-- 3. Implementierte Verfahren -->
+<section id="implementiert">
+  <h2>Implementierte Verfahren</h2>
+
+  <h3>1. Newton-Raphson (mit Varianten)</h3>
+  <p>
+    Die Familie der Newton-Verfahren linearisiert F lokal durch die Jacobi-Matrix J
+    und löst das entstehende lineare System. Unterschiede liegen in der Lösung
+    des linearen Systems (dicht vs. sparse) und der Schrittdämpfung.
+  </p>
+
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>Variante</th><th>Lineares System</th><th>Dämpfung</th><th>Stärke</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><code>NEWTON_ARMIJO</code></td>
+        <td>Dichte LU (MatrixSimple)</td>
+        <td>Armijo-Backtracking</td>
+        <td>Robustheit bei nichtlinearen Systemen</td>
+      </tr>
+      <tr>
+        <td><code>NEWTON_SPARSE</code></td>
+        <td>GSPAR Sparse-LU</td>
+        <td>Keine</td>
+        <td>Geschwindigkeit bei großen Systemen</td>
+      </tr>
+      <tr>
+        <td><code>NEWTON_SPARSE_ARMIJO</code></td>
+        <td>GSPAR Sparse-LU</td>
+        <td>Armijo-Backtracking</td>
+        <td>Beste Kombination: schnell + robust</td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>2. Levenberg-Marquardt</h3>
+  <p>
+    LM kombiniert Newton-Raphson mit Gradientenabstieg über einen adaptiven
+    Dämpfungsparameter λ. Bei großem λ verhält sich LM wie Gradientenabstieg
+    (robust, langsam), bei kleinem λ wie Newton (schnell, lokal). Besonders
+    geeignet für schlecht konditionierte Systeme.
+  </p>
+
+  <div class="math-block">
+    <div class="eq"><span class="hi">LM-System:</span>  (JᵀJ + λI) · Δx = −Jᵀ F(x)</div>
+    <div class="eq"><span class="cmt">// λ groß → Gradientenabstieg (stabiler)</span></div>
+    <div class="eq"><span class="cmt">// λ klein → Newton-Schritt (schneller)</span></div>
+    <div class="eq"><span class="cmt">// λ wird adaptiv nach Fortschritt angepasst</span></div>
+  </div>
+
+  <h3>3. Broyden Quasi-Newton</h3>
+  <p>
+    Broyden aktualisiert die Jacobi-Approximation durch einen Rang-1-Update
+    statt sie neu aufzubauen. Das spart Rechenzeit pro Iteration — besonders
+    vorteilhaft wenn die Jacobi-Berechnung teuer ist. Zwei Varianten:
+    mit dichter und mit GSPAR Sparse-LU.
+  </p>
+
+  <div class="math-block">
+    <div class="eq"><span class="hi">Broyden-Update:</span></div>
+    <div class="eq">  Jₖ₊₁ = Jₖ + (Δf − Jₖ·Δx) · ΔxᵀT / ||Δx||²</div>
+    <div class="eq"><span class="cmt">// Rang-1-Korrektur — O(n²) statt O(n³) für Neuaufbau</span></div>
+  </div>
+
+  <h3>4. Homotopie (Arc-Length Continuation)</h3>
+  <p>
+    Homotopie löst nicht direkt F(x) = 0, sondern konstruiert einen glatten Pfad
+    von einem einfachen Startproblem H(x,0) = 0 zum Zielproblem H(x,1) = F(x) = 0.
+    Besonders geeignet wenn der Startvektor weit von der Lösung entfernt ist
+    oder bei stark nichtlinearen Systemen.
+  </p>
+
+  <div class="math-block">
+    <div class="eq"><span class="hi">Homotopie-Funktion:</span></div>
+    <div class="eq">  H(x, t) = t·F(x) + (1−t)·F₀(x) = 0,   t ∈ [0, 1]</div>
+    <div class="eq"><span class="cmt">// t=0: einfaches Startproblem (Startwerte)</span></div>
+    <div class="eq"><span class="cmt">// t=1: Original-Problem F(x) = 0</span></div>
+    <div class="eq"><span class="cmt">// Arc-Length: Pfad wird nach Bogenlänge parametrisiert</span></div>
+  </div>
+</section>
+
+<!-- 4. Nicht implementierte Verfahren -->
+<section id="nicht-implementiert">
+  <h2>Weitere Verfahren (nicht implementiert)</h2>
+
+  <div class="note blue">
+    <strong>Hinweis:</strong> Die folgenden Verfahren sind für thermodynamische
+    Gleichungssysteme prinzipiell geeignet. Sie sind in CMDSolver nicht implementiert,
+    könnten aber für spezielle Anwendungsfälle relevant sein.
+  </div>
+
+  <h3>Trust-Region Methoden</h3>
+  <p>
+    Ähnlich wie LM, aber mit expliziter Schrittweitenkontrolle über einen
+    "Vertrauensbereich" (Trust-Region) Δ. Der Newton-Schritt wird auf eine
+    Kugel mit Radius Δ beschränkt. Δ wird adaptiv angepasst basierend auf
+    dem Verhältnis von vorhergesagtem zu tatsächlichem Fortschritt.
+  </p>
+  <p>
+    <strong>Vorteil gegenüber LM:</strong> Geometrisch intuitiveres Modell,
+    bessere theoretische Konvergenzeigenschaften. Standard in modernen
+    Optimierungsbibliotheken (z.B. MINPACK, SciPy).
+  </p>
+
+  <h3>Dogleg-Verfahren</h3>
+  <p>
+    Kombination aus Newton-Schritt und Cauchy-Punkt (steilstem Abstieg) innerhalb
+    der Trust-Region. Berechnet einen "geknickten" Pfad (Dogleg) zwischen beiden.
+    Effizienter als reines Trust-Region bei gut konditionierten Systemen.
+  </p>
+
+  <h3>GMRES / Krylov-Unterraum Methoden</h3>
+  <p>
+    Für sehr große Systeme (n > 10.000) ist selbst GSPAR Sparse-LU zu teuer.
+    GMRES (Generalized Minimal Residual) löst das lineare System J·Δx = −F
+    iterativ ohne die Jacobi explizit zu faktorisieren. Benötigt nur
+    Matrix-Vektor-Produkte J·v.
+  </p>
+  <p>
+    <strong>Relevanz für CMDSolver:</strong> Bei den aktuellen Modellgrößen
+    (bis ~500 Gleichungen) nicht nötig. Interessant wenn Netzwerke aus vielen
+    Modulen zu sehr großen Systemen zusammengesetzt werden.
+  </p>
+
+  <h3>Anderson Acceleration</h3>
+  <p>
+    Beschleunigt Fixpunkt-Iterationen x ← G(x) durch Extrapolation aus mehreren
+    vergangenen Iterationswerten. Besonders effektiv bei Systemen die natürlich
+    als Fixpunkt-Iteration formuliert werden können — z.B. bei schwacher Kopplung
+    zwischen Modulen in einer modularen Stream-Architektur.
+  </p>
+
+  <h3>Fixpunkt-Iteration (Gauss-Seidel für Gleichungssysteme)</h3>
+  <p>
+    Löst jede Gleichung sequenziell nach einer Variablen auf und iteriert.
+    Konvergiert nur bei kontraktiven Abbildungen — für allgemeine
+    thermodynamische Systeme meist nicht geeignet. War der klassische Ansatz
+    in frühen Prozesssimulatoren (ASPEN, gPROMS vor Version 3).
+  </p>
+
+  <h3>Globales Newton mit Regularisierung</h3>
+  <p>
+    Fügt der Jacobi eine Regularisierungsmatrix hinzu: J_reg = J + εI.
+    Einfacher als LM aber weniger theoretisch fundiert. Kann bei sehr
+    schlecht konditionierten Systemen als erster Schritt vor LM nützlich sein.
+  </p>
+
+  <h3>Parallele / Verteilte Newton-Verfahren</h3>
+  <p>
+    Für zukünftige modulare Architekturen: Wenn das System in Teilsysteme
+    (Mixer, Jetpipe, Nozzle) aufgeteilt wird, kann jedes Teilsystem parallel
+    gelöst werden. Block-Newton-Verfahren lösen die Teilsysteme und iterieren
+    über die Kopplung (Stream-Variablen). Relevant für die geplante
+    Stream-Architektur.
+  </p>
+</section>
+
+<!-- 5. Verfahrenswahl -->
+<section id="wahl">
+  <h2>Leitfaden zur Verfahrenswahl</h2>
+
+  <div class="tbl-wrap">
+  <table>
+    <thead>
+      <tr><th>Situation</th><th>Empfehlung</th><th>Begründung</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Standardfall, guter Startvektor</td>
+        <td><span class="badge b-ok">NEWTON_SPARSE_ARMIJO</span></td>
+        <td>Beste Kombination aus Geschwindigkeit und Robustheit</td>
+      </tr>
+      <tr>
+        <td>Kleines System (n &lt; 50)</td>
+        <td><span class="badge b-info">NEWTON_ARMIJO</span></td>
+        <td>Dichte LU schnell genug, einfache Implementierung</td>
+      </tr>
+      <tr>
+        <td>Schlechte Kondition (κ &gt; 10¹²)</td>
+        <td><span class="badge b-warn">LEVENBERG_MARQUARDT</span></td>
+        <td>Robuster gegenüber nahezu singulärer Jacobi</td>
+      </tr>
+      <tr>
+        <td>Schlechter Startvektor / weit von Lösung</td>
+        <td><span class="badge b-warn">HOMOTOPY</span></td>
+        <td>Verfolgt Lösungspfad von einfachem Start</td>
+      </tr>
+      <tr>
+        <td>Viele ähnliche Runs (Parameterstudie)</td>
+        <td><span class="badge b-info">BROYDEN_SPARSE</span></td>
+        <td>Jacobi-Update günstiger als Neuberechnung</td>
+      </tr>
+      <tr>
+        <td>Debugging / Analyse</td>
+        <td><span class="badge b-info">-TEST Modus</span></td>
+        <td>Alle 7 Solver vergleichen</td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="note green">
+    <strong>Faustregel:</strong> Beginne immer mit <code>NEWTON_SPARSE_ARMIJO</code>.
+    Wechsle zu LM wenn κ-Warnungen auftreten. Verwende Homotopie nur wenn
+    Newton und LM nicht konvergieren — Homotopie ist langsamer aber robuster.
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <span>CMDSolver Docs · Mathematischer Überblick · v2.5</span>
+  <span>
+    <a href="index.html">← Übersicht</a> &nbsp;|&nbsp;
+    <a href="solver_comparison.html">Vergleichsmatrix →</a>
+  </span>
+</footer>
+
+</body>
+</html>

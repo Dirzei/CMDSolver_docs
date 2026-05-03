@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CMDSolver Docs — Newton-GSPAR Sparse LU</title>
+<link rel="stylesheet" href="docs.css">
+</head>
+<body>
+
+<div class="doc-header">
+  <div class="breadcrumb">
+    <a href="index.html">CMDSolver Docs</a>
+    <span>›</span><span>Solver</span>
+    <span>›</span><span>Newton-GSPAR</span>
+  </div>
+  <span class="doc-badge solver">SolverType.NEWTON_SPARSE</span>
+</div>
+
+<div class="hero">
+  <div class="hero-sub">Solver 2 von 7</div>
+  <h1>Newton-GSPAR<br>Sparse LU</h1>
+  <p class="tagline">
+    Newton-Raphson mit GSPAR Sparse-LU — bis zu 10× schneller als dichte LU
+    bei großen, dünn besetzten Jacobi-Matrizen. Kein Backtracking.
+  </p>
+  <div class="hero-stats">
+    <div class="stat"><span class="stat-val">3</span><span class="stat-lbl">Iter (SimpleSystem)</span></div>
+    <div class="stat"><span class="stat-val">3.16e-11</span><span class="stat-lbl">fsum</span></div>
+    <div class="stat"><span class="stat-val">~28ms</span><span class="stat-lbl">Laufzeit</span></div>
+    <div class="stat"><span class="stat-val">Sparse</span><span class="stat-lbl">Jacobi-Typ</span></div>
+  </div>
+</div>
+
+<nav>
+  <a href="#theorie">Theorie</a>
+  <a href="#flussdiagramm">Flussdiagramm</a>
+  <a href="#pseudocode">Pseudocode</a>
+  <a href="#dateien">Dateien</a>
+  <a href="#parameter">Parameter</a>
+  <a href="#verhalten">Verhalten</a>
+  <a href="#grenzen">Grenzen</a>
+</nav>
+
+<main>
+
+<section id="theorie">
+  <h2>Theoretischer Kontext</h2>
+
+  <h3>Grundidee</h3>
+  <p>
+    Newton-GSPAR verwendet dasselbe Newton-Raphson-Verfahren wie NEWTON_ARMIJO,
+    ersetzt aber die dichte LU-Zerlegung durch den <strong>GSPAR Sparse-LU-Solver</strong>.
+    Bei thermodynamischen Systemen ist die Jacobi-Matrix dünn besetzt (sparse) —
+    die meisten Variablen beeinflussen die meisten Gleichungen nicht direkt.
+    GSPAR nutzt diese Struktur aus.
+  </p>
+
+  <div class="math-block">
+    <div class="eq"><span class="hi">Newton-Schritt:</span>  J(xₖ) · Δxₖ = −F(xₖ)</div>
+    <div class="eq"></div>
+    <div class="eq"><span class="hi">Dichte LU (MatrixSimple):</span>  O(n³) Operationen</div>
+    <div class="eq"><span class="hi">Sparse LU (GSPAR):</span>       O(nnz · log n)  <span class="cmt">← nnz ≪ n²</span></div>
+    <div class="eq"></div>
+    <div class="eq"><span class="hi">Pivotisierungsstrategie:</span> MIN_FILL</div>
+    <div class="eq"><span class="cmt">// Wählt Pivot-Elemente um Fill-In (neue Nicht-Null-Einträge)</span></div>
+    <div class="eq"><span class="cmt">// bei der LU-Faktorisierung zu minimieren → kompakte Faktoren</span></div>
+  </div>
+
+  <h3>GSPAR — Sparse LU in CMDSolver</h3>
+  <p>
+    GSPAR (General SPARse) ist eine in CMDSolver integrierte Sparse-LU-Bibliothek.
+    Sie speichert die Jacobi-Matrix im CSR-Format (Compressed Sparse Row) und
+    führt die LU-Zerlegung mit Spaltenpivotierung durch. Die Pivotierungsstrategie
+    MIN_FILL minimiert den "Fill-In" — neue Nicht-Null-Einträge die bei der
+    Faktorisierung entstehen.
+  </p>
+  <p>
+    Im Gegensatz zu NEWTON_ARMIJO gibt es <strong>kein Backtracking</strong> —
+    der volle Newton-Schritt wird immer angewendet. Das macht den Solver schneller
+    pro Iteration, aber weniger robust bei schlechten Startwerten.
+  </p>
+</section>
+
+<section id="flussdiagramm">
+  <h2>Flussdiagramm</h2>
+  <div class="flowchart">
+  <svg width="100%" viewBox="0 0 600 480" xmlns="http://www.w3.org/2000/svg"
+       font-family="IBM Plex Sans, sans-serif" font-size="12">
+    <defs>
+      <marker id="arr" viewBox="0 0 10 10" refX="8" refY="5"
+              markerWidth="6" markerHeight="6" orient="auto">
+        <path d="M2 1L8 5L2 9" fill="none" stroke="#4a9eff" stroke-width="1.5"/>
+      </marker>
+    </defs>
+    <rect x="200" y="10" width="200" height="38" rx="19" fill="#1a2535" stroke="#4a9eff" stroke-width="1.5"/>
+    <text x="300" y="34" text-anchor="middle" fill="#4a9eff" font-weight="600">START</text>
+    <line x1="300" y1="48" x2="300" y2="76" stroke="#4a9eff" stroke-width="1.5" marker-end="url(#arr)"/>
+
+    <rect x="150" y="78" width="300" height="44" rx="6" fill="#13161b" stroke="#2e3540"/>
+    <text x="300" y="97" text-anchor="middle" fill="#c8cdd6">Startwerte + Jacobi aufbauen</text>
+    <text x="300" y="113" text-anchor="middle" fill="#4a5568" font-size="10">parallel, symbolisch via CASprzak</text>
+    <line x1="300" y1="122" x2="300" y2="150" stroke="#4a9eff" stroke-width="1.5" marker-end="url(#arr)"/>
+
+    <rect x="150" y="152" width="300" height="44" rx="6" fill="#13161b" stroke="#2e3540"/>
+    <text x="300" y="171" text-anchor="middle" fill="#c8cdd6">GSPAR Sparse-LU Faktorisierung</text>
+    <text x="300" y="187" text-anchor="middle" fill="#4a5568" font-size="10">J = L·U  (MIN_FILL Pivotierung)</text>
+    <line x1="300" y1="196" x2="300" y2="224" stroke="#4a9eff" stroke-width="1.5" marker-end="url(#arr)"/>
+
+    <rect x="150" y="226" width="300" height="44" rx="6" fill="#13161b" stroke="#2e3540"/>
+    <text x="300" y="245" text-anchor="middle" fill="#c8cdd6">Vorwärts-/Rückwärtssubstitution</text>
+    <text x="300" y="261" text-anchor="middle" fill="#4a5568" font-size="10">L·U·Δx = −F(x)  →  Δx</text>
+    <line x1="300" y1="270" x2="300" y2="298" stroke="#4a9eff" stroke-width="1.5" marker-end="url(#arr)"/>
+
+    <rect x="150" y="300" width="300" height="44" rx="6" fill="#13161b" stroke="#2e3540"/>
+    <text x="300" y="319" text-anchor="middle" fill="#c8cdd6">x ← x + Δx (voller Schritt)</text>
+    <text x="300" y="335" text-anchor="middle" fill="#4a5568" font-size="10">kein Backtracking — α = 1.0</text>
+    <line x1="300" y1="344" x2="300" y2="372" stroke="#4a9eff" stroke-width="1.5" marker-end="url(#arr)"/>
+
+    <rect x="150" y="374" width="300" height="44" rx="6" fill="#13161b" stroke="#2e3540"/>
+    <text x="300" y="393" text-anchor="middle" fill="#c8cdd6">PhysicalProjector + fsum</text>
+    <text x="300" y="409" text-anchor="middle" fill="#4a5568" font-size="10">Bounds enforzen, Konvergenz prüfen</text>
+    <line x1="300" y1="418" x2="300" y2="446" stroke="#4a9eff" stroke-width="1.5" marker-end="url(#arr)"/>
+
+    <rect x="200" y="448" width="200" height="28" rx="14" fill="#0f2a1e" stroke="#3ecf8e" stroke-width="1.5"/>
+    <text x="300" y="466" text-anchor="middle" fill="#3ecf8e" font-weight="600">fsum &lt; tol → CONVERGED</text>
+  </svg>
+  </div>
+</section>
+
+<section id="pseudocode">
+  <h2>Pseudocode</h2>
+<pre><span class="kw">function</span> <span class="fn">newton_sparse_solve</span>(F, x₀, tol, maxIter):
+    x ← InitGuessApplier(x₀)
+
+    <span class="kw">for</span> k = 0 <span class="kw">to</span> maxIter:
+        J ← buildJacobian(F, x)        <span class="cmt">// parallel, symbolisch</span>
+        f ← F(x)
+
+        <span class="cmt">// ── GSPAR Sparse-LU ──</span>
+        J_sparse ← CSR(J)              <span class="cmt">// Compressed Sparse Row Format</span>
+        [L, U, P] ← gspar_lu(J_sparse) <span class="cmt">// MIN_FILL Pivotierung</span>
+        Δx ← gspar_solve(L, U, P, −f) <span class="cmt">// Vorwärts-/Rückwärtssubstitution</span>
+
+        <span class="cmt">// ── Voller Schritt (kein Backtracking) ──</span>
+        x ← x + Δx
+        x ← PhysicalProjector(x)
+
+        fsum ← Σ|Fᵢ(x)|
+        <span class="kw">if</span> fsum &lt; tol: <span class="kw">return</span> CONVERGED, x, k, fsum
+
+    <span class="kw">return</span> NOT_CONVERGED, x, maxIter, fsum</pre>
+</section>
+
+<section id="dateien">
+  <h2>Wichtige Dateien</h2>
+  <ul class="file-list">
+    <li>
+      <span class="file-icon">KERN</span>
+      <div class="file-desc">
+        <strong>GSPARSolver.java</strong>
+        Implementiert <code>computeStep()</code> via GSPAR Sparse-LU.
+        Kein Backtracking — voller Newton-Schritt.
+        <br><code>apps/eqnParser/solver/GSPARSolver.java</code>
+      </div>
+    </li>
+    <li>
+      <span class="file-icon">SPARSE</span>
+      <div class="file-desc">
+        <strong>GSPAR.java</strong>
+        Sparse-LU-Bibliothek. Implementiert CSR-Format, MIN_FILL-Pivotierung,
+        Vorwärts-/Rückwärtssubstitution.
+        <br><code>apps/eqnParser/solver/gspar/GSPAR.java</code>
+      </div>
+    </li>
+    <li>
+      <span class="file-icon">BASIS</span>
+      <div class="file-desc">
+        <strong>AbstractSolver.java</strong>
+        Basisklasse — Jacobi aufbauen, Iteration, Konvergenzprüfung.
+        <br><code>apps/eqnParser/solver/AbstractSolver.java</code>
+      </div>
+    </li>
+  </ul>
+</section>
+
+<section id="parameter">
+  <h2>Parameter</h2>
+  <pre>java CASSolver -I:model.cas -S:NEWTON_SPARSE</pre>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>Parameter</th><th>Default</th><th>Beschreibung</th></tr></thead>
+    <tbody>
+      <tr><td><code>tolerance</code></td><td><code>1e-7</code></td><td>Konvergenzschwelle</td></tr>
+      <tr><td><code>maxIter</code></td><td><code>100</code></td><td>Maximale Iterationen</td></tr>
+      <tr><td>Pivotierungsstrategie</td><td>MIN_FILL</td><td>Minimiert Fill-In bei LU-Faktorisierung</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<section id="verhalten">
+  <h2>Konvergenzverhalten</h2>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>Situation</th><th>Verhalten</th><th>Empfehlung</th></tr></thead>
+    <tbody>
+      <tr><td>Großes dünn besetztes System (n &gt; 200)</td><td><span class="badge b-ok">✅ Optimal</span></td><td>Bis zu 10× schneller als dichte LU</td></tr>
+      <tr><td>Guter Startvektor</td><td><span class="badge b-ok">✅ 3-5 Iter</span></td><td>Quadratische Konvergenz</td></tr>
+      <tr><td>Schlechter Startvektor</td><td><span class="badge b-err">❌ Divergenz möglich</span></td><td>→ NEWTON_SPARSE_ARMIJO</td></tr>
+      <tr><td>Schlecht konditioniert (κ &gt; 10¹²)</td><td><span class="badge b-warn">⚠️ Instabil</span></td><td>→ Levenberg-Marquardt</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<section id="grenzen">
+  <h2>Bekannte Grenzen</h2>
+  <div class="note red">
+    <strong>Kein Backtracking:</strong> Ohne Armijo-Liniensuche kann der Solver bei
+    schlechten Startwerten divergieren. Für robustere Ausführung → NEWTON_SPARSE_ARMIJO.
+  </div>
+  <div class="note amber">
+    <strong>Fill-In:</strong> Bei bestimmten Jacobi-Strukturen kann der Fill-In bei
+    der LU-Faktorisierung groß werden. MIN_FILL-Pivotierung minimiert das,
+    kann es aber nicht vollständig vermeiden.
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <span>CMDSolver Docs · Newton-GSPAR Sparse LU · v2.5</span>
+  <span>
+    <a href="solver_newton_armijo.html">← Newton-Armijo</a> &nbsp;|&nbsp;
+    <a href="solver_newton_sparse_armijo.html">Newton-Sparse+Armijo →</a>
+  </span>
+</footer>
+</body>
+</html>

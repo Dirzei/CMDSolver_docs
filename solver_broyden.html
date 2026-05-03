@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CMDSolver Docs — Broyden Quasi-Newton</title>
+<link rel="stylesheet" href="docs.css">
+</head>
+<body>
+
+<div class="doc-header">
+  <div class="breadcrumb">
+    <a href="index.html">CMDSolver Docs</a>
+    <span>›</span><span>Solver</span>
+    <span>›</span><span>Broyden</span>
+  </div>
+  <span class="doc-badge solver">SolverType.BROYDEN</span>
+</div>
+
+<div class="hero">
+  <div class="hero-sub">Solver 5 von 7</div>
+  <h1>Broyden<br>Quasi-Newton</h1>
+  <p class="tagline">
+    Quasi-Newton-Verfahren mit Rang-1-Update der Jacobi-Approximation.
+    Günstiger pro Iteration als vollständiger Jacobi-Neuaufbau —
+    besonders vorteilhaft bei Parameterstudien.
+  </p>
+  <div class="hero-stats">
+    <div class="stat"><span class="stat-val">25</span><span class="stat-lbl">Iter (SimpleSystem)</span></div>
+    <div class="stat"><span class="stat-val">8.02e-08</span><span class="stat-lbl">fsum</span></div>
+    <div class="stat"><span class="stat-val">~50ms</span><span class="stat-lbl">Laufzeit</span></div>
+    <div class="stat"><span class="stat-val">Rang-1</span><span class="stat-lbl">Update</span></div>
+  </div>
+</div>
+
+<nav>
+  <a href="#theorie">Theorie</a>
+  <a href="#pseudocode">Pseudocode</a>
+  <a href="#dateien">Dateien</a>
+  <a href="#parameter">Parameter</a>
+  <a href="#verhalten">Verhalten</a>
+  <a href="#grenzen">Grenzen</a>
+</nav>
+
+<main>
+
+<section id="theorie">
+  <h2>Theoretischer Kontext</h2>
+
+  <h3>Grundidee — allgemein verständlich</h3>
+  <p>
+    Bei Newton-Verfahren wird in jeder Iteration die vollständige Jacobi-Matrix
+    neu berechnet — das ist teuer. Broyden fragt: "Können wir die Jacobi aus dem
+    vorherigen Schritt <em>anpassen</em> statt sie neu zu berechnen?"
+  </p>
+  <p>
+    Die Antwort: Ja — durch einen <strong>Rang-1-Update</strong>. Man berechnet
+    wie sich F zwischen zwei Punkten verändert hat und korrigiert die
+    Jacobi-Approximation minimal so dass sie mit dieser Beobachtung konsistent ist.
+    Das kostet O(n²) statt O(n³) für einen vollständigen Neuaufbau.
+  </p>
+
+  <div class="math-block">
+    <div class="eq"><span class="hi">Broyden-Update (Rang-1):</span></div>
+    <div class="eq">  Jₖ₊₁ = Jₖ + (Δf − Jₖ·Δx) · ΔxᵀT / ||Δx||²</div>
+    <div class="eq"></div>
+    <div class="eq"><span class="hi">wobei:</span></div>
+    <div class="eq">  Δx = xₖ₊₁ − xₖ     <span class="cmt">// Schritt</span></div>
+    <div class="eq">  Δf = F(xₖ₊₁) − F(xₖ) <span class="cmt">// Residuumsänderung</span></div>
+    <div class="eq"></div>
+    <div class="eq"><span class="hi">Sekanten-Bedingung:</span>  Jₖ₊₁ · Δx = Δf</div>
+    <div class="eq"><span class="cmt">// Die neue Jacobi ist konsistent mit dem letzten Schritt</span></div>
+  </div>
+
+  <h3>Reset-Mechanismus</h3>
+  <p>
+    Broyden akkumuliert Approximationsfehler über die Iterationen. CMDSolver
+    implementiert daher einen automatischen Reset: Nach <code>resetInterval</code>
+    Iterationen oder wenn die Konditionszahl κ einen Schwellwert überschreitet,
+    wird die Jacobi vollständig neu berechnet. Das verhindert Divergenz durch
+    akkumulierte Fehler.
+  </p>
+</section>
+
+<section id="pseudocode">
+  <h2>Pseudocode</h2>
+<pre><span class="kw">function</span> <span class="fn">broyden_solve</span>(F, x₀, tol, maxIter, resetInterval):
+    x ← InitGuessApplier(x₀)
+    J ← buildJacobian(F, x)    <span class="cmt">// vollständiger Aufbau beim Start</span>
+    Jinv ← inverse(J)
+
+    <span class="kw">for</span> k = 0 <span class="kw">to</span> maxIter:
+        f ← F(x)
+
+        <span class="cmt">// ── Newton-Schritt mit approximierter Jacobi ──</span>
+        Δx ← −Jinv · f
+
+        <span class="cmt">// ── Armijo-Liniensuche ──</span>
+        α ← armijo_search(x, Δx, F)
+
+        x_new ← x + α · Δx
+        f_new ← F(x_new)
+
+        <span class="cmt">// ── Broyden Rang-1-Update ──</span>
+        <span class="kw">if</span> k % resetInterval != 0 <span class="kw">and</span> κ(J) &lt; κ_reset:
+            Δf ← f_new − f
+            J ← J + (Δf − J·Δx) · Δxᵀ / ||Δx||²  <span class="cmt">// O(n²)</span>
+            Jinv ← update_inverse(Jinv, Δx, Δf)
+        <span class="kw">else</span>:
+            J ← buildJacobian(F, x_new)             <span class="cmt">// vollständiger Reset</span>
+            Jinv ← inverse(J)
+
+        x ← x_new
+        x ← PhysicalProjector(x)
+        fsum ← Σ|Fᵢ(x)|
+        <span class="kw">if</span> fsum &lt; tol: <span class="kw">return</span> CONVERGED, x, k, fsum
+
+    <span class="kw">return</span> NOT_CONVERGED, x, maxIter, fsum</pre>
+</section>
+
+<section id="dateien">
+  <h2>Wichtige Dateien</h2>
+  <ul class="file-list">
+    <li>
+      <span class="file-icon">KERN</span>
+      <div class="file-desc">
+        <strong>BroydenSolver.java</strong>
+        Implementiert Rang-1-Update, Reset-Mechanismus, Armijo-Liniensuche
+        und Checkpoint-System für Warm-Start bei Parameterstudien.
+        <br><code>apps/eqnParser/solver/BroydenSolver.java</code>
+      </div>
+    </li>
+    <li>
+      <span class="file-icon">BASIS</span>
+      <div class="file-desc">
+        <strong>AbstractSolver.java</strong>
+        Basisklasse — Jacobi-Aufbau, Iteration, Konvergenzprüfung.
+        <br><code>apps/eqnParser/solver/AbstractSolver.java</code>
+      </div>
+    </li>
+  </ul>
+</section>
+
+<section id="parameter">
+  <h2>Parameter</h2>
+  <pre>java CASSolver -I:model.cas -S:BROYDEN</pre>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>Parameter</th><th>Default</th><th>Beschreibung</th></tr></thead>
+    <tbody>
+      <tr><td><code>tolerance</code></td><td><code>1e-7</code></td><td>Konvergenzschwelle</td></tr>
+      <tr><td><code>maxIter</code></td><td><code>100</code></td><td>Maximale Iterationen</td></tr>
+      <tr><td><code>broydenResetInterval</code></td><td><code>25</code></td><td>Vollständiger Jacobi-Neuaufbau alle n Iterationen</td></tr>
+      <tr><td><code>broydenKappaReset</code></td><td><code>1e10</code></td><td>κ-Schwellwert für erzwungenen Reset</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<section id="verhalten">
+  <h2>Konvergenzverhalten</h2>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>Situation</th><th>Verhalten</th><th>Empfehlung</th></tr></thead>
+    <tbody>
+      <tr><td>Parameterstudien (viele ähnliche Punkte)</td><td><span class="badge b-ok">✅ Sehr effizient</span></td><td>Jacobi vom Vorpunkt als Start</td></tr>
+      <tr><td>Gut konditioniertes System</td><td><span class="badge b-warn">⚠️ Mehr Iterationen als Newton</span></td><td>Superlinear statt quadratisch</td></tr>
+      <tr><td>Schlecht konditioniert</td><td><span class="badge b-err">❌ Reset nötig</span></td><td>→ BROYDEN_SPARSE oder LM</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<section id="grenzen">
+  <h2>Bekannte Grenzen</h2>
+  <div class="note amber">
+    <strong>Akkumulierte Fehler:</strong> Die Jacobi-Approximation degradiert über
+    viele Iterationen. Der Reset-Mechanismus begrenzt das, kann es aber nicht
+    vollständig vermeiden. Bei sehr nichtlinearen Systemen häufiger Reset empfohlen.
+  </div>
+  <div class="note amber">
+    <strong>Superlineare Konvergenz:</strong> Broyden konvergiert superlinear statt
+    quadratisch — mehr Iterationen als Newton bei gleicher Genauigkeit.
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <span>CMDSolver Docs · Broyden Quasi-Newton · v2.5</span>
+  <span>
+    <a href="solver_lm.html">← Levenberg-Marquardt</a> &nbsp;|&nbsp;
+    <a href="solver_broyden_sparse.html">Broyden-Sparse →</a>
+  </span>
+</footer>
+</body>
+</html>

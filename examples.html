@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CMDSolver Docs — Beispielmodelle</title>
+<link rel="stylesheet" href="docs.css">
+<style>
+  .model-card {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: 10px; overflow: hidden; margin-bottom: 2.5rem;
+  }
+  .model-header {
+    background: var(--bg3); padding: 1rem 1.4rem;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;
+  }
+  .model-file {
+    font-family: var(--mono); font-size: 13px; color: var(--teal); font-weight: 600;
+  }
+  .model-body { padding: 1.2rem 1.4rem; }
+  .model-stats {
+    display: flex; gap: 2rem; flex-wrap: wrap;
+    padding: .8rem 1.4rem; background: rgba(255,255,255,.02);
+    border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
+  }
+  .ms { display: flex; flex-direction: column; gap: .1rem; }
+  .ms-val { font-family: var(--mono); font-size: 16px; font-weight: 500; color: var(--ok); }
+  .ms-lbl { font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: .08em; }
+
+  .eqn-card {
+    background: var(--bg3); border: 1px solid var(--border);
+    border-left: 3px solid var(--teal); border-radius: 6px;
+    padding: .9rem 1.1rem; margin-bottom: .8rem;
+    font-family: var(--mono); font-size: 12px;
+  }
+  .eqn-title { color: var(--text2); font-size: 11px; margin-bottom: .3rem;
+               letter-spacing: .05em; text-transform: uppercase; }
+  .eqn-body  { color: #e8ecf4; line-height: 1.8; white-space: pre; }
+  .eqn-exp   { color: var(--text3); font-style: italic; }
+</style>
+</head>
+<body>
+
+<div class="doc-header">
+  <div class="breadcrumb">
+    <a href="index.html">CMDSolver Docs</a>
+    <span>›</span><span>Beispielmodelle</span>
+  </div>
+  <span class="doc-badge overview">Beispiele</span>
+</div>
+
+<div class="hero">
+  <div class="hero-sub">Beispiele</div>
+  <h1>Beispielmodelle</h1>
+  <p class="tagline">
+    Zwei Referenzmodelle mit vollständiger Erklärung — von einem einfachen
+    algebraischen System bis zum komplexen aerothermodynamischen Düsenmodell.
+    Welche Gleichungen sind interessant, warum konvergiert welcher Solver?
+  </p>
+</div>
+
+<nav>
+  <a href="#simplesystem">SimpleSystem</a>
+  <a href="#nozzle">NozzleSystem</a>
+  <a href="#eigenes">Eigenes Modell</a>
+</nav>
+
+<main>
+
+<!-- ── SimpleSystem ── -->
+<section id="simplesystem">
+  <h2>SimpleSystem.cas — Basis-Testsystem</h2>
+
+  <div class="model-card">
+    <div class="model-header">
+      <span class="model-file">example/SimpleSystem.cas</span>
+      <span class="badge b-ok">12 Gleichungen · 20 Variablen · 8 fixiert</span>
+    </div>
+
+    <div class="model-stats">
+      <div class="ms"><span class="ms-val">12</span><span class="ms-lbl">Gleichungen</span></div>
+      <div class="ms"><span class="ms-val">20</span><span class="ms-lbl">Variablen</span></div>
+      <div class="ms"><span class="ms-val">8</span><span class="ms-lbl">Fixiert</span></div>
+      <div class="ms"><span class="ms-val">12</span><span class="ms-lbl">Frei (Unbekannte)</span></div>
+      <div class="ms"><span class="ms-val">~10⁶</span><span class="ms-lbl">Typisches κ</span></div>
+    </div>
+
+    <div class="model-body">
+      <h3>Was wird modelliert?</h3>
+      <p>Ein vereinfachtes thermodynamisches System mit algebraischen Abhängigkeiten
+      zwischen Druck, Temperatur, Massenstrom und abgeleiteten Größen. Das Modell ist
+      speziell für Tests konzipiert — realistisch konditioniert aber ohne physikalisch
+      kritische Bereiche (kein Ma-Übergang, keine Phasenübergänge).</p>
+
+      <h3>Interessante Gleichungstypen</h3>
+
+      <div class="eqn-card">
+        <div class="eqn-title">Gleichgewichtsgleichung — direkte Zuweisung</div>
+        <div class="eqn-body">PARTM.F060.GAMMAT = PARTM.F060.CPT / (PARTM.F060.CPT - PARTM.F060.RGAS);
+<span class="eqn-exp">// Isentropenexponent κ = cp / (cp - R)</span></div>
+      </div>
+
+      <div class="eqn-card">
+        <div class="eqn-title">CALL-Gleichung — thermodynamische Built-in Funktion</div>
+        <div class="eqn-body">CALL(PARTM.F060.CPT) = pCPOFT(PARTM.F060.TT, PARTM.F060.WGR, PARTM.F060.FAR);
+<span class="eqn-exp">// cp(T, WGR, FAR) aus BIfunctions.CpOfTNOZ()</span>
+<span class="eqn-exp">// Ableitung numerisch (5-Punkte-Formel)</span></div>
+      </div>
+
+      <div class="eqn-card">
+        <div class="eqn-title">Nichtlineare Gleichung — Potenz</div>
+        <div class="eqn-body">PARTM.F060.PS = PARTM.F060.PT * (1 - EXP1 * PARTM.F060.GAMMAT)^EXP2;
+<span class="eqn-exp">// Statischer Druck aus Totaldruck via isentrope Beziehung</span>
+<span class="eqn-exp">// EXP1, EXP2 = fixierte Hilfsgrößen aus dem INITIALIZE-Block</span></div>
+      </div>
+
+      <h3>Konvergenzergebnisse aller Solver</h3>
+      <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr><th>Solver</th><th>Status</th><th>Iterationen</th><th>fsum</th><th>Zeit</th><th>Hinweis</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>NEWTON_ARMIJO</code></td>
+            <td><span class="badge b-ok">CONVERGED</span></td>
+            <td>3</td><td><code>3.16e-11</code></td><td>~42ms</td>
+            <td>Gut konditioniertes System → quadratische Konvergenz</td>
+          </tr>
+          <tr>
+            <td><code>NEWTON_SPARSE</code></td>
+            <td><span class="badge b-ok">CONVERGED</span></td>
+            <td>3</td><td><code>3.16e-11</code></td><td>~28ms</td>
+            <td>Sparse-LU schneller als dichte LU</td>
+          </tr>
+          <tr>
+            <td><code>NEWTON_SPARSE_ARMIJO</code></td>
+            <td><span class="badge b-ok">CONVERGED</span></td>
+            <td>3</td><td><code>3.16e-11</code></td><td>~30ms</td>
+            <td>★ Empfohlen — beste Kombination</td>
+          </tr>
+          <tr>
+            <td><code>LEVENBERG_MARQUARDT</code></td>
+            <td><span class="badge b-ok">CONVERGED</span></td>
+            <td>36</td><td><code>8.30e-09</code></td><td>~61ms</td>
+            <td>Mehr Iterationen wegen μ-Anpassung — κ hier kein Problem</td>
+          </tr>
+          <tr>
+            <td><code>BROYDEN</code></td>
+            <td><span class="badge b-ok">CONVERGED</span></td>
+            <td>25</td><td><code>8.02e-08</code></td><td>~50ms</td>
+            <td>Superlinear statt quadratisch</td>
+          </tr>
+          <tr>
+            <td><code>BROYDEN_SPARSE</code></td>
+            <td><span class="badge b-ok">CONVERGED</span></td>
+            <td>3</td><td><code>3.16e-11</code></td><td>~9ms</td>
+            <td>Schnellster Gesamtlauf — Rang-1 Update + Sparse-LU</td>
+          </tr>
+          <tr>
+            <td><code>HOMOTOPY</code></td>
+            <td><span class="badge b-ok">CONVERGED</span></td>
+            <td>—</td><td>NaN*</td><td>~83ms</td>
+            <td>*NaN normal — Homotopie gibt kein fsum über Standard-Kanal</td>
+          </tr>
+        </tbody>
+      </table>
+      </div>
+
+      <h3>CLI-Aufruf</h3>
+      <pre>java -cp "CMDSolver.jar;libs/CASprzak.jar" cmd.CASSolver \
+    -I:example/SimpleSystem.cas -TEST</pre>
+
+      <h3>SolverAPI-Aufruf</h3>
+      <pre>SolverResult result = <span class="kw">new</span> SolverAPI()
+    .loadModel(<span class="str">"example/SimpleSystem.cas"</span>)
+    .setSolverType(SolverType.NEWTON_SPARSE_ARMIJO)
+    .solve();
+
+<span class="cmt">// Ergebnis prüfen</span>
+System.out.println(<span class="str">"Konvergiert: "</span> + result.isConverged());
+System.out.println(<span class="str">"Iterationen: "</span> + result.getIterations());
+System.out.println(<span class="str">"fsum: "</span> + result.getFinalResidual());
+
+<span class="cmt">// Alle Werte ausgeben</span>
+result.getAllValues().forEach((k, v) ->
+    System.out.printf(<span class="str">"%-35s = %.6g%n"</span>, k, v));</pre>
+
+      <div class="note green">
+        <strong>Als Regressions-Baseline:</strong> SimpleSystem.cas ist das Referenzsystem
+        für alle Solver-Tests. Nach jeder Änderung am Code muss <code>-TEST</code>
+        auf diesem Modell alle 7 Solver mit identischen Residuen liefern.
+        Referenzwerte: Newton 3 Iter / 3.16e-11, BroydenSparse ~9ms.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── NozzleSystem ── -->
+<section id="nozzle">
+  <h2>NozzleSystem_4_fixed.cas — Aerothermodynamisches Düsenmodell</h2>
+
+  <div class="model-card">
+    <div class="model-header">
+      <span class="model-file">example/NozzleSystem_4_fixed.cas</span>
+      <span class="badge b-warn">303 Gleichungen · 400+ Variablen · κ ~ 10²³</span>
+    </div>
+
+    <div class="model-stats">
+      <div class="ms"><span class="ms-val">303</span><span class="ms-lbl">Gleichungen</span></div>
+      <div class="ms"><span class="ms-val">400+</span><span class="ms-lbl">Variablen</span></div>
+      <div class="ms"><span class="ms-lbl">κ</span><span class="ms-val">~10²³</span></div>
+      <div class="ms"><span class="ms-val">JANAF</span><span class="ms-lbl">Thermodynamik</span></div>
+      <div class="ms"><span class="ms-val">ISA</span><span class="ms-lbl">Atmosphäre</span></div>
+    </div>
+
+    <div class="model-body">
+      <h3>Was wird modelliert?</h3>
+      <p>Ein vollständiges aerothermodynamisches Modell einer Schubdüse (Nozzle)
+      mit Mischer und Jetpipe. Das Modell berechnet Strömungsgrößen in mehreren
+      Stationen (F060, F080, F090, ...) vom Kerngasstrom über den Bypass bis
+      zum Düsenaustritt. Kerngrößen: Totaldruck, Totaltemperatur, Massenstrom,
+      statischer Druck, Machzahl, spezifische Wärme, Isentropenexponent.</p>
+
+      <h3>Modellstruktur</h3>
+      <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Bereich</th><th>Variablen-Prefix</th><th>Inhalt</th></tr></thead>
+        <tbody>
+          <tr><td>Global</td><td><code>GLOBAL.*</code></td><td>Konstanten (π, R_univ, Schalter)</td></tr>
+          <tr><td>Geometrie</td><td><code>GEOM.*</code></td><td>Radien, Längen, Flächen</td></tr>
+          <tr><td>Atmosphäre</td><td><code>AMB.*</code></td><td>ISA-Bedingungen, Gaszusammensetzung</td></tr>
+          <tr><td>Kerngasstrom</td><td><code>PARTM.F060.*</code></td><td>Station 060: Eintritt Kerngasstrom</td></tr>
+          <tr><td>Bypass</td><td><code>PARTM.F080.*</code></td><td>Station 080: Bypass-Strom</td></tr>
+          <tr><td>Mischer</td><td><code>PARTM.F090.*</code></td><td>Station 090: nach Mischung</td></tr>
+          <tr><td>Düsenaustritt</td><td><code>PARTM.F100.*</code></td><td>Station 100: Düsenaustritt</td></tr>
+          <tr><td>Gesamtmodell</td><td><code>FULLM.*</code></td><td>Schub, Schallgeschwindigkeit, Durchfluss</td></tr>
+        </tbody>
+      </table>
+      </div>
+
+      <h3>Interessante Gleichungstypen</h3>
+
+      <div class="eqn-card">
+        <div class="eqn-title">Struktureller IF — Betriebsmodus-Schalter</div>
+        <div class="eqn-body">IF (GLOBAL.STATICSWITCH.SPEC == FIXED)
+  PARTM.F080.PS = AMB.PS;
+ELSE
+  PARTM.F080.PS = PARTM.F060.PS * GLOBAL.STATICSWITCH;
+ENDIF
+<span class="eqn-exp">// Schaltet zwischen Betriebsmodi zur Parse-Zeit — nicht zur Laufzeit</span>
+<span class="eqn-exp">// STATICSWITCH.Spec == Fixed → Umgebungsdruck direkt vorgegeben</span></div>
+      </div>
+
+      <div class="eqn-card">
+        <div class="eqn-title">MofCondiRatio — Machzahl aus Flächenverhältnis</div>
+        <div class="eqn-body">CALL(FULLM.HTMAX.MA) = pMOFCONDIRATIO(FULLM.HTMAX.ARAT, FULLM.HTMAX.GAMMAT);
+<span class="eqn-exp">// Löst A/A* = f(Ma, κ) numerisch nach Ma auf</span>
+<span class="eqn-exp">// Transzendente Gleichung — nur numerisch lösbar</span>
+<span class="eqn-exp">// Ableitung via 5-Punkte-Formel in BIfunctions</span></div>
+      </div>
+
+      <div class="eqn-card">
+        <div class="eqn-title">JANAF-Enthalpieberechnung</div>
+        <div class="eqn-body">CALL(PARTM.F060.HT) = pHTOFTJANAF(PARTM.F060.TT,
+    AMB.FN2, AMB.FO2, AMB.FAR, AMB.FCO2, AMB.FNE,
+    AMB.FHE, AMB.FCH4, AMB.FKR, AMB.FH2, AMB.FN2O,
+    AMB.FXE, AMB.FH2O);
+<span class="eqn-exp">// Spezifische Enthalpie h(T) für Gasgemisch via JANAF-Polynome</span>
+<span class="eqn-exp">// 13 Eingaben — vollständige Gaszusammensetzung</span></div>
+      </div>
+
+      <h3>Warum ist dieses Modell schwierig?</h3>
+      <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Ursache</th><th>Auswirkung</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>Konditionszahl κ ~ 10²³</td>
+            <td>Druck in Pa (10⁵) und dimensionslose Größen (10⁻³) nebeneinander — riesige Spanne</td>
+          </tr>
+          <tr>
+            <td>JANAF-Polynome als Built-in Funktionen</td>
+            <td>Numerische Ableitungen statt symbolischer — leicht mehr Fehler in der Jacobi</td>
+          </tr>
+          <tr>
+            <td>MofCondiRatio nahe Ma=1</td>
+            <td>Funktion hat vertikale Tangente bei Ma=1 — Jacobi-Singularität möglich</td>
+          </tr>
+          <tr>
+            <td>Starke Kopplung aller Stationen</td>
+            <td>Jede Gleichung hängt von vielen anderen ab — dichte Jacobi trotz Sparse-Struktur</td>
+          </tr>
+        </tbody>
+      </table>
+      </div>
+
+      <h3>Solver-Empfehlung für dieses Modell</h3>
+      <pre><span class="cmt">// Empfohlen: Newton-Sparse-Armijo mit Diagnose-Modus</span>
+java cmd.CASSolver \
+    -I:example/NozzleSystem_4_fixed.cas \
+    -S:NEWTON_SPARSE_ARMIJO \
+    -DI
+
+<span class="cmt">// Falls Newton nicht konvergiert: Levenberg-Marquardt</span>
+java cmd.CASSolver \
+    -I:example/NozzleSystem_4_fixed.cas \
+    -S:LEVENBERG_MARQUARDT \
+    -DI
+
+<span class="cmt">// Bei κ-Warnungen und LM-Problemen: Homotopie kritisch</span>
+java cmd.CASSolver \
+    -I:example/NozzleSystem_4_fixed.cas \
+    -S:HOMOTOPY \
+    -SH:CRITICAL \
+    -SH:INNER=LEVENBERG_MARQUARDT</pre>
+
+      <div class="note amber">
+        <strong>Bekanntes Problem:</strong> Das NozzleSystem_4_fixed konvergiert
+        mit Newton und LM bei guten Startwerten. Homotopie zeigt bei diesem Modell
+        Stagnationsverhalten — Verbesserung durch echten Tangenten-Prädiktor geplant
+        (Roadmap R-03). Bei Konvergenzproblemen zuerst <code>-DI</code> versuchen
+        und Startwerte in der <code>-U:</code>-Datei manuell setzen.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Eigenes Modell ── -->
+<section id="eigenes">
+  <h2>Eigenes Modell aufbauen — Schritt für Schritt</h2>
+
+  <p>Empfohlene Vorgehensweise beim Aufbau eines neuen CAS-Modells:</p>
+
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>Schritt</th><th>Aktion</th><th>Tipp</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>1</td>
+        <td>Variablen definieren — erst alle Fixed, dann Free</td>
+        <td>Beginne mit physikalisch bekannten Größen als Fixed. Nur was wirklich unbekannt ist als Free.</td>
+      </tr>
+      <tr>
+        <td>2</td>
+        <td>Gleichgewicht prüfen: n Gleichungen = n Freie</td>
+        <td><code>-I:model.cas -TEST</code> zeigt Systemgröße. Zu viele Gleichungen → System überbestimmt.</td>
+      </tr>
+      <tr>
+        <td>3</td>
+        <td>Startwerte physikalisch sinnvoll wählen</td>
+        <td>Schlechte Startwerte sind häufigste Konvergenz-Ursache. Mit <code>-DI</code> automatisch verbessern.</td>
+      </tr>
+      <tr>
+        <td>4</td>
+        <td>Bounds setzen</td>
+        <td>Lower/Upper sollten physikalisch sinnvoll sein — PhysicalProjector verhindert negative Drücke etc.</td>
+      </tr>
+      <tr>
+        <td>5</td>
+        <td>Mit Newton-Sparse-Armijo testen</td>
+        <td>Konvergiert meist in 3–10 Iterationen bei gut formulierten Systemen.</td>
+      </tr>
+      <tr>
+        <td>6</td>
+        <td>Falls nicht konvergiert: Diagnose</td>
+        <td>Log nach κ-Warnungen durchsuchen. <code>-DV:start.txt</code> Startvektor inspizieren.</td>
+      </tr>
+      <tr>
+        <td>7</td>
+        <td>Batch-Parameterstudie</td>
+        <td>CSV-Datei mit Betriebspunkten → <code>-I:studie.csv</code>. BroydenSparse für schnelle Serien.</td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Minimales Starter-Template</h3>
+  <pre><span class="cmt">// template.cas — Minimal-Vorlage für ein neues Modell</span>
+
+<span class="cmt">// ── Fixierte Eingangsgrößen ────────────────────────────</span>
+IN_A <span class="kw">AS REAL</span> (Description: <span class="str">"Eingangsgröße A"</span>, Lower: 0, Value: 100, Upper: 1000, Spec: Fixed, Unit: <span class="str">"Pa"</span>);
+IN_B <span class="kw">AS REAL</span> (Description: <span class="str">"Eingangsgröße B"</span>, Lower: 0, Value: 300, Upper: 600, Spec: Fixed, Unit: <span class="str">"K"</span>);
+
+<span class="cmt">// ── Unbekannte (freie Variablen) ───────────────────────</span>
+OUT_X <span class="kw">AS REAL</span> (Description: <span class="str">"Unbekannte X"</span>, Lower: 0, Value: 50, Upper: 500, Spec: Free, Unit: <span class="str">"Pa"</span>);
+OUT_Y <span class="kw">AS REAL</span> (Description: <span class="str">"Unbekannte Y"</span>, Lower: 200, Value: 290, Upper: 400, Spec: Free, Unit: <span class="str">"K"</span>);
+
+<span class="cmt">// ── Gleichungen (n frei = n Gleichungen) ───────────────</span>
+OUT_X = IN_A * 0.5;                      <span class="cmt">// Gleichung 1</span>
+OUT_Y = IN_B - 10;                        <span class="cmt">// Gleichung 2</span>
+
+<span class="cmt">// Aufruf:</span>
+<span class="cmt">// java cmd.CASSolver -I:template.cas -S:NEWTON_SPARSE_ARMIJO</span></pre>
+</section>
+
+</main>
+
+<footer>
+  <span>CMDSolver Docs · Beispielmodelle · v2.5</span>
+  <span>
+    <a href="api_reference.html">← API-Referenz</a> &nbsp;|&nbsp;
+    <a href="troubleshooting.html">Troubleshooting →</a>
+  </span>
+</footer>
+</body>
+</html>

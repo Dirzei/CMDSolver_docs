@@ -1,0 +1,1143 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CMDSolver — Technische Dokumentation v2.3</title>
+<style>
+  :root {
+    --blue-dark:#1a3a5c; --blue-mid:#2c5f8a; --blue-light:#3a7abd;
+    --bg:#f8f9fb; --card:#ffffff; --border:#d0dcea; --code-bg:#f0f4f8;
+    --green:#2e7d32; --amber:#e65100; --text:#1a1a2e; --muted:#5a6a7a;
+  }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { font-family:'Segoe UI',system-ui,sans-serif; font-size:14px; line-height:1.65; background:var(--bg); color:var(--text); }
+  #toc { position:fixed; top:0; left:0; width:248px; height:100vh; background:var(--blue-dark); color:#cde; overflow-y:auto; padding:24px 0; font-size:12.5px; }
+  #toc h2 { color:#fff; font-size:13px; padding:0 18px 12px; letter-spacing:.06em; text-transform:uppercase; }
+  #toc a { display:block; padding:5px 18px; color:#b0c8e0; text-decoration:none; border-left:3px solid transparent; }
+  #toc a:hover,#toc a.active { color:#fff; background:rgba(255,255,255,.08); border-left-color:#7eb8e8; }
+  #toc .toc-sub { padding-left:30px; font-size:11.5px; color:#8aacc8; }
+  #content { margin-left:248px; padding:36px 48px; max-width:1100px; }
+  h1 { font-size:26px; color:var(--blue-dark); border-bottom:3px solid var(--blue-dark); padding-bottom:8px; margin:42px 0 18px; }
+  h1:first-child { margin-top:0; }
+  h2 { font-size:18px; color:var(--blue-mid); margin:28px 0 12px; border-left:4px solid var(--blue-light); padding-left:10px; }
+  h3 { font-size:14px; color:var(--blue-dark); margin:20px 0 8px; font-weight:600; }
+  p  { margin-bottom:10px; }
+  code { font-family:'Cascadia Code','Consolas',monospace; font-size:12.5px; background:var(--code-bg); padding:1px 5px; border-radius:3px; color:#1a3a5c; }
+  pre  { background:var(--code-bg); border:1px solid var(--border); border-left:4px solid var(--blue-light); padding:14px 16px; border-radius:6px; overflow-x:auto; margin:12px 0 16px; font-family:'Cascadia Code','Consolas',monospace; font-size:12px; line-height:1.55; }
+  pre code { background:none; padding:0; font-size:inherit; }
+  .pseudo { background:#fff8e8; border-left-color:#e6a020; }
+  table  { border-collapse:collapse; width:100%; margin:12px 0 18px; font-size:13px; }
+  th     { background:var(--blue-dark); color:#fff; padding:8px 12px; text-align:left; }
+  td     { padding:7px 12px; border-bottom:1px solid var(--border); vertical-align:top; }
+  tr:nth-child(even) td { background:#f0f5fb; }
+  tr:hover td { background:#e4edf8; }
+  .card { background:var(--card); border:1px solid var(--border); border-radius:8px; padding:18px 20px; margin:14px 0; }
+  .note { background:#e8f4fd; border-left:4px solid var(--blue-light); padding:10px 14px; border-radius:4px; margin:10px 0; font-size:13px; }
+  .warn { background:#fff3e0; border-left:4px solid var(--amber); padding:10px 14px; border-radius:4px; margin:10px 0; font-size:13px; }
+  .ok   { background:#e8f5e9; border-left:4px solid var(--green); padding:10px 14px; border-radius:4px; margin:10px 0; font-size:13px; }
+  .flow-wrap { display:flex; gap:32px; align-items:flex-start; margin:16px 0 24px; flex-wrap:wrap; }
+  .flow-svg  { flex:0 0 auto; }
+  .flow-code { flex:1 1 320px; }
+  svg.flow { font-family:'Segoe UI',system-ui,sans-serif; }
+  .fb { fill:#dce8f5; stroke:#1a3a5c; stroke-width:1.2; }
+  .fd { fill:#fff0cc; stroke:#1a3a5c; stroke-width:1.2; }
+  .fi { fill:#e8f5e8; stroke:#1a3a5c; stroke-width:1.2; }
+  .fs { fill:#1a3a5c; stroke:none; }
+  .fe { fill:#2e7d32; stroke:none; }
+  .fr { fill:#c8e6c9; stroke:#2e7d32; stroke-width:1.2; }
+  .ft { font-size:10.5px; fill:#1a1a2e; text-anchor:middle; dominant-baseline:middle; }
+  .fw { font-size:10.5px; fill:#fff; text-anchor:middle; dominant-baseline:middle; font-weight:600; }
+  .fl { font-size:9.5px; fill:#5a6a7a; text-anchor:middle; }
+  .ar { stroke:#1a3a5c; stroke-width:1.2; fill:none; marker-end:url(#arr); }
+  .badge { display:inline-block; background:var(--green); color:#fff; font-size:11px; font-weight:700; padding:2px 8px; border-radius:12px; margin-left:6px; }
+  ul,ol { padding-left:22px; margin-bottom:10px; }
+  li { margin-bottom:4px; }
+  hr { border:none; border-top:1px solid var(--border); margin:32px 0; }
+</style>
+</head>
+<body>
+<nav id="toc">
+  <h2>CMDSolver v2.3</h2>
+  <a href="#overview">1. Übersicht</a>
+  <a href="#architecture">2. Architektur</a>
+  <a href="#abstract-solver">3. AbstractSolver</a>
+  <a class="toc-sub" href="#jacobi-build">Jacobi-Aufbau</a>
+  <a class="toc-sub" href="#stagnation">Stagnations-Restart</a>
+  <a href="#solver-common">4. Allgemeine Solver-Optionen</a>
+  <a href="#solvers">5. Solver im Detail</a>
+  <a class="toc-sub" href="#newton-armijo">Newton-Armijo</a>
+  <a class="toc-sub" href="#newton-sparse">Newton-GSPAR</a>
+  <a class="toc-sub" href="#newton-sparse-armijo">Newton-GSPAR+Armijo</a>
+  <a class="toc-sub" href="#lm">Levenberg-Marquardt</a>
+  <a class="toc-sub" href="#broyden">Broyden</a>
+  <a class="toc-sub" href="#broyden-sparse">Broyden-GSPAR</a>
+  <a class="toc-sub" href="#homotopy">Homotopie</a>
+  <a href="#gspar-detail">6. Newton-GSPAR intern</a>
+  <a class="toc-sub" href="#flow-main">Gesamtablauf</a>
+  <a class="toc-sub" href="#super-pattern">Super-Pattern</a>
+  <a class="toc-sub" href="#lu-detail">LU-Faktorisierung</a>
+  <a class="toc-sub" href="#armijo">Armijo-Liniensuche</a>
+  <a href="#broyden-gspar-detail">7. Broyden-GSPAR intern</a>
+  <a href="#initialize">8. INITIALIZE &amp; Conditionals</a>
+  <a href="#projector">9. PhysicalProjector</a>
+  <a href="#scaling">10. Skalierung</a>
+  <a href="#di-flag">11. Startwert-Diagnose</a>
+  <a href="#cli">12. CLI-Referenz</a>
+  <a href="#test-mode">13. -TEST Modus</a>
+  <a href="#cas-format">14. CAS-Format</a>
+  <a href="#performance">15. Performance</a>
+  <a href="#history">16. Entwicklungshistorie</a>
+  <a href="#bugfixes">17. Bug-Fix-Log</a>
+  <a href="#extensions">18. Erweiterungen</a>
+</nav>
+
+<main id="content">
+<defs>
+  <marker id="arr" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+    <polygon points="0 0,8 3,0 6" fill="#1a3a5c"/>
+  </marker>
+</defs>
+
+<h1 id="overview">1. Übersicht</h1>
+<p>CMDSolver löst nichtlineare Gleichungssysteme <strong>F(x) = 0</strong>, F: ℝ<sup>n</sup>→ℝ<sup>n</sup>,
+durch iterative Newton-artige Verfahren. Eingabe über CAS-Dateien mit symbolischen Gleichungen,
+Variablen-Bounds, INITIALIZE-Blöcken und konditionalen IF/ELSE-Ausdrücken.</p>
+
+<div class="ok">
+  <strong>Stand Mai 2026 — Version 2.3:</strong> 7 Solver vollständig implementiert und getestet.
+  Neu in v2.3: <code>BROYDEN_SPARSE</code> (Broyden + GSPAR-LU via Sherman-Morrison-Woodbury),
+  automatischer Solver-Test via <code>-TEST</code> Flag, paralleler thread-sicherer Jacobi-Aufbau (O(nnz)).
+</div>
+
+<table>
+  <tr><th>Solver</th><th>Flag</th><th>Methode</th><th>SimpleSystem</th><th>Empfohlen für</th></tr>
+  <tr><td>Newton-Armijo</td><td><code>-S:NEWTON_ARMIJO</code></td><td>Dense LU + Armijo</td><td>3 iter, 3.2e-11</td><td>Standard, n&lt;200</td></tr>
+  <tr><td>Newton-GSPAR</td><td><code>-S:NEWTON_SPARSE</code></td><td>Sparse LU (WIAS 1994)</td><td>3 iter, 3.2e-11</td><td>n&gt;200, dünn besetzt</td></tr>
+  <tr><td>Newton-GSPAR+Armijo</td><td><code>-S:NEWTON_SPARSE_ARMIJO</code></td><td>Sparse LU + Armijo</td><td>3 iter, 3.2e-11</td><td>Große Systeme, schlechte Startwerte</td></tr>
+  <tr><td>Levenberg-Marquardt</td><td><code>-S:LEVENBERG_MARQUARDT</code></td><td>LM-Dämpfung</td><td>36 iter, 8.3e-09</td><td>Schlecht konditioniert (κ&gt;10¹²)</td></tr>
+  <tr><td>Broyden</td><td><code>-S:BROYDEN</code></td><td>Rang-1-Update dense</td><td>25 iter, 8.0e-08</td><td>Teurer Jacobi-Aufbau</td></tr>
+  <tr><td>Broyden-GSPAR</td><td><code>-S:BROYDEN_SPARSE</code></td><td>Rang-1-Update + GSPAR-LU</td><td>3 iter, 3.2e-11</td><td>Große Systeme, sparender Jacobi-Aufbau</td></tr>
+  <tr><td>Homotopie</td><td><code>-S:HOMOTOPY</code></td><td>Pfadverfolgung t∈[0,1]</td><td>11 iter, 5.1e-09</td><td>Schlechter Startwert, Ma→1</td></tr>
+</table>
+
+<hr>
+<h1 id="architecture">2. Architektur</h1>
+<table>
+  <tr><th>Paket</th><th>Inhalt</th></tr>
+  <tr><td><code>apps.eqnParser</code></td><td>EqnSysReader, EqnData, SystemData, EqnSystem, InitGuessApplier, InitialValueAnalyzer</td></tr>
+  <tr><td><code>apps.eqnParser.solver</code></td><td>AbstractSolver, alle Solver-Klassen, PhysicalProjector, VariableScaler, ResidualNormalizer</td></tr>
+  <tr><td><code>apps.eqnParser.solver.gspar</code></td><td>GSPAR, GSPARWorkspace, SparseMatrix, GSPARPseudoCode</td></tr>
+  <tr><td><code>apps.eqnParser.matrix</code></td><td>MatrixSimple, DerivativeMatrix, OutputVariable</td></tr>
+  <tr><td><code>cmd</code></td><td>CASSolver (CLI), BatchRunner</td></tr>
+</table>
+
+<h3>Solver-Klassenhierarchie</h3>
+<pre>
+AbstractSolver (solve(), buildJacobian(), evaluateF(), applyStep(), …)
+├── NewtonArmijoSolver        (-S:NEWTON_ARMIJO)
+├── LevenbergMarquardtSolver  (-S:LEVENBERG_MARQUARDT)
+├── BroydenSolver             (-S:BROYDEN)
+├── HomotopySolver            (-S:HOMOTOPY)
+└── GSPARSolver               (-S:NEWTON_SPARSE)
+    ├── NewtonArmijoGSPARSolver  (-S:NEWTON_SPARSE_ARMIJO)  [+ Armijo auf GSPAR-LU]
+    └── BroydenGSPARSolver       (-S:BROYDEN_SPARSE)        [+ Broyden-Update auf GSPAR-LU]
+</pre>
+
+<h3>Initialisierungs-Reihenfolge (kritisch)</h3>
+<div class="warn">
+  Die folgende Reihenfolge ist <strong>zwingend</strong>:
+</div>
+<pre>
+1. initStructSwitches()        // MUSS ZUERST — setzt IF(VAR.SPEC==FIXED) Schalter
+2. InitGuessApplier.apply()    // INITIALIZE-Block aus CAS-Datei anwenden
+3. InitialValueAnalyzer (-DI)  // optional — Startwert-Optimierung NACH InitGuessApplier
+4. AbstractSolver.solve()      // Newton-Iteration
+</pre>
+
+<hr>
+<h1 id="abstract-solver">3. AbstractSolver — Gemeinsame Infrastruktur</h1>
+
+<h2 id="jacobi-build">3.1 Jacobi-Aufbau (thread-sicher, O(nnz))</h2>
+
+<div class="flow-wrap">
+<div class="flow-svg">
+<svg class="flow" width="260" height="480" viewBox="0 0 260 480">
+  <defs><marker id="arr" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+    <polygon points="0 0,8 3,0 6" fill="#1a3a5c"/></marker></defs>
+  <rect x="30" y="8" width="200" height="28" rx="5" class="fs"/>
+  <text x="130" y="22" class="fw">buildJacobian(sysData, a, values)</text>
+  <rect x="30" y="50" width="200" height="36" rx="4" class="fi"/>
+  <text x="130" y="62" class="ft">fullToReduced[j] aufbauen</text>
+  <text x="130" y="74" class="ft">fixiert → -1, frei → Spalten-Index</text>
+  <rect x="30" y="100" width="200" height="28" rx="4" class="fb"/>
+  <text x="130" y="110" class="ft">IntStream.range(0, n).parallel()</text>
+  <text x="130" y="121" class="ft">ForkJoinPool — eine Zeile pro Thread</text>
+  <polygon points="130,144 220,160 130,176 40,160" class="fd"/>
+  <text x="130" y="157" class="ft">Gleichungstyp?</text>
+  <rect x="10" y="190" width="100" height="36" rx="4" class="fi"/>
+  <text x="60" y="203" class="ft">Symbolisch</text>
+  <text x="60" y="214" class="ft">derivMat[i][idx]</text>
+  <rect x="80" y="240" width="100" height="28" rx="4" class="fi"/>
+  <text x="130" y="250" class="ft">CALL-Gleichung</text>
+  <text x="130" y="261" class="ft">calcDeriv + row[out]=1.0</text>
+  <rect x="150" y="190" width="100" height="36" rx="4" class="fb"/>
+  <text x="200" y="203" class="ft">Finite Diff.</text>
+  <text x="200" y="214" class="ft">localValues-Kopie</text>
+  <rect x="30" y="290" width="200" height="36" rx="4" class="fb"/>
+  <text x="130" y="303" class="ft">row[rc] → a.setValueAt(i, rc, v)</text>
+  <text x="130" y="315" class="ft">thread-sicher: eigene Zeile i</text>
+  <rect x="70" y="340" width="120" height="26" rx="5" class="fe"/>
+  <text x="130" y="353" class="fw">a befüllt</text>
+  <text x="80" y="390" class="ft" style="fill:#2c5f8a; font-weight:600">Speicher v2.3:</text>
+  <rect x="30" y="400" width="200" height="72" rx="4" class="fr"/>
+  <text x="130" y="415" class="ft">row[]: O(functionCount) — kein afull!</text>
+  <text x="130" y="428" class="ft">a[][]: O(functionCount²)</text>
+  <text x="130" y="441" class="ft">afull: entfällt (war O(totalCount²))</text>
+  <text x="130" y="454" class="ft">Parallelität: immer aktiv</text>
+  <line x1="130" y1="36" x2="130" y2="50" class="ar"/>
+  <line x1="130" y1="86" x2="130" y2="100" class="ar"/>
+  <line x1="130" y1="128" x2="130" y2="144" class="ar"/>
+  <line x1="80" y1="160" x2="60" y2="190" class="ar"/>
+  <line x1="130" y1="176" x2="130" y2="240" class="ar"/>
+  <line x1="180" y1="160" x2="200" y2="190" class="ar"/>
+  <line x1="60" y1="226" x2="60" y2="303" stroke="#1a3a5c" stroke-width="1.2" fill="none"/>
+  <line x1="60" y1="303" x2="30" y2="303" class="ar"/>
+  <line x1="130" y1="268" x2="130" y2="290" class="ar"/>
+  <line x1="200" y1="226" x2="200" y2="303" stroke="#1a3a5c" stroke-width="1.2" fill="none"/>
+  <line x1="200" y1="303" x2="230" y2="303" class="ar"/>
+  <line x1="130" y1="326" x2="130" y2="340" class="ar"/>
+</svg>
+</div>
+<div class="flow-code">
+<h3>Pseudocode — buildJacobian</h3>
+<pre class="pseudo">
+// AbstractSolver.buildJacobian() — v2.3
+
+// Mapping einmalig aufbauen (read-only für Threads)
+fullToReduced = new int[totalCount]
+reduced = 0
+for j = 0..totalCount-1:
+  if var[j].isFixed(): fullToReduced[j] = -1
+  else:               fullToReduced[j] = reduced++
+
+// Parallel über alle Gleichungen
+IntStream.range(0, n).parallel().forEach(i ->
+
+  row = new double[functionCount]  // thread-lokal!
+
+  if symbolisch AND NOT CALL:
+    for idx in eqn.getVariableIndices(values):
+      rc = fullToReduced[idx]
+      if rc >= 0:
+        row[rc] = derivMat[i][idx].evaluate(values)
+
+  elif CALL-Gleichung:
+    for k in indices:
+      rc = fullToReduced[indices[k]]
+      if rc >= 0: row[rc] = eqn.calcDeriv(values, k)
+    // Output-Variable: dF/dOutput = +1
+    row[fullToReduced[indices[0]]] = 1.0
+
+  else: // Finite Differenzen (Homotopie)
+    localValues = new HashMap(values)  // thread-lokale Kopie!
+    f0 = eqn.calcFunc(localValues)
+    for j = 0..totalCount-1:
+      rc = fullToReduced[j]
+      if rc < 0: continue  // fixiert — überspringen
+      h = max(1e-6·|xj|, 1e-8)
+      localValues[alias] = xj + h
+      row[rc] = (eqn.calcFunc(localValues) - f0) / h
+      localValues[alias] = xj
+
+  // Thread-sicher: jeder Thread schreibt in eigene Zeile i
+  for rc = 0..n-1: a[i][rc] = row[rc]
+)
+</pre>
+</div>
+</div>
+
+<div class="note">
+  <strong>CALL-Gleichungen:</strong> F = Output − pCALL(inputs) = 0.
+  Die Output-Variable hat immer Koeffizient +1 — wird explizit gesetzt,
+  da <code>calcDeriv(values, 0)</code> für sie 0 zurückgibt.
+</div>
+
+<h2 id="stagnation">3.2 Stagnations-Restart</h2>
+<p>Wenn fsum sich über 8 aufeinanderfolgende Iterationen weniger als 1% verbessert,
+werden alle freien Variablen um ±2.5% gestört (deterministisch, Seed = Iterationsnummer):</p>
+<pre class="pseudo">
+if improvement &lt; 1%  für 8 Iterationen:
+  rng = new Random(iteration)           // reproduzierbar
+  for jede freie Variable:
+    val += val * 0.05 * (rng.nextDouble() - 0.5)   // ±2.5%
+  evaluateF() → fsum neu
+  stagnCount = 0
+</pre>
+
+<hr>
+<h1 id="solver-common">4. Allgemeine Solver-Optionen</h1>
+
+<h3>Solver-Auswahl</h3>
+<table>
+  <tr><th>Flag</th><th>Solver</th><th>Default</th></tr>
+  <tr><td><code>-S:NEWTON_ARMIJO</code></td><td>Newton + Armijo (dense LU)</td><td>✓</td></tr>
+  <tr><td><code>-S:NEWTON_SPARSE</code></td><td>Newton + GSPAR Sparse-LU</td><td></td></tr>
+  <tr><td><code>-S:NEWTON_SPARSE_ARMIJO</code></td><td>Newton + GSPAR Sparse-LU + Armijo</td><td></td></tr>
+  <tr><td><code>-S:LEVENBERG_MARQUARDT</code></td><td>Levenberg-Marquardt</td><td></td></tr>
+  <tr><td><code>-S:BROYDEN</code></td><td>Broyden Quasi-Newton (dense)</td><td></td></tr>
+  <tr><td><code>-S:BROYDEN_SPARSE</code></td><td>Broyden + GSPAR Sparse-LU</td><td></td></tr>
+  <tr><td><code>-S:HOMOTOPY</code></td><td>Homotopie / Arc-Length</td><td></td></tr>
+</table>
+
+<h3>Gemeinsame Parameter (alle Solver)</h3>
+<table>
+  <tr><th>Flag</th><th>Default</th><th>Beschreibung</th></tr>
+  <tr><td><code>-SC:NONE</code></td><td>✓</td><td>Keine Jacobi-Skalierung</td></tr>
+  <tr><td><code>-SC:DIAGONAL</code></td><td></td><td>Diagonal-Skalierung: scale[j] = 1/|J[j][j]|</td></tr>
+  <tr><td><code>-SC:UNIT_INTERVAL</code></td><td></td><td>Skalierung auf [0,1] via Bounds (experimentell)</td></tr>
+  <tr><td><code>-SN</code></td><td></td><td>Relative Residuumsnormierung ‖F‖/‖F(x₀)‖</td></tr>
+  <tr><td><code>-DI</code></td><td></td><td>Startwert-Diagnose + Optimierung vor dem Solve</td></tr>
+  <tr><td><code>-TEST</code></td><td></td><td>Alle Solver automatisch testen → _solvertest.txt</td></tr>
+</table>
+
+<hr>
+<h1 id="solvers">5. Solver im Detail</h1>
+
+<h2 id="newton-armijo">5.1 Newton-Armijo (<code>-S:NEWTON_ARMIJO</code>)</h2>
+<p>Klassisches Newton-Raphson mit dichter Gauss-Jordan-Inversion (<code>MatrixSimple.inverse()</code>,
+O(n³)) und Armijo-Backtracking. Konditionszahl wird per Frobenius-Norm geschätzt.</p>
+<table>
+  <tr><th>Parameter</th><th>Flag</th><th>Default</th><th>Beschreibung</th></tr>
+  <tr><td>Startvektordump</td><td><code>-DV:&lt;file&gt;</code></td><td>—</td><td>Startwerte vor Iter 0 im -U-Format</td></tr>
+</table>
+<div class="card"><strong>Wann:</strong> Standard für n &lt; 200. Quadratische Konvergenz nahe der Lösung.</div>
+
+<h2 id="newton-sparse">5.2 Newton-GSPAR (<code>-S:NEWTON_SPARSE</code>)</h2>
+<p>Newton mit GSPAR sparse LU (Grund, WIAS Berlin ~1994). Löst J·dx = −F in O(nnz·fill) statt O(n³).
+Einmalige Strukturanalyse, schnelle Refaktorisierung via Pseudo-Code.</p>
+<table>
+  <tr><th>Parameter</th><th>Flag</th><th>Default</th><th>Beschreibung</th></tr>
+  <tr><td>Reset-Intervall</td><td><code>-SB:RESET=n</code></td><td>1</td><td>Alle n Iter vollständig re-faktorisieren</td></tr>
+  <tr><td>Kappa-Reset</td><td><code>-SB:KAPPA=x</code></td><td>1e12</td><td>κ-Schwelle für erzwungene Refaktorisierung</td></tr>
+</table>
+<div class="card"><strong>Wann:</strong> n &gt; 200, dünn besetzte Jacobi (nnz ≪ n²). 2–3× schneller als Newton-Armijo.</div>
+
+<h2 id="newton-sparse-armijo">5.3 Newton-GSPAR+Armijo (<code>-S:NEWTON_SPARSE_ARMIJO</code>)</h2>
+<p>Erbt GSPAR-LU-Kern (<code>extends GSPARSolver</code>) und ergänzt Armijo-Liniensuche.
+Alle GSPAR-Parameter plus Armijo-Backtracking.</p>
+<div class="card"><strong>Wann:</strong> Große Systeme mit schlechten Startwerten — GSPAR-Effizienz + Armijo-Robustheit.</div>
+
+<h2 id="lm">5.4 Levenberg-Marquardt (<code>-S:LEVENBERG_MARQUARDT</code>)</h2>
+<p>Löst <code>(J<sup>T</sup>J + μ·D)·dx = −J<sup>T</sup>F</code> mit adaptivem μ.
+D = diag(J<sup>T</sup>J). μ-Initialisierung via geometrisches Mittel (verhindert Einfrieren
+durch einzelne große Jacobi-Einträge).</p>
+<table>
+  <tr><th>Parameter</th><th>Konfig</th><th>Default</th><th>Beschreibung</th></tr>
+  <tr><td>μ-Init</td><td><code>lmMuInit</code></td><td>1e-6</td><td>μ₀ = lmMuInit · geomMean(diag(JᵀJ))</td></tr>
+  <tr><td>μ-Verkleinerung</td><td><code>lmNuDown</code></td><td>5.0</td><td>μ /= nuDown bei Fortschritt (ρ &gt; 0.25)</td></tr>
+  <tr><td>μ-Vergrößerung</td><td><code>lmNuUp</code></td><td>2.0</td><td>μ *= nuUp bei Stagnation</td></tr>
+  <tr><td>Gain-Ratio</td><td><code>lmRhoMin</code></td><td>0.25</td><td>Schritt akzeptiert wenn ρ &gt; lmRhoMin</td></tr>
+</table>
+<div class="card"><strong>Wann:</strong> Schlecht konditioniert (κ &gt; 10¹²), Ma→1-Übergänge, stark nichtlinear.</div>
+
+<h2 id="broyden">5.5 Broyden (<code>-S:BROYDEN</code>)</h2>
+<p>Aktualisiert J per Rang-1-Update. Adaptiver Checkpoint/Rollback: bei Divergenz
+(fsum &gt; 2×ckFsum) zurücksetzen + Intervall halbieren. Nach 3 Rollbacks: Newton-Fallback.</p>
+<table>
+  <tr><th>Parameter</th><th>Flag</th><th>Default</th><th>Beschreibung</th></tr>
+  <tr><td>Reset-Intervall</td><td><code>-SB:RESET=n</code></td><td>1</td><td>Jacobi alle n Iter neu. 10 = adaptiv</td></tr>
+  <tr><td>Kappa-Reset</td><td><code>-SB:KAPPA=x</code></td><td>1e12</td><td>κ-Schwelle für erzwungenen Reset</td></tr>
+  <tr><td>Warmstart-Schwelle</td><td><code>-SB:WARMKAPPA=x</code></td><td>1e8</td><td>κ für Jacobi-Wiederverwendung beim Reset</td></tr>
+</table>
+<div class="card"><strong>Wann:</strong> Teurer Jacobi-Aufbau (viele CALL-Gleichungen), aber n klein.</div>
+
+<h2 id="broyden-sparse">5.6 Broyden-GSPAR (<code>-S:BROYDEN_SPARSE</code>)</h2>
+<p>Kombiniert Broyden-Rang-1-Updates mit GSPAR-LU als Basislöser.
+Statt dense Gauss-Jordan-Inversion löst GSPAR das LGS in O(nnz·fill).
+Broyden-Korrekturen werden via sequentieller Sherman-Morrison-Woodbury angewendet.</p>
+
+<table>
+  <tr><th>Methode</th><th>LGS pro Iter</th><th>Jacobi-Speicher</th></tr>
+  <tr><td>Broyden (dense)</td><td>O(n³)</td><td>O(n²)</td></tr>
+  <tr><td>Broyden-GSPAR</td><td>O(nnz·fill + bCount·n)</td><td>O(nnz + bCount·n)</td></tr>
+</table>
+<table>
+  <tr><th>Parameter</th><th>Flag</th><th>Default</th><th>Beschreibung</th></tr>
+  <tr><td>Reset-Intervall</td><td><code>-SB:RESET=n</code></td><td>1</td><td>GSPAR re-faktorisiert alle n Iter</td></tr>
+  <tr><td>Kappa-Reset</td><td><code>-SB:KAPPA=x</code></td><td>1e12</td><td>κ-Schwelle für erzwungenen Reset</td></tr>
+</table>
+<div class="card"><strong>Wann:</strong> Große Systeme (n &gt; 200) wo Broyden-Updates die GSPAR-Effizienz
+ausnutzen. Konvergiert auf SimpleSystem in 3 Iterationen — identisch zu Newton-GSPAR.</div>
+
+<h2 id="homotopy">5.7 Homotopie (<code>-S:HOMOTOPY</code>)</h2>
+<p>Löst <code>H(x,t) = (1−t)·J₀·(x−x₀) + t·F(x) = 0</code> für t: 0→1.
+Prediktor–Korrektor-Schema mit adaptiver Schrittweite.</p>
+<table>
+  <tr><th>Parameter</th><th>Flag</th><th>Default</th><th>Beschreibung</th></tr>
+  <tr><td>Schritte</td><td><code>-SH:STEPS=n</code></td><td>10</td><td>Initiale Anzahl Homotopie-Schritte</td></tr>
+  <tr><td>Bogenlänge</td><td><code>-SH:DS=x</code></td><td>0.1</td><td>Initiale Schrittweite ds</td></tr>
+  <tr><td>Innerer Solver</td><td><code>-SH:INNER=typ</code></td><td>NEWTON_ARMIJO</td><td>Korrektor-Solver pro Schritt</td></tr>
+  <tr><td>Ma=1-Preset</td><td><code>-SH:CRITICAL</code></td><td></td><td>50 Schritte, ds=0.02</td></tr>
+</table>
+<div class="card"><strong>Wann:</strong> Wenn alle anderen Solver divergieren — schlechte Startwerte, Bifurkationspunkte.</div>
+
+<hr>
+<h1 id="gspar-detail">6. Newton-GSPAR intern</h1>
+
+<h2 id="flow-main">6.1 Gesamtablauf</h2>
+<div class="flow-wrap">
+<div class="flow-svg">
+<svg class="flow" width="280" height="640" viewBox="0 0 280 640">
+  <defs><marker id="arr2" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+    <polygon points="0 0,8 3,0 6" fill="#1a3a5c"/></marker></defs>
+  <style>
+    .ar2{stroke:#1a3a5c;stroke-width:1.2;fill:none;marker-end:url(#arr2);}
+    .fl2{font-size:9.5px;fill:#5a6a7a;text-anchor:middle;}
+  </style>
+  <rect x="60" y="8" width="160" height="28" rx="6" class="fs"/>
+  <text x="140" y="22" class="fw">solve(sysData)</text>
+  <rect x="40" y="52" width="200" height="36" rx="4" class="fi"/>
+  <text x="140" y="62" class="ft">initStructSwitches()</text>
+  <text x="140" y="74" class="ft">InitGuessApplier.apply()</text>
+  <rect x="40" y="104" width="200" height="36" rx="4" class="fb"/>
+  <text x="140" y="114" class="ft">buildJacobian(a) — parallel</text>
+  <text x="140" y="126" class="ft">thread-lokale row[], O(nnz)</text>
+  <polygon points="140,156 230,172 140,188 50,172" class="fd"/>
+  <text x="140" y="168" class="ft">structureAnalyzed?</text>
+  <rect x="30" y="202" width="220" height="36" rx="4" class="fi"/>
+  <text x="140" y="214" class="ft">analyzeStructure(sysData, n)</text>
+  <text x="140" y="226" class="ft">Super-Pattern IF+ELSE vereinigen</text>
+  <rect x="40" y="254" width="200" height="28" rx="4" class="fb"/>
+  <text x="140" y="264" class="ft">fillJacobiValues(J)</text>
+  <text x="140" y="276" class="ft">Werte → sparseA.a[]</text>
+  <rect x="40" y="298" width="200" height="36" rx="4" class="fb"/>
+  <text x="140" y="309" class="ft">GSPAR.factorize()</text>
+  <text x="140" y="320" class="ft">dllugc→dllugb→dlluga→dldsp1</text>
+  <rect x="40" y="350" width="200" height="28" rx="4" class="fb"/>
+  <text x="140" y="361" class="ft">GSPAR.solve(ws, −F)</text>
+  <text x="140" y="372" class="ft">Vor-/Rückwärtsrechnung dlsolk</text>
+  <rect x="40" y="394" width="200" height="28" rx="4" class="fb"/>
+  <text x="140" y="405" class="ft">unscaleStep(dx) → dxOrig</text>
+  <text x="140" y="417" class="ft">armijoStep(dxOrig) → α</text>
+  <rect x="40" y="438" width="200" height="28" rx="4" class="fb"/>
+  <text x="140" y="449" class="ft">applyStep(α·dxOrig)</text>
+  <text x="140" y="461" class="ft">PhysicalProjector.project()</text>
+  <polygon points="140,482 230,498 140,514 50,498" class="fd"/>
+  <text x="140" y="495" class="ft">‖F‖ &lt; tol?</text>
+  <rect x="85" y="528" width="110" height="26" rx="6" class="fe"/>
+  <text x="140" y="541" class="fw">CONVERGED</text>
+  <line x1="140" y1="36" x2="140" y2="52" class="ar2"/>
+  <line x1="140" y1="88" x2="140" y2="104" class="ar2"/>
+  <line x1="140" y1="140" x2="140" y2="156" class="ar2"/>
+  <line x1="140" y1="188" x2="140" y2="202" class="ar2"/>
+  <text x="148" y="197" class="fl2">Ja</text>
+  <line x1="230" y1="172" x2="258" y2="172" stroke="#999" stroke-width="1.2" fill="none"/>
+  <line x1="258" y1="172" x2="258" y2="268" stroke="#999" stroke-width="1.2" fill="none"/>
+  <line x1="258" y1="268" x2="240" y2="268" class="ar2" style="stroke:#999"/>
+  <text x="254" y="164" class="fl2" style="fill:#999">Nein</text>
+  <line x1="140" y1="238" x2="140" y2="254" class="ar2"/>
+  <line x1="140" y1="282" x2="140" y2="298" class="ar2"/>
+  <line x1="140" y1="334" x2="140" y2="350" class="ar2"/>
+  <line x1="140" y1="378" x2="140" y2="394" class="ar2"/>
+  <line x1="140" y1="422" x2="140" y2="438" class="ar2"/>
+  <line x1="140" y1="466" x2="140" y2="482" class="ar2"/>
+  <line x1="140" y1="514" x2="140" y2="528" class="ar2"/>
+  <text x="148" y="522" class="fl2">Ja</text>
+  <line x1="50" y1="498" x2="15" y2="498" stroke="#1a3a5c" stroke-width="1.2" fill="none"/>
+  <line x1="15" y1="498" x2="15" y2="116" stroke="#1a3a5c" stroke-width="1.2" fill="none"/>
+  <line x1="15" y1="116" x2="40" y2="116" class="ar2"/>
+  <text x="8" y="492" class="fl2" style="fill:#1a3a5c">N</text>
+  <text x="8" y="504" class="fl2" style="fill:#1a3a5c">e</text>
+  <text x="8" y="516" class="fl2" style="fill:#1a3a5c">i</text>
+  <text x="8" y="528" class="fl2" style="fill:#1a3a5c">n</text>
+</svg>
+</div>
+<div class="flow-code">
+<h3>Pseudocode — Hauptschleife</h3>
+<pre class="pseudo">
+// AbstractSolver.solve()
+initStructSwitches(sysData)
+InitGuessApplier.apply(sysData)
+
+while ‖F(x)‖ > tol AND iter &lt; maxIter:
+
+  // Jacobi parallel aufbauen (v2.3)
+  buildJacobian(a, sysData, values)
+  if scalingActive: scaleJacobian(a, D)
+
+  // GSPARSolver.computeStep()
+  if NOT structureAnalyzed:
+    analyzeStructure(sysData, n)
+    structureAnalyzed = true
+
+  fillJacobiValues(a, n)
+  // Werte aus a → Pattern → sparseA.a
+
+  if iter==0 OR needsRefactorize(kappa):
+    GSPAR.factorize(sparseA, workspace)
+  else:
+    // schnelle Refaktorisierung via Pseudo-Code
+    sparseA.transferValues(jacobiVals, ws.af)
+
+  dx = GSPAR.solve(workspace, −F)
+
+  // AbstractSolver (nach computeStep)
+  dxOrig = unscaleStep(dx)   // D · dx_skaliert
+  alpha  = armijoStep(dxOrig, F, x)
+  x += alpha · dxOrig
+  PhysicalProjector.project(x)
+
+  F(x) → fsum; iter++
+</pre>
+</div>
+</div>
+
+<h2 id="super-pattern">6.2 Super-Pattern für IF/ELSE-Gleichungen</h2>
+<div class="warn">
+  <strong>Kernproblem:</strong> Bei IF/ELSE-Gleichungen ändert sich das Jacobi-Sparsity-Pattern
+  zwischen Iterationen. Ein festes Pattern aus Iter-0 führt zu falschen LU-Zerlegungen → Divergenz.
+  <strong>Lösung:</strong> Super-Pattern = Vereinigung aller möglichen Nicht-Null-Positionen beider Zweige.
+</div>
+<div class="flow-wrap">
+<div class="flow-svg">
+<svg class="flow" width="280" height="390" viewBox="0 0 280 390">
+  <defs><marker id="arr3" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+    <polygon points="0 0,8 3,0 6" fill="#1a3a5c"/></marker></defs>
+  <style>.ar3{stroke:#1a3a5c;stroke-width:1.2;fill:none;marker-end:url(#arr3);}</style>
+  <rect x="50" y="6" width="180" height="26" rx="5" class="fs"/>
+  <text x="140" y="19" class="fw">analyzeStructure(sysData, n)</text>
+  <rect x="30" y="46" width="220" height="36" rx="4" class="fi"/>
+  <text x="140" y="57" class="ft">Index-Mapping: fullToReduced[]</text>
+  <text x="140" y="69" class="ft">fixiert→-1, frei→Spalten-Index</text>
+  <rect x="30" y="98" width="220" height="36" rx="4" class="fb"/>
+  <text x="140" y="110" class="ft">FOR row=0..n-1:</text>
+  <text x="140" y="121" class="ft">  colSet = eqn.getVariableIndices()</text>
+  <polygon points="140,150 230,166 140,182 50,166" class="fd"/>
+  <text x="140" y="163" class="ft">isConditional?</text>
+  <rect x="30" y="196" width="220" height="28" rx="4" class="fi"/>
+  <text x="140" y="208" class="ft">elseIdx = eqnElse.getVariableIndices()</text>
+  <text x="140" y="219" class="ft">colSet.addAll(elseIdx)  ← Vereinigung!</text>
+  <rect x="30" y="240" width="220" height="28" rx="4" class="fb"/>
+  <text x="140" y="252" class="ft">FOR col IN colSet:</text>
+  <text x="140" y="263" class="ft">  pattern[row][fullToReduced[col]] = true</text>
+  <rect x="30" y="284" width="220" height="46" rx="4" class="fi"/>
+  <text x="140" y="296" class="ft">SparseMatrix.buildFromTriplets(pattern)</text>
+  <text x="140" y="308" class="ft">GSPAR.allocate(workspace)</text>
+  <text x="140" y="320" class="ft">structureAnalyzed = true  (einmalig!)</text>
+  <rect x="30" y="346" width="220" height="28" rx="4" class="fb"/>
+  <text x="140" y="358" class="ft">fillJacobiValues(J, n):</text>
+  <text x="140" y="369" class="ft">  liest J[i][ja[k]] für jede Pattern-Position</text>
+  <line x1="140" y1="32" x2="140" y2="46" class="ar3"/>
+  <line x1="140" y1="82" x2="140" y2="98" class="ar3"/>
+  <line x1="140" y1="134" x2="140" y2="150" class="ar3"/>
+  <line x1="140" y1="182" x2="140" y2="196" class="ar3"/>
+  <text x="148" y="191" class="fl2">Ja</text>
+  <line x1="230" y1="166" x2="258" y2="166" stroke="#999" stroke-width="1.2" fill="none"/>
+  <line x1="258" y1="166" x2="258" y2="254" stroke="#999" stroke-width="1.2" fill="none"/>
+  <line x1="258" y1="254" x2="250" y2="254" class="ar3" style="stroke:#999"/>
+  <text x="254" y="158" class="fl2" style="fill:#999">Nein</text>
+  <line x1="140" y1="224" x2="140" y2="240" class="ar3"/>
+  <line x1="140" y1="268" x2="140" y2="284" class="ar3"/>
+  <line x1="140" y1="330" x2="140" y2="346" class="ar3"/>
+</svg>
+</div>
+<div class="flow-code">
+<h3>Pseudocode — analyzeStructure</h3>
+<pre class="pseudo">
+// GSPARSolver.analyzeStructure(sysData, n)
+
+// 1. Mapping vollständiger Index → Jacobi-Spalte
+fullToReduced = new int[totalCount]
+reduced = 0
+for j = 0..totalCount-1:
+  if var[j].isFixed(): fullToReduced[j] = -1
+  else:               fullToReduced[j] = reduced++
+
+// 2. Super-Pattern: Vereinigung IF+ELSE
+pattern = new boolean[n][n]
+for row = 0..n-1:
+  eqn = sysData.getEqnAtIndex(row)
+  colSet = eqn.getVariableIndices()  // IF-Zweig
+
+  if eqn.isConditional()
+  OR eqn.isStructConditional():
+    elseIdx = eqn.getConditionalElseEqn()
+                 .getVariableIndices()
+    colSet.addAll(elseIdx)  // Vereinigung!
+
+  for fullCol in colSet:
+    rc = fullToReduced[fullCol]
+    if rc >= 0: pattern[row][rc] = true
+
+// 3. Allokation
+sparseA   = SparseMatrix.buildFromTriplets(pattern)
+workspace = GSPAR.allocate(sparseA)
+jacobiVals = new double[nnz]
+structureAnalyzed = true  // nie wieder!
+</pre>
+<h3>Pseudocode — fillJacobiValues</h3>
+<pre class="pseudo">
+// Pro Iteration — O(nnz)
+k = 0
+for i = 0..n-1:
+  for je = sparseA.ia[i]..sparseA.ia[i+1]-1:
+    j = sparseA.ja[je]     // Spalte aus Pattern
+    jacobiVals[k++] = J.getValueAt(i, j)
+    // 0.0 wenn Zweig inaktiv — korrekt!
+</pre>
+</div>
+</div>
+
+<h2 id="lu-detail">6.3 GSPAR LU-Faktorisierung (PAQ = LU)</h2>
+<div class="flow-wrap">
+<div class="flow-svg">
+<svg class="flow" width="280" height="440" viewBox="0 0 280 440">
+  <defs><marker id="arr4" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+    <polygon points="0 0,8 3,0 6" fill="#1a3a5c"/></marker></defs>
+  <style>.ar4{stroke:#1a3a5c;stroke-width:1.2;fill:none;marker-end:url(#arr4);}</style>
+  <rect x="50" y="6" width="180" height="26" rx="5" class="fs"/>
+  <text x="140" y="19" class="fw">factorize(sparseA, workspace)</text>
+  <rect x="30" y="46" width="220" height="36" rx="4" class="fi"/>
+  <text x="140" y="57" class="ft">dllugc: Matrix in Workspace kopieren</text>
+  <text x="140" y="68" class="ft">sparseA.a → ws.af, ws.jlu, ws.jzei</text>
+  <rect x="30" y="96" width="220" height="46" rx="4" class="fb"/>
+  <text x="140" y="108" class="ft">dllugb: Symbolische Pivotwahl</text>
+  <text x="140" y="119" class="ft">MIN_FILL — minimaler Fill-in</text>
+  <text x="140" y="130" class="ft">→ ws.ip (Permutation), mlu, fillin</text>
+  <rect x="30" y="156" width="220" height="28" rx="4" class="fb"/>
+  <text x="140" y="167" class="ft">dlluga: Einheits-Pivotelemente</text>
+  <text x="140" y="178" class="ft">für nicht-pivotierte Zeilen (mp &lt; n)</text>
+  <rect x="30" y="198" width="220" height="36" rx="4" class="fb"/>
+  <text x="140" y="209" class="ft">dllugd: Spaltenverkettung</text>
+  <text x="140" y="220" class="ft">ws.iu, ws.il — schneller Zugriff</text>
+  <rect x="30" y="248" width="220" height="36" rx="4" class="fi"/>
+  <text x="140" y="259" class="ft">dldsp1: Pseudo-Code generieren</text>
+  <text x="140" y="270" class="ft">ic-Array — Instruktionen für dldint</text>
+  <rect x="30" y="298" width="220" height="36" rx="4" class="fb"/>
+  <text x="140" y="309" class="ft">dlsolk: Vor-/Rückwärtssubstitution</text>
+  <text x="140" y="320" class="ft">L·y = b[IP]  →  U·dx = y</text>
+  <rect x="30" y="348" width="220" height="46" rx="4" style="fill:#fff8e8;stroke:#1a3a5c;stroke-width:1.2"/>
+  <text x="140" y="360" class="ft" style="font-weight:600">JLU-Kodierung (kritisch):</text>
+  <text x="140" y="372" class="ft">Pivot: JLU = -(col+1)  → jluCol = col</text>
+  <text x="140" y="384" class="ft">Normal: JLU = col</text>
+  <text x="140" y="396" class="ft">jluCol(v) = v&lt;0 ? -(v+1) : v</text>
+  <line x1="140" y1="32" x2="140" y2="46" class="ar4"/>
+  <line x1="140" y1="82" x2="140" y2="96" class="ar4"/>
+  <line x1="140" y1="142" x2="140" y2="156" class="ar4"/>
+  <line x1="140" y1="184" x2="140" y2="198" class="ar4"/>
+  <line x1="140" y1="234" x2="140" y2="248" class="ar4"/>
+  <line x1="140" y1="284" x2="140" y2="298" class="ar4"/>
+  <line x1="140" y1="334" x2="140" y2="348" class="ar4"/>
+</svg>
+</div>
+<div class="flow-code">
+<h3>Pseudocode — LU-Faktorisierung</h3>
+<pre class="pseudo">
+// GSPAR.factorize(sparseA, ws)
+
+// ① dllugc — Matrix in Workspace
+ws.af   = copy(sparseA.a)
+ws.jlu  = copy(sparseA.ja)
+ws.jzei = copy(sparseA.ia)
+
+// ② dllugb — LU mit MIN_FILL Pivoting
+for k = 0..n-1:
+  pivotCol = argmin fillCount(j≥k)
+  ws.ip[k] = pivotCol
+  pivot = ws.af[diagonal(pivotCol)]
+  for i mit af[i,pivotCol] ≠ 0:
+    factor = af[i,pivotCol] / pivot
+    af[i,:] -= factor * af[pivotCol,:]
+    // JLU: Pivot → -(col+1)
+
+// ③ dllugd — Verkettung für Zugriff
+for i = 0..n-1:
+  ws.iu[i] = erste U-Position in Zeile i
+  ws.il[i] = erste L-Position in Zeile i
+
+// ④ dldsp1 — Pseudo-Code für Refaktorisierung
+// ic[k] = (IE2 &lt;&lt; 16) | IE1
+// Fortran RSHIFT ≡ Java >>> 16
+
+// ⑤ dlsolk — Lösung
+// Vorwärts:  L·y = b[IP]  (Permutation!)
+// Rückwärts: U·dx = y
+</pre>
+<h3>Pseudocode — Pseudo-Code-Interpreter</h3>
+<pre class="pseudo">
+// dldint — schnelle Refaktorisierung
+while L &lt; ICEN:
+  ENT = ic[L]; L += 2
+  ie2 = ENT >>> 16
+  ie1 = ENT & 0xFFFF
+
+  S = 0
+  for k=0..ie1-1:
+    S += af[ic[L]] * af[ic[L+1]]; L+=2
+
+  switch ie2:
+    1: af[ic[L]] -= S   // U-Element, alt
+    2: af[ic[L]]  = -S  // U-Element, neu
+    3: af[ic[L]]  = S   // Pivot
+    4: af[ic[L]] -= S   // L-Element, alt
+    5: af[ic[L]]  = -S  // L-Element, neu
+    6: L++              // Sonderfall
+</pre>
+</div>
+</div>
+
+<h2 id="armijo">6.4 Armijo-Liniensuche</h2>
+<div class="note">
+  <strong>Kritische Architektur:</strong> Armijo läuft <em>nach</em> <code>unscaleStep(dx)</code>
+  — immer im <strong>physikalischen Raum</strong> (Pa, K, kg/s). Frühere Versionen führten
+  Armijo im skalierten Raum durch → falsche Schritte bei <code>-SC:DIAGONAL</code> (Bug B19).
+</div>
+<pre class="pseudo">
+// AbstractSolver.solve() — Schritt-Architektur
+dx     = computeStep(J, f, …)       // GSPAR: reiner LU-Solve
+dxOrig = unscaleStep(dx)            // physikalischer Raum: D · dx_skaliert
+alpha  = armijoStep(dxOrig, f, x)   // suche alpha ∈ {1, ½, ¼, …}
+x += alpha · dxOrig
+
+// armijoStep — Sufficient Decrease Bedingung
+f0 = ‖F(x)‖²;   slope = -f0   // Newton-Abstiegsrichtung
+alpha = alphaInit  // 1.0
+while alpha > alphaMin:
+  xTry = x + alpha · dxOrig
+  fTry = ‖F(xTry)‖²
+  if fTry ≤ f0 + c₁ · alpha · slope: break
+  alpha *= rho   // 0.5
+</pre>
+
+<hr>
+<h1 id="broyden-gspar-detail">7. Broyden-GSPAR intern</h1>
+
+<div class="flow-wrap">
+<div class="flow-svg">
+<svg class="flow" width="280" height="520" viewBox="0 0 280 520">
+  <defs><marker id="arr5" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+    <polygon points="0 0,8 3,0 6" fill="#1a3a5c"/></marker></defs>
+  <style>.ar5{stroke:#1a3a5c;stroke-width:1.2;fill:none;marker-end:url(#arr5);}</style>
+  <rect x="60" y="8" width="160" height="28" rx="6" class="fs"/>
+  <text x="140" y="22" class="fw">computeStep() — Iteration k</text>
+  <polygon points="140,52 220,68 140,84 60,68" class="fd"/>
+  <text x="140" y="65" class="ft">k &gt; 0 AND lastStep ≠ null?</text>
+  <rect x="30" y="98" width="220" height="36" rx="4" class="fi"/>
+  <text x="140" y="110" class="ft">applyBroydenUpdate(f, n)</text>
+  <text x="140" y="121" class="ft">u = (y − J_k·s) / ss  →  bU[], bV[]</text>
+  <polygon points="140,150 220,166 140,182 60,166" class="fd"/>
+  <text x="140" y="163" class="ft">shouldReset(iter, kappa)?</text>
+  <rect x="30" y="196" width="220" height="28" rx="4" class="fb"/>
+  <text x="140" y="208" class="ft">bU[], bV[] leeren, bCount=0</text>
+  <text x="140" y="219" class="ft">GSPAR: needsRefactorize = true</text>
+  <rect x="30" y="240" width="220" height="36" rx="4" class="fb"/>
+  <text x="140" y="252" class="ft">super.computeStep()  — GSPAR-LU</text>
+  <text x="140" y="263" class="ft">dx₀ = J₀⁻¹·(−F)  via LU-Solve</text>
+  <polygon points="140,292 220,308 140,324 60,308" class="fd"/>
+  <text x="140" y="305" class="ft">bCount &gt; 0?</text>
+  <rect x="30" y="338" width="220" height="46" rx="4" class="fi"/>
+  <text x="140" y="350" class="ft">woodburyCorrect(dx₀, f)</text>
+  <text x="140" y="362" class="ft">für k=0..bCount-1:</text>
+  <text x="140" y="374" class="ft">  Sherman-Morrison Rang-1-Korrektur</text>
+  <rect x="30" y="400" width="220" height="28" rx="4" class="fb"/>
+  <text x="140" y="412" class="ft">armijoSearch(dx) → alpha</text>
+  <rect x="30" y="444" width="220" height="28" rx="4" class="fi"/>
+  <text x="140" y="456" class="ft">lastStep = alpha·dx</text>
+  <text x="140" y="467" class="ft">lastF = f (für nächsten Update)</text>
+  <rect x="70" y="486" width="140" height="26" rx="5" class="fe"/>
+  <text x="140" y="499" class="fw">return alpha·dx</text>
+  <line x1="140" y1="36" x2="140" y2="52" class="ar5"/>
+  <line x1="140" y1="84" x2="140" y2="98" class="ar5"/>
+  <text x="148" y="92" class="fl2">Ja</text>
+  <line x1="220" y1="68" x2="250" y2="68" stroke="#999" stroke-width="1.2" fill="none"/>
+  <line x1="250" y1="68" x2="250" y2="158" stroke="#999" stroke-width="1.2" fill="none"/>
+  <line x1="250" y1="158" x2="220" y2="158" class="ar5" style="stroke:#999"/>
+  <text x="246" y="60" class="fl2" style="fill:#999">Nein</text>
+  <line x1="140" y1="134" x2="140" y2="150" class="ar5"/>
+  <line x1="140" y1="182" x2="140" y2="196" class="ar5"/>
+  <text x="148" y="191" class="fl2">Ja</text>
+  <line x1="220" y1="166" x2="250" y2="166" stroke="#999" stroke-width="1.2" fill="none"/>
+  <line x1="250" y1="166" x2="250" y2="252" stroke="#999" stroke-width="1.2" fill="none"/>
+  <line x1="250" y1="252" x2="250" y2="252" class="ar5" style="stroke:#999"/>
+  <line x1="140" y1="224" x2="140" y2="240" class="ar5"/>
+  <line x1="140" y1="276" x2="140" y2="292" class="ar5"/>
+  <line x1="140" y1="324" x2="140" y2="338" class="ar5"/>
+  <text x="148" y="333" class="fl2">Ja</text>
+  <line x1="220" y1="308" x2="250" y2="308" stroke="#999" stroke-width="1.2" fill="none"/>
+  <line x1="250" y1="308" x2="250" y2="412" stroke="#999" stroke-width="1.2" fill="none"/>
+  <line x1="250" y1="412" x2="250" y2="412" class="ar5" style="stroke:#999"/>
+  <line x1="140" y1="384" x2="140" y2="400" class="ar5"/>
+  <line x1="140" y1="428" x2="140" y2="444" class="ar5"/>
+  <line x1="140" y1="472" x2="140" y2="486" class="ar5"/>
+</svg>
+</div>
+<div class="flow-code">
+<h3>Pseudocode — Broyden-GSPAR</h3>
+<pre class="pseudo">
+// BroydenGSPARSolver.computeStep()
+
+// Iter 0: Initialisierung
+if iter == 0:
+  bU[], bV[] = leer; bCount = 0
+  lastStep = null; lastF = f
+
+// Broyden-Update aus letzter Iteration
+if iter > 0 AND lastStep != null:
+  ss = ‖lastStep‖²
+  y  = f_current − lastF
+  // J_k·s ≈ Σ u_i·(v_i^T·s)  (akkumuliert)
+  Jks = Σ_{k<bCount} bU[k]·(bV[k]^T·lastStep)
+  u = (y − Jks) / ss
+  bU[bCount] = u;  bV[bCount] = lastStep
+  bCount++
+
+// Reset-Entscheidung
+if shouldReset(iter, kappa):
+  bCount = 0;  GSPAR-Refaktorisierung erzwingen
+
+// Basis-Schritt via GSPAR
+dx₀ = super.computeStep()   // J₀⁻¹·(−F)
+
+// Woodbury-Korrektur für alle Updates
+result = dx₀
+for k = 0..bCount-1:
+  vtr   = bV[k]^T · result
+  denom = 1 + bV[k]^T · J₀⁻¹·bU[k]  // ≈ 1 + ‖u‖
+  coeff = vtr / denom
+  result -= coeff · bU[k]
+
+// Armijo-Liniensuche
+alpha = armijoSearch(result)
+
+// Für nächsten Update merken
+lastStep = alpha · result
+lastF    = f
+
+return alpha · result
+</pre>
+</div>
+</div>
+
+<hr>
+<h1 id="initialize">8. INITIALIZE-Blöcke und Conditional-Gleichungen</h1>
+<div class="warn">
+  <code>initStructSwitches()</code> <strong>muss</strong> vor <code>InitGuessApplier.apply()</code>
+  aufgerufen werden. Beide Listen: <code>getAllEqnData()</code> <strong>und</strong> <code>getInitData()</code>!
+</div>
+<table>
+  <tr><th>Typ</th><th>Auswertung</th><th>Beispiel</th></tr>
+  <tr><td><code>conditional</code></td><td>Mit aktuellen Werten jede Iteration</td><td><code>IF(PT/PCRIT &gt; 1)</code></td></tr>
+  <tr><td><code>structConditional</code></td><td>Einmalig (SPEC==FIXED/FREE)</td><td><code>IF(VAR.SPEC==FIXED)</code></td></tr>
+</table>
+
+<hr>
+<h1 id="projector">9. PhysicalProjector</h1>
+<table>
+  <tr><th>Erkennung</th><th>Minimum</th><th>Beispiele</th></tr>
+  <tr><td>temp, tt, ts / Einheit K</td><td>≥ 200 K</td><td>TT060, TS066</td></tr>
+  <tr><td>pres, pt, ps / Einheit Pa</td><td>≥ 1 Pa</td><td>PT060, PS066</td></tr>
+  <tr><td>rho, dens</td><td>≥ 1e-6 kg/m³</td><td>RHO060</td></tr>
+  <tr><td>mach, mn, ma</td><td>≥ 0</td><td>MN060</td></tr>
+  <tr><td>vel, vt, va</td><td>≥ 0</td><td>VT060</td></tr>
+</table>
+<div class="note">
+  <strong>lo=0:</strong> |val| &lt; 1e-12 → auf 0.0 projiziert (numerisches Rauschen).
+  Echte Verletzungen (|val| ≥ 1e-12) → 1e-10 Minimum.
+</div>
+
+<hr>
+<h1 id="scaling">10. Variablen-Skalierung</h1>
+<pre>
+J_skaliert = J · D            // Spalte j mit scale[j] multiplizieren
+dx_orig    = D · dx_skaliert  // nach LGS-Lösung rücktransformieren
+// evaluateF() arbeitet IMMER im physikalischen Raum
+</pre>
+<table>
+  <tr><th>Strategie</th><th>Flag</th><th>scale[j]</th><th>Empfehlung</th></tr>
+  <tr><td>NONE</td><td><code>-SC:NONE</code></td><td>1.0</td><td>Default</td></tr>
+  <tr><td>DIAGONAL</td><td><code>-SC:DIAGONAL</code></td><td>1/|J[j][j]|</td><td>Gemischte Einheiten (Pa/K/Ma)</td></tr>
+  <tr><td>UNIT_INTERVAL</td><td><code>-SC:UNIT_INTERVAL</code></td><td>(hi-lo)⁻¹</td><td>Experimentell</td></tr>
+</table>
+
+<hr>
+<h1 id="di-flag">11. Startwert-Diagnose (-DI)</h1>
+<ol>
+  <li><strong>Residuums-Diagnose:</strong> F(x₀) — Top-10 größte Residuen</li>
+  <li><strong>Bounds-Qualität:</strong> val=lo=0 → geometrisches Mittel (√(hi·0.1))</li>
+  <li><strong>Propagations-Init:</strong> y = f(x_fixed) direkt auswerten → Startwert setzen</li>
+  <li><strong>Sensitivitäts-Check:</strong> Jacobi-Spalten nahe Null → mögliche Redundanz</li>
+</ol>
+<div class="note"><code>-DI</code> setzt <code>useInitData=false</code> — InitGuessApplier läuft nicht nochmals.</div>
+
+<hr>
+<h1 id="cli">12. CLI-Referenz</h1>
+
+<h3>Eingabe / Ausgabe</h3>
+<table>
+  <tr><th>Flag</th><th>Beschreibung</th></tr>
+  <tr><td><code>-I:&lt;file&gt;</code></td><td><strong>Pflicht.</strong> *.cas/*.dat = Single-Run; *.csv = Batch-Mode</td></tr>
+  <tr><td><code>-U:&lt;file&gt;</code></td><td>Variable-Update-Datei</td></tr>
+  <tr><td><code>-C:&lt;file&gt;</code></td><td>CAS-Basismodell für Batch-Mode</td></tr>
+  <tr><td><code>-DV:&lt;file&gt;</code></td><td>Startvektordump im -U-Format</td></tr>
+  <tr><td><code>-BA</code></td><td>Batch: alle Variablen ausgeben (auch Fixed)</td></tr>
+  <tr><td><code>-h</code></td><td>Hilfe ausgeben</td></tr>
+</table>
+
+<h3>Solver-Auswahl</h3>
+<table>
+  <tr><th>Flag</th><th>Default</th><th>Solver</th></tr>
+  <tr><td><code>-S:NEWTON_ARMIJO</code></td><td>✓</td><td>Newton + Armijo (dense LU)</td></tr>
+  <tr><td><code>-S:NEWTON_SPARSE</code></td><td></td><td>Newton + GSPAR Sparse-LU</td></tr>
+  <tr><td><code>-S:NEWTON_SPARSE_ARMIJO</code></td><td></td><td>Newton + GSPAR + Armijo</td></tr>
+  <tr><td><code>-S:LEVENBERG_MARQUARDT</code></td><td></td><td>Levenberg-Marquardt</td></tr>
+  <tr><td><code>-S:BROYDEN</code></td><td></td><td>Broyden (dense)</td></tr>
+  <tr><td><code>-S:BROYDEN_SPARSE</code></td><td></td><td>Broyden + GSPAR Sparse-LU</td></tr>
+  <tr><td><code>-S:HOMOTOPY</code></td><td></td><td>Homotopie / Arc-Length</td></tr>
+</table>
+
+<h3>Allgemeine Parameter</h3>
+<table>
+  <tr><th>Flag</th><th>Default</th><th>Beschreibung</th></tr>
+  <tr><td><code>-SC:NONE / DIAGONAL / UNIT_INTERVAL</code></td><td>NONE</td><td>Jacobi-Skalierung</td></tr>
+  <tr><td><code>-SN</code></td><td></td><td>Relative Residuumsnormierung</td></tr>
+  <tr><td><code>-DI</code></td><td></td><td>Startwert-Diagnose + Optimierung</td></tr>
+  <tr><td><code>-TEST</code></td><td></td><td>Alle Solver benchmarken → *_solvertest.txt</td></tr>
+</table>
+
+<h3>Broyden-spezifische Parameter</h3>
+<table>
+  <tr><th>Flag</th><th>Default</th><th>Beschreibung</th></tr>
+  <tr><td><code>-SB:RESET=n</code></td><td>1</td><td>Jacobi-Reset-Intervall (10 = adaptiv)</td></tr>
+  <tr><td><code>-SB:KAPPA=x</code></td><td>1e12</td><td>κ-Schwelle für erzwungenen Reset</td></tr>
+  <tr><td><code>-SB:WARMKAPPA=x</code></td><td>1e8</td><td>Warmstart-Schwelle (nur BROYDEN dense)</td></tr>
+</table>
+
+<h3>Homotopie-spezifische Parameter</h3>
+<table>
+  <tr><th>Flag</th><th>Default</th><th>Beschreibung</th></tr>
+  <tr><td><code>-SH:STEPS=n</code></td><td>10</td><td>Anzahl Homotopie-Schritte</td></tr>
+  <tr><td><code>-SH:DS=x</code></td><td>0.1</td><td>Initiale Bogenlänge</td></tr>
+  <tr><td><code>-SH:INNER=typ</code></td><td>NEWTON_ARMIJO</td><td>Innerer Korrektor-Solver</td></tr>
+  <tr><td><code>-SH:CRITICAL</code></td><td></td><td>Ma=1-Preset: 50 Schritte, ds=0.02</td></tr>
+</table>
+
+<h3>Beispiele</h3>
+<pre>
+# Standard Newton
+java CASSolver -I:engine.cas
+
+# Sparse Newton + Normierung
+java CASSolver -I:engine.cas -S:NEWTON_SPARSE -SN
+
+# Sparse Newton + Armijo bei schlechten Startwerten
+java CASSolver -I:engine.cas -S:NEWTON_SPARSE_ARMIJO -DI
+
+# Broyden-GSPAR adaptiv
+java CASSolver -I:engine.cas -S:BROYDEN_SPARSE -SB:RESET=10
+
+# LM für schlechte Kondition
+java CASSolver -I:engine.cas -S:LEVENBERG_MARQUARDT -SC:DIAGONAL
+
+# Homotopie für Ma≈1
+java CASSolver -I:engine.cas -S:HOMOTOPY -SH:CRITICAL -DI
+
+# Alle Solver automatisch testen
+java CASSolver -I:engine.cas -TEST
+
+# Batch-Mode
+java CASSolver -I:runs.csv -C:engine.cas -S:NEWTON_SPARSE -BA
+</pre>
+
+<hr>
+<h1 id="test-mode">13. -TEST Modus</h1>
+<p>Testet alle 7 Solver automatisch auf demselben Modell. Jeder Solver erhält ein frisches
+<code>SystemData</code>-Objekt mit kopierten Initialwerten — keine gegenseitige Beeinflussung.</p>
+<pre>
+java CASSolver -I:SimpleSystem.cas -TEST
+</pre>
+<p>Ausgabe in <code>SimpleSystem_solvertest.txt</code> im aktuellen Arbeitsverzeichnis:</p>
+<pre>
+CMDSolver — Solver-Test
+Modell : SimpleSystem.cas
+Datum  : 2026-05-01 00:20:49
+n      : 12 Gleichungen, 20 Variablen
+----------------------------------------------------------------------------------
+Solver                                Status          Iter          fsum     Zeit(s)
+----------------------------------------------------------------------------------
+Newton-Raphson + Armijo line search   CONVERGED          3    3,1623e-11       0,048
+Newton-GSPAR sparse LU                CONVERGED          3    3,1623e-11       0,037
+Newton-GSPAR sparse LU + Armijo       CONVERGED          3    3,1623e-11       0,033
+Levenberg-Marquardt                   CONVERGED         36    8,2964e-09       0,087
+Broyden quasi-Newton (rank-1 update)  CONVERGED         25    8,0230e-08       0,046
+Broyden quasi-Newton (GSPAR)          CONVERGED          3    3,1623e-11       0,008
+Arc-length continuation               CONVERGED         11    5,0948e-09       0,085
+----------------------------------------------------------------------------------
+</pre>
+<div class="note">
+  <strong>Homotopie ITER=-1:</strong> Die Homotopie gibt ITER aus <code>HomotopyResult</code>
+  zurück — dieser enthält die Gesamtzahl der inneren Solver-Iterationen, nicht die Homotopie-Schritte.
+  Aktuell liefert <code>ITER</code> in <code>hr.solution</code> -1 wenn nicht explizit gesetzt.
+  fsum=NaN bedeutet ebenso dass FSUM nicht im solution-Vektor enthalten ist — beides kosmetisch,
+  Konvergenz ist korrekt.
+</div>
+
+<hr>
+<h1 id="cas-format">14. CAS-Dateiformat</h1>
+<pre>
+// Variablendeklaration
+TT060 AS REAL (Lower: 200.; Value: 288.15; Upper: 2000.; Spec: Free; Unit: "K");
+PT060 AS REAL (Value: 101325.; Spec: Fixed; Unit: "Pa");
+
+// Gleichungen (implizit F = LHS - RHS = 0)
+TT060 = TT_IN + DELTA_T;
+
+// Procedure-Aufruf (built-in Thermodynamik)
+CALL(CPT060) = pCPOFT(TT060, WGR060, FAR060);
+
+// Conditional-Gleichung
+IF (SWITCH.EQ.0)
+  CP060 = CPT060;
+ELSE
+  CP060 = CPS060;
+ENDIF
+
+// Struct-Conditional (einmalig, SPEC-abhängig)
+IF (VAR.SPEC==FIXED)
+  TT060 = TT_FIXED;
+ENDIF
+
+// INITIALIZE-Block
+INITIALIZE
+  TT060 := 288.15;
+END
+</pre>
+<table>
+  <tr><th>Block</th><th>Zweck</th></tr>
+  <tr><td>VARIABLE … END</td><td>Variablendeklarationen mit Metadata</td></tr>
+  <tr><td>EQUATION … END</td><td>Gleichungsblock (F(x)=0)</td></tr>
+  <tr><td>INITIALIZE … END</td><td>Startwert-Overrides</td></tr>
+  <tr><td>PROCEDURE … END</td><td>Built-in Funktionsaufrufe</td></tr>
+  <tr><td>FOR … END</td><td>Schleifen-Expansion</td></tr>
+  <tr><td>IF … ELSE … ENDIF</td><td>Konditionale Gleichungen</td></tr>
+</table>
+
+<hr>
+<h1 id="performance">15. Performance-Vergleich</h1>
+<p>SimpleSystem: n=12, 20 Variablen, 8 fixiert.</p>
+<table>
+  <tr><th>Solver</th><th>Iter</th><th>fsum</th><th>Zeit</th><th>Skalierung</th></tr>
+  <tr><td>NEWTON_ARMIJO</td><td>3</td><td>3.16e-11</td><td>~48 ms</td><td>O(n³) LU</td></tr>
+  <tr><td>NEWTON_SPARSE</td><td>3</td><td>3.16e-11</td><td>~37 ms</td><td>O(nnz·fill)</td></tr>
+  <tr><td>NEWTON_SPARSE_ARMIJO</td><td>3</td><td>3.16e-11</td><td>~33 ms</td><td>O(nnz·fill)</td></tr>
+  <tr><td>LEVENBERG_MARQUARDT</td><td>36</td><td>8.30e-09</td><td>~87 ms</td><td>O(n³) pro Iter</td></tr>
+  <tr><td>BROYDEN</td><td>25</td><td>8.02e-08</td><td>~46 ms</td><td>O(n²) Rang-1</td></tr>
+  <tr><td><strong>BROYDEN_SPARSE</strong></td><td><strong>3</strong></td><td><strong>3.16e-11</strong></td><td><strong>~8 ms</strong></td><td>O(nnz·fill)</td></tr>
+  <tr><td>HOMOTOPY</td><td>11</td><td>5.09e-09</td><td>~85 ms</td><td>innerer Solver</td></tr>
+</table>
+<div class="note">
+  <strong>Jacobi-Aufbau ab v2.3:</strong> Immer parallel (ForkJoinPool), O(functionCount²) statt
+  O(totalCount²). afull entfällt vollständig — bei n=623 spart das 3.5 MB pro Iteration.
+</div>
+<h3>Thread-Safety</h3>
+<p>Der Jacobi-Aufbau in <code>buildJacobian()</code> ist intern thread-sicher (parallele Zeilen via
+ForkJoinPool). Die Solver-Objekte selbst haben jedoch mutablen Zustand (LM: μ, Broyden: bU/bV,
+GSPAR: workspace) — für parallele Ausführung mehrerer Betriebspunkte muss jeder Thread
+eine eigene Solver-Instanz verwenden. <code>freshRunData()</code> im -TEST-Modus stellt das sicher.</p>
+
+<hr>
+<h1 id="history">16. Entwicklungshistorie</h1>
+<h3>Phase 1 — Monolithischer Solver</h3>
+<p>Einzelne EqnSystem.java, gedämpftes Newton ohne Liniensuche.</p>
+<h3>Phase 2 — Modularisierung und AbstractSolver</h3>
+<p>Strategy-Pattern: AbstractSolver, SolverConfig, SolverFactory. PhysicalProjector, VariableScaler.</p>
+<h3>Phase 3 — LM, Broyden, Homotopie</h3>
+<p>Levenberg-Marquardt, Broyden (adaptiv, Checkpoint/Rollback), Homotopie (Arc-Length, -SH:CRITICAL).</p>
+<h3>Phase 4 — Batch-Mode und InitialValueAnalyzer</h3>
+<p>CSV-Batch-Mode, BatchRunner, -DI Flag.</p>
+<h3>Phase 5 — INITIALIZE-Block Fix</h3>
+<p>initStructSwitches() Reihenfolge, parseStructIfCondition() Bug B1–B3.</p>
+<h3>Phase 6 — GSPAR Sparse-LU (Fortran → Java)</h3>
+<p>Vollständige Portierung GSPAR (F. Grund, WIAS Berlin ~1994). Super-Pattern, JLU-Kodierung,
+Bugs B12–B20. 2.4× Speedup gegenüber Newton-Armijo bei n=623.</p>
+<h3>Phase 7 — LM-Stabilisierung und Homotopie-Fix (v2.1)</h3>
+<p>LM: geometrisches Mittel für μ-Init. Homotopie: hValues-Datenfluss fix (B21).
+Newton-Armijo als Default-innerer-Solver. Stagnations-Restart.</p>
+<h3>Phase 8 — Thread-sicherer Jacobi + NEWTON_SPARSE_ARMIJO (v2.2)</h3>
+<p>afull eliminiert, buildJacobian parallel + thread-sicher (B24). CALL-Output-Fix (B22).
+Neuer Solver NEWTON_SPARSE_ARMIJO (extends GSPARSolver + Armijo).</p>
+<h3>Phase 9 — BROYDEN_SPARSE + -TEST Modus (v2.3)</h3>
+<p>Neuer Solver BROYDEN_SPARSE: Broyden-Updates auf GSPAR-LU via Sherman-Morrison-Woodbury.
+Konvergiert in 3 Iterationen (identisch Newton-GSPAR). Automatischer Solver-Test via -TEST Flag:
+alle 7 Solver sequenziell, frische SystemData-Kopie pro Run, Ausgabe _solvertest.txt.</p>
+
+<hr>
+<h1 id="bugfixes">17. Bug-Fix-Log</h1>
+<table>
+  <tr><th>ID</th><th>Datei</th><th>Beschreibung</th></tr>
+  <tr><td>B1</td><td>EqnSysReader</td><td>StructConditional: split("[.]") → lastIndexOf(".spec")</td></tr>
+  <tr><td>B2</td><td>EqnSystem</td><td>initStructSwitches() verarbeitete nur eqnData, nicht initData</td></tr>
+  <tr><td>B3</td><td>EqnSystem</td><td>initStructSwitches() muss VOR InitGuessApplier laufen</td></tr>
+  <tr><td>B4</td><td>PhysicalProjector</td><td>lo=0 projizierte auf 0 statt physikalisches Minimum</td></tr>
+  <tr><td>B5</td><td>PhysicalProjector</td><td>|val|&lt;1e-12 bei lo=0 → auf 0.0 statt 1e-10</td></tr>
+  <tr><td>B6</td><td>CASSolver (-DI)</td><td>-DI lief vor InitGuessApplier; Fix: useInitData=false</td></tr>
+  <tr><td>B12</td><td>GSPAR.jluCol</td><td>Pivot-Markierung: -(col+1) statt -col</td></tr>
+  <tr><td>B13</td><td>GSPAR.dllugd</td><td>Math.abs(jlu[je])-1 bei col=0 ergab -1</td></tr>
+  <tr><td>B14</td><td>GSPAR.dlsolk</td><td>b[je]=0.0 Nullsetzungs-Bug in Rückwärtsrechnung</td></tr>
+  <tr><td>B15</td><td>GSPAR.dlsolk</td><td>Arrays.fill(b,0) fehlte vor Rückwärtsrechnung</td></tr>
+  <tr><td>B16</td><td>GSPAR.dllugb</td><td>Schur-Komplement: exakte Fortran outer50-GOTO-Semantik</td></tr>
+  <tr><td>B17</td><td>GSPARSolver</td><td>Super-Pattern: Vereinigung einmalig statt pro Iteration</td></tr>
+  <tr><td>B18</td><td>GSPARSolver</td><td>fillJacobiValues: festes Pattern (ja[]) statt v!=0</td></tr>
+  <tr><td>B19</td><td>AbstractSolver</td><td>Armijo im skalierten Raum bei SC:DIAGONAL</td></tr>
+  <tr><td>B20</td><td>GSPARSolver</td><td>fullIdx→reducedJacobiCol Mapping fehlte</td></tr>
+  <tr><td>B21</td><td>HomotopySolver</td><td>hValues-Datenfluss: Prediktor in falscher Map</td></tr>
+  <tr><td>B22</td><td>AbstractSolver</td><td>CALL-Output: Koeffizient 0 statt +1 in Jacobi</td></tr>
+  <tr><td>B23</td><td>LevenbergMarquardtSolver</td><td>μ-Init: max statt geometrisches Mittel</td></tr>
+  <tr><td>B24</td><td>AbstractSolver</td><td>afull Race Condition bei parallelem Jacobi-Aufbau</td></tr>
+  <tr><td>B25</td><td>BroydenGSPARSolver</td><td>approximateJ0(): n=bU[0].length bei bCount=0 → ArrayIndexOutOfBounds</td></tr>
+  <tr><td>B26</td><td>BroydenGSPARSolver</td><td>norm2() Sichtbarkeit: private überschreibt protected aus AbstractSolver → vecNorm2()</td></tr>
+</table>
+
+<hr>
+<h1 id="extensions">18. Mögliche Erweiterungen</h1>
+
+<h2>Phase 2 — LM und Broyden vollständig sparse</h2>
+<div class="card">LM: J<sup>T</sup>J sparse aufbauen — bei dünnbesetzter Jacobi bleibt J<sup>T</sup>J
+oft noch handhabbar. Broyden dense: dense J₀ durch GSPAR-LU ersetzen (analog BroydenGSPARSolver).</div>
+
+<h2>NEWTON_SPARSE_ARMIJO als Homotopie-innerer-Solver</h2>
+<p>Aktuell verwendet Homotopie Newton-Armijo (dense). Bei n&gt;200:
+<code>-SH:INNER=NEWTON_SPARSE_ARMIJO</code> würde erheblichen Speedup bringen.</p>
+
+<h2>GMRES für sehr große Systeme</h2>
+<p>Für n&gt;5000 mit ILU-Präkonditionierung. <code>computeStep()</code> in AbstractSolver
+ist solver-agnostisch — GMRES überschreibt nur diese Methode.</p>
+
+<h2>Homotopie-ITER Fix im -TEST Modus</h2>
+<p>HomotopyResult enthält keine ITER-OutputVariable im selben Format wie DirectSolver.
+Fix: HomotopyResult.totalIterations als ITER-Wert in solution-Liste eintragen.</p>
+
+<h2>Adaptive Solver-Auswahl</h2>
+<pre>
+if kappa &lt; 1e8:    NEWTON_SPARSE (schnell)
+if kappa &lt; 1e14:   NEWTON_ARMIJO (robust)
+if kappa ≥ 1e14:   LEVENBERG_MARQUARDT (stabil)
+</pre>
+
+<hr>
+<p style="color:var(--muted);font-size:12px;text-align:center;margin-top:24px;">
+CMDSolver v2.3 — Technische Dokumentation — Stand Mai 2026
+</p>
+</main>
+
+<script>
+const sections = document.querySelectorAll('h1[id],h2[id]');
+const links = document.querySelectorAll('#toc a');
+window.addEventListener('scroll', () => {
+  let current = '';
+  sections.forEach(s => { if (window.scrollY >= s.offsetTop - 80) current = s.id; });
+  links.forEach(l => { l.classList.toggle('active', l.getAttribute('href') === '#' + current); });
+}, { passive: true });
+</script>
+</body>
+</html>

@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CMDSolver Docs — Solver Vergleich</title>
+<link rel="stylesheet" href="docs.css">
+<style>
+  .comp-table thead th { font-size: 11px; text-align: center; padding: 10px 8px; }
+  .comp-table thead th:first-child { text-align: left; min-width: 180px; }
+  .comp-table td { text-align: center; padding: 10px 8px; font-size: 12px; }
+  .comp-table td:first-child { text-align: left; font-size: 13px; color: #e8ecf4; }
+  .comp-table td.sub { color: var(--text2); font-size: 11px; font-style: italic; }
+  .comp-table .section-row td {
+    background: var(--bg4); color: var(--text3);
+    font-family: var(--mono); font-size: 10px;
+    letter-spacing: .1em; text-transform: uppercase;
+    text-align: left; padding: 6px 14px;
+  }
+  .star-full  { color: var(--ok); }
+  .star-half  { color: var(--warn); }
+  .star-empty { color: var(--border2); }
+  .impl { color: var(--ok); font-size: 13px; }
+  .na   { color: var(--text3); }
+</style>
+</head>
+<body>
+
+<div class="doc-header">
+  <div class="breadcrumb">
+    <a href="index.html">CMDSolver Docs</a>
+    <span>›</span>
+    <span>Solver Vergleich</span>
+  </div>
+  <span class="doc-badge comparison">Vergleichsmatrix</span>
+</div>
+
+<div class="hero">
+  <div class="hero-sub">Kapitel 2</div>
+  <h1>Solver Vergleichsmatrix</h1>
+  <p class="tagline">
+    Alle 7 implementierten Solver im direkten Vergleich — Konvergenzverhalten,
+    Rechenaufwand, Robustheit und Einsatzempfehlungen auf einen Blick.
+  </p>
+</div>
+
+<nav>
+  <a href="#matrix">Vergleichsmatrix</a>
+  <a href="#leistung">Testergebnisse</a>
+  <a href="#anmerkungen">Anmerkungen</a>
+  <a href="#empfehlung">Empfehlung</a>
+</nav>
+
+<main>
+
+<!-- Vergleichsmatrix -->
+<section id="matrix">
+  <h2>Vergleichsmatrix</h2>
+
+  <div class="note blue">
+    <strong>Bewertung:</strong>
+    <span class="star-full">★★★</span> Sehr gut &nbsp;
+    <span class="star-half">★★☆</span> Gut &nbsp;
+    <span class="star-half">★☆☆</span> Eingeschränkt &nbsp;
+    <span class="star-empty">☆☆☆</span> Ungeeignet
+    &nbsp;&nbsp;|&nbsp;&nbsp;
+    Fußnoten <sup>1–9</sup> erklären Bewertungen im Detail.
+  </div>
+
+  <div class="tbl-wrap">
+  <table class="comp-table">
+    <thead>
+      <tr>
+        <th>Kriterium</th>
+        <th>Newton<br>Armijo</th>
+        <th>Newton<br>Sparse</th>
+        <th>Newton<br>Sparse+Armijo</th>
+        <th>Levenberg<br>Marquardt</th>
+        <th>Broyden</th>
+        <th>Broyden<br>Sparse</th>
+        <th>Homotopie<br>Arc-Length</th>
+      </tr>
+    </thead>
+    <tbody>
+
+      <!-- Konvergenz -->
+      <tr class="section-row"><td colspan="8">Konvergenzverhalten</td></tr>
+      <tr>
+        <td>Konvergenzrate <sup>1</sup></td>
+        <td><span class="star-full">★★★</span></td>
+        <td><span class="star-full">★★★</span></td>
+        <td><span class="star-full">★★★</span></td>
+        <td><span class="star-half">★★☆</span></td>
+        <td><span class="star-half">★★☆</span></td>
+        <td><span class="star-half">★★☆</span></td>
+        <td><span class="star-half">★☆☆</span></td>
+      </tr>
+      <tr>
+        <td>Robustheit bei schlechtem Start <sup>2</sup></td>
+        <td><span class="star-half">★★☆</span></td>
+        <td><span class="star-half">★☆☆</span></td>
+        <td><span class="star-half">★★☆</span></td>
+        <td><span class="star-full">★★★</span></td>
+        <td><span class="star-half">★☆☆</span></td>
+        <td><span class="star-half">★☆☆</span></td>
+        <td><span class="star-full">★★★</span></td>
+      </tr>
+      <tr>
+        <td>Robustheit bei hohem κ <sup>3</sup></td>
+        <td><span class="star-half">★☆☆</span></td>
+        <td><span class="star-half">★☆☆</span></td>
+        <td><span class="star-half">★☆☆</span></td>
+        <td><span class="star-full">★★★</span></td>
+        <td><span class="star-half">★☆☆</span></td>
+        <td><span class="star-half">★☆☆</span></td>
+        <td><span class="star-half">★★☆</span></td>
+      </tr>
+      <tr>
+        <td>Globale Konvergenz <sup>4</sup></td>
+        <td><span class="star-half">★★☆</span></td>
+        <td><span class="star-half">★☆☆</span></td>
+        <td><span class="star-half">★★☆</span></td>
+        <td><span class="star-half">★★☆</span></td>
+        <td><span class="star-half">★☆☆</span></td>
+        <td><span class="star-half">★☆☆</span></td>
+        <td><span class="star-full">★★★</span></td>
+      </tr>
+
+      <!-- Rechenaufwand -->
+      <tr class="section-row"><td colspan="8">Rechenaufwand</td></tr>
+      <tr>
+        <td>Aufwand pro Iteration <sup>5</sup></td>
+        <td><span class="star-half">★★☆</span><br><span class="na">O(n³) dicht</span></td>
+        <td><span class="star-full">★★★</span><br><span class="na">O(nnz) sparse</span></td>
+        <td><span class="star-full">★★★</span><br><span class="na">O(nnz) sparse</span></td>
+        <td><span class="star-half">★★☆</span><br><span class="na">O(n²) reg.</span></td>
+        <td><span class="star-full">★★★</span><br><span class="na">O(n²) update</span></td>
+        <td><span class="star-full">★★★</span><br><span class="na">O(nnz) sparse</span></td>
+        <td><span class="star-half">★☆☆</span><br><span class="na">viele Iter.</span></td>
+      </tr>
+      <tr>
+        <td>Jacobi-Berechnung</td>
+        <td>Jede Iter.</td>
+        <td>Jede Iter.</td>
+        <td>Jede Iter.</td>
+        <td>Jede Iter.</td>
+        <td>Rang-1 Update</td>
+        <td>Rang-1 Update</td>
+        <td>Innerer Solver</td>
+      </tr>
+      <tr>
+        <td>Speicherbedarf <sup>6</sup></td>
+        <td><span class="star-half">★☆☆</span><br><span class="na">O(n²)</span></td>
+        <td><span class="star-full">★★★</span><br><span class="na">O(nnz)</span></td>
+        <td><span class="star-full">★★★</span><br><span class="na">O(nnz)</span></td>
+        <td><span class="star-half">★★☆</span><br><span class="na">O(n²)</span></td>
+        <td><span class="star-half">★☆☆</span><br><span class="na">O(n²)</span></td>
+        <td><span class="star-full">★★★</span><br><span class="na">O(nnz)</span></td>
+        <td><span class="star-half">★★☆</span><br><span class="na">O(n²)</span></td>
+      </tr>
+      <tr>
+        <td>Parallelisierbar</td>
+        <td><span class="impl">✅</span> Jacobi</td>
+        <td><span class="impl">✅</span> Jacobi</td>
+        <td><span class="impl">✅</span> Jacobi</td>
+        <td><span class="impl">✅</span> Jacobi</td>
+        <td><span class="na">—</span></td>
+        <td><span class="na">—</span></td>
+        <td><span class="impl">✅</span> Jacobi</td>
+      </tr>
+
+      <!-- Einsatz -->
+      <tr class="section-row"><td colspan="8">Einsatzbereich</td></tr>
+      <tr>
+        <td>Empfohlene Systemgröße</td>
+        <td>n &lt; 200</td>
+        <td>n &lt; 2000</td>
+        <td>n &lt; 2000</td>
+        <td>n &lt; 500</td>
+        <td>n &lt; 500</td>
+        <td>n &lt; 2000</td>
+        <td>n &lt; 500</td>
+      </tr>
+      <tr>
+        <td>Konditionszahl κ <sup>3</sup></td>
+        <td>&lt; 10⁸</td>
+        <td>&lt; 10⁸</td>
+        <td>&lt; 10⁸</td>
+        <td>&lt; 10²⁵</td>
+        <td>&lt; 10⁸</td>
+        <td>&lt; 10⁸</td>
+        <td>beliebig</td>
+      </tr>
+      <tr>
+        <td>Startvektornähe nötig <sup>2</sup></td>
+        <td>Mittel</td>
+        <td>Hoch</td>
+        <td>Mittel</td>
+        <td>Gering</td>
+        <td>Hoch</td>
+        <td>Hoch</td>
+        <td>Sehr gering</td>
+      </tr>
+      <tr>
+        <td>Geeignet für Parameterstudien <sup>7</sup></td>
+        <td><span class="star-half">★★☆</span></td>
+        <td><span class="star-full">★★★</span></td>
+        <td><span class="star-full">★★★</span></td>
+        <td><span class="star-half">★★☆</span></td>
+        <td><span class="star-full">★★★</span></td>
+        <td><span class="star-full">★★★</span></td>
+        <td><span class="star-half">★☆☆</span></td>
+      </tr>
+
+      <!-- Implementierung -->
+      <tr class="section-row"><td colspan="8">Implementierung</td></tr>
+      <tr>
+        <td>Kernklasse</td>
+        <td><code style="font-size:10px">NewtonArmijoSolver</code></td>
+        <td><code style="font-size:10px">GSPARSolver</code></td>
+        <td><code style="font-size:10px">NewtonArmijoGSPARSolver</code></td>
+        <td><code style="font-size:10px">LevenbergMarquardtSolver</code></td>
+        <td><code style="font-size:10px">BroydenSolver</code></td>
+        <td><code style="font-size:10px">BroydenGSPARSolver</code></td>
+        <td><code style="font-size:10px">HomotopySolver</code></td>
+      </tr>
+      <tr>
+        <td>CLI-Schlüssel</td>
+        <td><code style="font-size:10px">NEWTON_ARMIJO</code></td>
+        <td><code style="font-size:10px">NEWTON_SPARSE</code></td>
+        <td><code style="font-size:10px">NEWTON_SPARSE_ARMIJO</code></td>
+        <td><code style="font-size:10px">LEVENBERG_MARQUARDT</code></td>
+        <td><code style="font-size:10px">BROYDEN</code></td>
+        <td><code style="font-size:10px">BROYDEN_SPARSE</code></td>
+        <td><code style="font-size:10px">HOMOTOPY</code></td>
+      </tr>
+      <tr>
+        <td>Lineare Algebra</td>
+        <td>MatrixSimple<br>(dichte LU)</td>
+        <td>GSPAR<br>(Sparse-LU)</td>
+        <td>GSPAR<br>(Sparse-LU)</td>
+        <td>MatrixSimple<br>(dichte LU)</td>
+        <td>MatrixSimple<br>(dichte LU)</td>
+        <td>GSPAR<br>(Sparse-LU)</td>
+        <td>Innerer Solver <sup>8</sup></td>
+      </tr>
+
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<!-- Testergebnisse -->
+<section id="leistung">
+  <h2>Testergebnisse — SimpleSystem.cas</h2>
+
+  <p>
+    Gemessen auf SimpleSystem.cas: 12 Gleichungen, 20 Variablen (8 fixiert),
+    CMDSolver v2.5, Java 21, Windows 10.
+  </p>
+
+  <div class="tbl-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th>Solver</th>
+        <th>Status</th>
+        <th>Iterationen</th>
+        <th>fsum</th>
+        <th>Zeit (ms)</th>
+        <th>Empfehlung</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>NEWTON_ARMIJO</code></td>
+        <td><span class="badge b-ok">CONVERGED</span></td>
+        <td class="center">3</td>
+        <td class="center"><code>3.16e-11</code></td>
+        <td class="center">~42</td>
+        <td>Standard für kleine Systeme</td>
+      </tr>
+      <tr>
+        <td><code>NEWTON_SPARSE</code></td>
+        <td><span class="badge b-ok">CONVERGED</span></td>
+        <td class="center">3</td>
+        <td class="center"><code>3.16e-11</code></td>
+        <td class="center">~28</td>
+        <td>Schnellster bei gut konditionierten Systemen</td>
+      </tr>
+      <tr>
+        <td><code>NEWTON_SPARSE_ARMIJO</code></td>
+        <td><span class="badge b-ok">CONVERGED</span></td>
+        <td class="center">3</td>
+        <td class="center"><code>3.16e-11</code></td>
+        <td class="center">~30</td>
+        <td><strong>Beste Gesamtwahl</strong> ← empfohlen</td>
+      </tr>
+      <tr>
+        <td><code>LEVENBERG_MARQUARDT</code></td>
+        <td><span class="badge b-ok">CONVERGED</span></td>
+        <td class="center">36</td>
+        <td class="center"><code>8.30e-09</code></td>
+        <td class="center">~61</td>
+        <td>Bei schlechter Kondition bevorzugen</td>
+      </tr>
+      <tr>
+        <td><code>BROYDEN</code></td>
+        <td><span class="badge b-ok">CONVERGED</span></td>
+        <td class="center">25</td>
+        <td class="center"><code>8.02e-08</code></td>
+        <td class="center">~50</td>
+        <td>Gut für Parameterstudien</td>
+      </tr>
+      <tr>
+        <td><code>BROYDEN_SPARSE</code></td>
+        <td><span class="badge b-ok">CONVERGED</span></td>
+        <td class="center">3</td>
+        <td class="center"><code>3.16e-11</code></td>
+        <td class="center">~9</td>
+        <td>Schnellster Gesamtlauf</td>
+      </tr>
+      <tr>
+        <td><code>HOMOTOPY</code></td>
+        <td><span class="badge b-ok">CONVERGED</span></td>
+        <td class="center">—</td>
+        <td class="center">NaN <sup>9</sup></td>
+        <td class="center">~83</td>
+        <td>Nur bei Konvergenzproblemen</td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="note amber">
+    <strong>Wichtig:</strong> Diese Ergebnisse gelten für ein kleines, gut konditioniertes
+    Testsystem. Bei größeren oder schlechter konditionierten Systemen können die
+    relativen Stärken der Solver deutlich abweichen.
+  </div>
+</section>
+
+<!-- Anmerkungen -->
+<section id="anmerkungen">
+  <h2>Anmerkungen zu den Bewertungen</h2>
+
+  <div class="footnotes">
+    <p><sup>1</sup> <strong>Konvergenzrate:</strong>
+    Newton-Raphson und seine Varianten konvergieren <em>quadratisch</em> in der Nähe der Lösung
+    — der Fehler wird pro Iteration quadriert. LM und Broyden konvergieren superlinear.
+    Homotopie konvergiert abhängig von der Schrittweite des Pfades — typisch linear.</p>
+
+    <p><sup>2</sup> <strong>Robustheit bei schlechtem Startvektor:</strong>
+    Newton-Verfahren haben nur lokale Konvergenzgarantien — der Startvektor muss nahe
+    genug an der Lösung liegen. Die Armijo-Liniensuche verbessert den globalen
+    Einzugsbereich erheblich. LM ist durch den Dämpfungsparameter λ robuster.
+    Homotopie ist am robustesten — sie braucht nur einen Startvektor der das
+    vereinfachte Problem H(x,0)=0 löst (typisch: die Initialwerte aus dem CAS-Modell).</p>
+
+    <p><sup>3</sup> <strong>Konditionszahl κ:</strong>
+    κ ist das Verhältnis des größten zum kleinsten Singulärwert der Jacobi-Matrix.
+    Hohe κ bedeutet fast-singuläre Jacobi — kleine Fehler in F werden zu großen
+    Fehlern in Δx verstärkt. LM regularisiert durch λI und ist deshalb robust
+    bis κ ~ 10²⁵. Die Homotopie-Schritte sind ebenfalls weniger empfindlich da
+    der Prädiktor-Korrektor-Ansatz kleinere lokale Linearisierungsfehler macht.</p>
+
+    <p><sup>4</sup> <strong>Globale Konvergenz:</strong>
+    "Global" bedeutet hier: Konvergenz auch von weit entfernten Startvektoren.
+    Nur Homotopie bietet echte globale Konvergenzgarantien (unter regulären Bedingungen).
+    Newton+Armijo hat einen vergrößerten Einzugsbereich gegenüber reinem Newton.</p>
+
+    <p><sup>5</sup> <strong>Aufwand pro Iteration (nnz = Anzahl Nicht-Null-Einträge der Jacobi):</strong>
+    Dichte LU: O(n³). Sparse-LU (GSPAR): O(nnz · log n) bis O(n · nnz) je nach Struktur.
+    Broyden-Update: O(n²) — günstiger als Neuaufbau O(n³), aber akkumuliert Approximationsfehler.
+    Homotopie hat mehrere innere Solver-Aufrufe pro Homotopie-Schritt.</p>
+
+    <p><sup>6</sup> <strong>Speicherbedarf (n = Systemgröße, nnz = Nicht-Null-Einträge):</strong>
+    Dichte Matrix: n² Einträge — bei n=500: 250.000 doubles = 2MB.
+    Sparse-Matrix (GSPAR): nur nnz Einträge — bei 5% Besetzung und n=500: ~12.500 doubles = 100KB.
+    Für thermodynamische Systeme ist die Jacobi typischerweise zu 5-15% besetzt.</p>
+
+    <p><sup>7</sup> <strong>Geeignet für Parameterstudien (BatchRunner):</strong>
+    Bei Parameterstudien werden viele ähnliche Punkte gelöst. Broyden kann die
+    Jacobi vom vorherigen Punkt als Startapproximation verwenden. Newton-Sparse
+    profitiert von schneller Faktorisierung. Homotopie ist zu langsam pro Run.</p>
+
+    <p><sup>8</sup> <strong>Homotopie — innerer Solver:</strong>
+    Der Homotopie-Korrektor verwendet selbst einen Newton-basierten inneren Solver.
+    Standard ist <code>NEWTON_ARMIJO</code>. Konfigurierbar via
+    <code>-SH:INNER=LEVENBERG_MARQUARDT</code> für schlecht konditionierte Systeme.</p>
+
+    <p><sup>9</sup> <strong>Homotopie fsum = NaN:</strong>
+    Der Homotopie-Solver meldet kein fsum über den normalen Ausgabekanal —
+    er hat eine eigene interne Konvergenzprüfung über den Pfadfortschritt (t → 1).
+    NaN bedeutet "nicht verfügbar", nicht "Fehler". Status CONVERGED ist maßgeblich.</p>
+  </div>
+</section>
+
+<!-- Empfehlung -->
+<section id="empfehlung">
+  <h2>Entscheidungsbaum</h2>
+
+  <div class="flowchart">
+  <svg width="100%" viewBox="0 0 700 440" xmlns="http://www.w3.org/2000/svg"
+       font-family="IBM Plex Sans, sans-serif" font-size="12">
+    <defs>
+      <marker id="a" viewBox="0 0 10 10" refX="8" refY="5"
+              markerWidth="6" markerHeight="6" orient="auto">
+        <path d="M2 1L8 5L2 9" fill="none" stroke="#4a5568" stroke-width="1.5"/>
+      </marker>
+    </defs>
+
+    <!-- Start -->
+    <rect x="250" y="10" width="200" height="38" rx="19"
+          fill="#1a2535" stroke="#4a9eff" stroke-width="1.5"/>
+    <text x="350" y="34" text-anchor="middle" fill="#4a9eff" font-weight="600">Modell lösen</text>
+
+    <line x1="350" y1="48" x2="350" y2="76" stroke="#4a5568" stroke-width="1" marker-end="url(#a)"/>
+
+    <!-- κ > 10¹² ? -->
+    <polygon points="350,78 480,104 350,130 220,104"
+             fill="#1a1e25" stroke="#a78bfa" stroke-width="1.5"/>
+    <text x="350" y="108" text-anchor="middle" fill="#a78bfa" font-size="11">κ &gt; 10¹²?</text>
+
+    <!-- Ja → LM -->
+    <line x1="480" y1="104" x2="580" y2="104" stroke="#4a5568" stroke-width="1" marker-end="url(#a)"/>
+    <text x="526" y="96" text-anchor="middle" fill="#4a5568" font-size="10">ja</text>
+    <rect x="582" y="84" width="110" height="40" rx="6"
+          fill="#1a2010" stroke="#3ecf8e" stroke-width="1.5"/>
+    <text x="637" y="108" text-anchor="middle" fill="#3ecf8e" font-size="11">LM</text>
+
+    <!-- Nein → Startvektor -->
+    <line x1="350" y1="130" x2="350" y2="158" stroke="#4a5568" stroke-width="1" marker-end="url(#a)"/>
+    <text x="360" y="150" fill="#4a5568" font-size="10">nein</text>
+
+    <!-- Guter Start? -->
+    <polygon points="350,160 480,186 350,212 220,186"
+             fill="#1a1e25" stroke="#a78bfa" stroke-width="1.5"/>
+    <text x="350" y="190" text-anchor="middle" fill="#a78bfa" font-size="11">Guter Startvektor?</text>
+
+    <!-- Nein → Homotopie -->
+    <line x1="220" y1="186" x2="120" y2="186" stroke="#4a5568" stroke-width="1" marker-end="url(#a)"/>
+    <text x="170" y="178" text-anchor="middle" fill="#4a5568" font-size="10">nein</text>
+    <rect x="10" y="166" width="110" height="40" rx="6"
+          fill="#1a2010" stroke="#3ecf8e" stroke-width="1.5"/>
+    <text x="65" y="190" text-anchor="middle" fill="#3ecf8e" font-size="11">HOMOTOPY</text>
+
+    <!-- Ja → Systemgröße -->
+    <line x1="350" y1="212" x2="350" y2="240" stroke="#4a5568" stroke-width="1" marker-end="url(#a)"/>
+    <text x="360" y="232" fill="#4a5568" font-size="10">ja</text>
+
+    <!-- n > 200? -->
+    <polygon points="350,242 470,268 350,294 230,268"
+             fill="#1a1e25" stroke="#a78bfa" stroke-width="1.5"/>
+    <text x="350" y="272" text-anchor="middle" fill="#a78bfa" font-size="11">n &gt; 200?</text>
+
+    <!-- Ja → Sparse -->
+    <line x1="470" y1="268" x2="570" y2="268" stroke="#4a5568" stroke-width="1" marker-end="url(#a)"/>
+    <text x="516" y="260" text-anchor="middle" fill="#4a5568" font-size="10">ja</text>
+    <rect x="572" y="248" width="120" height="40" rx="6"
+          fill="#1a2010" stroke="#3ecf8e" stroke-width="1.5"/>
+    <text x="632" y="268" text-anchor="middle" fill="#3ecf8e" font-size="10">NEWTON_SPARSE</text>
+    <text x="632" y="282" text-anchor="middle" fill="#3ecf8e" font-size="10">_ARMIJO ★</text>
+
+    <!-- Nein → Parameterstudie? -->
+    <line x1="350" y1="294" x2="350" y2="322" stroke="#4a5568" stroke-width="1" marker-end="url(#a)"/>
+    <text x="360" y="314" fill="#4a5568" font-size="10">nein</text>
+
+    <!-- Parameterstudie? -->
+    <polygon points="350,324 470,350 350,376 230,350"
+             fill="#1a1e25" stroke="#a78bfa" stroke-width="1.5"/>
+    <text x="350" y="354" text-anchor="middle" fill="#a78bfa" font-size="11">Parameterstudie?</text>
+
+    <!-- Ja → Broyden Sparse -->
+    <line x1="470" y1="350" x2="570" y2="350" stroke="#4a5568" stroke-width="1" marker-end="url(#a)"/>
+    <text x="516" y="342" text-anchor="middle" fill="#4a5568" font-size="10">ja</text>
+    <rect x="572" y="330" width="120" height="40" rx="6"
+          fill="#1a2010" stroke="#3ecf8e" stroke-width="1.5"/>
+    <text x="632" y="350" text-anchor="middle" fill="#3ecf8e" font-size="10">BROYDEN</text>
+    <text x="632" y="364" text-anchor="middle" fill="#3ecf8e" font-size="10">_SPARSE</text>
+
+    <!-- Nein → Newton Armijo -->
+    <line x1="350" y1="376" x2="350" y2="404" stroke="#4a5568" stroke-width="1" marker-end="url(#a)"/>
+    <text x="360" y="396" fill="#4a5568" font-size="10">nein</text>
+    <rect x="250" y="406" width="200" height="30" rx="6"
+          fill="#1a2010" stroke="#3ecf8e" stroke-width="1.5"/>
+    <text x="350" y="425" text-anchor="middle" fill="#3ecf8e" font-size="11">NEWTON_ARMIJO</text>
+
+  </svg>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <span>CMDSolver Docs · Solver Vergleich · v2.5</span>
+  <span>
+    <a href="math_overview.html">← Mathematischer Überblick</a> &nbsp;|&nbsp;
+    <a href="solver_newton_armijo.html">Newton-Armijo →</a>
+  </span>
+</footer>
+
+</body>
+</html>

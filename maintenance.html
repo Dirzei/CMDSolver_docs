@@ -1,0 +1,866 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CMDSolver Docs — Wartung & Entwicklung</title>
+<link rel="stylesheet" href="docs.css">
+<style>
+  /* ── Toggle ── */
+  .mode-toggle {
+    display: flex; gap: 0; margin-bottom: 2rem;
+    border: 1px solid var(--border); border-radius: 8px;
+    overflow: hidden; width: fit-content;
+  }
+  .mode-btn {
+    padding: .6rem 1.6rem; font-family: var(--mono);
+    font-size: 11px; letter-spacing: .08em; text-transform: uppercase;
+    border: none; cursor: pointer; transition: all .2s;
+    background: var(--bg2); color: var(--text3);
+  }
+  .mode-btn.active {
+    background: var(--accent); color: #0d0f12; font-weight: 600;
+  }
+  .mode-btn:first-child { border-right: 1px solid var(--border); }
+
+  /* ── Sichtbarkeit ── */
+  .quick-only  { display: block; }
+  .full-only   { display: none; }
+  body.full-mode .quick-only { display: none; }
+  body.full-mode .full-only  { display: block; }
+  body.full-mode section.full-only { display: block; }
+  section.quick-only, section.full-only { display: block; }
+  body.full-mode section.quick-only { display: none; }
+
+  /* ── Recipe Cards ── */
+  .recipe {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: 8px; padding: 1.2rem 1.4rem; margin-bottom: 1rem;
+  }
+  .recipe-title {
+    font-size: 14px; font-weight: 500; color: #e8ecf4;
+    margin-bottom: .8rem; display: flex; align-items: center; gap: .6rem;
+  }
+  .recipe-title::before {
+    content: ''; display: inline-block; width: 6px; height: 6px;
+    border-radius: 50%; background: var(--teal); flex-shrink: 0;
+  }
+  .recipe-steps { counter-reset: rs; }
+  .recipe-step {
+    counter-increment: rs; display: flex; gap: .8rem;
+    margin-bottom: .6rem; font-size: 13px; color: var(--text2);
+  }
+  .recipe-step::before {
+    content: counter(rs); min-width: 20px; height: 20px;
+    background: rgba(45,212,191,.15); border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--mono); font-size: 10px; color: var(--teal);
+    flex-shrink: 0; margin-top: 2px;
+  }
+
+  /* ── Checklist ── */
+  .checklist { list-style: none; }
+  .checklist li {
+    padding: .4rem 0; font-size: 13px; color: var(--text2);
+    display: flex; gap: .6rem; align-items: flex-start;
+  }
+  .checklist li::before {
+    content: '□'; color: var(--border2); font-size: 14px; flex-shrink: 0;
+  }
+  .checklist li.warn::before { content: '⚠'; color: var(--warn); }
+  .checklist li.must::before { content: '★'; color: var(--ok); }
+
+  /* ── Arch diagram wrapper ── */
+  .arch { background: var(--bg2); border: 1px solid var(--border);
+          border-radius: 10px; padding: 1.2rem; margin: 1rem 0 1.5rem;
+          overflow-x: auto; }
+
+  /* ── Bug cards ── */
+  .bug-card {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-left: 3px solid var(--err); border-radius: 6px;
+    padding: 1rem 1.2rem; margin-bottom: 1rem;
+  }
+  .bug-card.fixed { border-left-color: var(--ok); }
+  .bug-id { font-family: var(--mono); font-size: 11px;
+            color: var(--err); margin-bottom: .3rem; }
+  .bug-card.fixed .bug-id { color: var(--ok); }
+  .bug-title { font-size: 14px; font-weight: 500; color: #e8ecf4;
+               margin-bottom: .5rem; }
+  .bug-body { font-size: 13px; color: var(--text2); line-height: 1.7; }
+
+  /* ── Layer diagram ── */
+  .layer {
+    border: 1px solid var(--border2); border-radius: 6px;
+    padding: .6rem 1rem; margin-bottom: .4rem;
+    display: flex; align-items: center; gap: 1rem;
+  }
+  .layer-name {
+    font-family: var(--mono); font-size: 11px; min-width: 80px;
+    color: var(--accent);
+  }
+  .layer-classes { font-size: 12px; color: var(--text2); }
+  .layer-resp { font-size: 11px; color: var(--text3);
+                margin-left: auto; text-align: right; }
+  .layer.l-cmd   { background: rgba(74,158,255,.04); }
+  .layer.l-core  { background: rgba(62,207,142,.04); }
+  .layer.l-solver{ background: rgba(167,139,250,.04); }
+  .layer.l-bi    { background: rgba(240,160,48,.04); }
+  .layer.l-mat   { background: rgba(45,212,191,.04); }
+</style>
+</head>
+<body>
+
+<div class="doc-header">
+  <div class="breadcrumb">
+    <a href="index.html">CMDSolver Docs</a>
+    <span>›</span><span>Wartung & Entwicklung</span>
+  </div>
+  <span class="doc-badge overview">Kapitel 6</span>
+</div>
+
+<div class="hero">
+  <div class="hero-sub">Kapitel 6</div>
+  <h1>Wartung &amp; Entwicklung</h1>
+  <p class="tagline">
+    Code verstehen, Fehler beheben, erweitern — für Entwickler mit und ohne
+    Vorkenntnis des CMDSolver-Codes.
+  </p>
+</div>
+
+<nav>
+  <a href="#einstieg">Einstieg</a>
+  <a href="#architektur">Architektur</a>
+  <a href="#rezepte">Rezepte</a>
+  <a href="#checkliste">Checkliste</a>
+  <a href="#datenfluss">Datenfluss</a>
+  <a href="#klassen">Klassen</a>
+  <a href="#erweiterung">Erweitern</a>
+  <a href="#bugs">Bugklassen</a>
+  <a href="#fallstricke">Fallstricke</a>
+  <a href="#build">Build</a>
+</nav>
+
+<main>
+
+<!-- Modus-Toggle -->
+<div class="mode-toggle">
+  <button class="mode-btn active" onclick="setMode('quick')" id="btn-quick">
+    ⚡ Schnelleinstieg
+  </button>
+  <button class="mode-btn" onclick="setMode('full')" id="btn-full">
+    📖 Vollständige Einführung
+  </button>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     SCHNELLEINSTIEG
+     ══════════════════════════════════════════════════════ -->
+
+<section id="einstieg" class="quick-only">
+  <h2>Schnelleinstieg — Architektur auf einen Blick</h2>
+
+  <div class="note green">
+    <strong>Für:</strong> Ich kenne CMDSolver, war aber länger weg.
+    Was war nochmal wo? Welche Datei muss ich anfassen?
+  </div>
+
+  <div class="layer l-cmd">
+    <span class="layer-name">cmd/</span>
+    <span class="layer-classes"><code>CASSolver</code> · <code>SolverAPI</code> · <code>SolverResult</code> · <code>BatchRunner</code></span>
+    <span class="layer-resp">CLI + programmatischer Einstieg</span>
+  </div>
+  <div style="text-align:center;color:var(--text3);font-size:12px;margin:.2rem 0">↓ ruft auf</div>
+  <div class="layer l-core">
+    <span class="layer-name">eqnParser/</span>
+    <span class="layer-classes"><code>EqnSysReader</code> · <code>EqnData</code> · <code>SystemData</code> · <code>EqnSystem</code></span>
+    <span class="layer-resp">Parser + Datenmodell + Orchestrierung</span>
+  </div>
+  <div style="text-align:center;color:var(--text3);font-size:12px;margin:.2rem 0">↓ ruft auf</div>
+  <div class="layer l-solver">
+    <span class="layer-name">solver/</span>
+    <span class="layer-classes"><code>AbstractSolver</code> → Newton · LM · Broyden · Homotopie</span>
+    <span class="layer-resp">7 Solver-Algorithmen</span>
+  </div>
+  <div style="text-align:center;color:var(--text3);font-size:12px;margin:.2rem 0">↓ nutzt</div>
+  <div class="layer l-mat">
+    <span class="layer-name">matrix/</span>
+    <span class="layer-classes"><code>MatrixSimple</code> · <code>DerivativeMatrix</code> · GSPAR</span>
+    <span class="layer-resp">Lineare Algebra</span>
+  </div>
+  <div style="text-align:center;color:var(--text3);font-size:12px;margin:.2rem 0">↓ nutzt</div>
+  <div class="layer l-bi">
+    <span class="layer-name">buildInFunctions/</span>
+    <span class="layer-classes"><code>BIfunctions</code> · <code>ThermoConstants</code></span>
+    <span class="layer-resp">Thermodynamische Berechnungen</span>
+  </div>
+</section>
+
+<!-- Rezepte -->
+<section id="rezepte" class="quick-only">
+  <h2>Rezepte — häufige Aufgaben</h2>
+
+  <div class="recipe">
+    <div class="recipe-title">Neuen Solver hinzufügen</div>
+    <div class="recipe-steps">
+      <div class="recipe-step">Neue Klasse <code>MeinSolver.java</code> in <code>apps/eqnParser/solver/</code> — extends <code>AbstractSolver</code>, überschreibt <code>computeStep()</code> und <code>getName()</code></div>
+      <div class="recipe-step"><code>SolverType.java</code> — neuen Enum-Wert <code>MEIN_SOLVER("Beschreibung")</code> hinzufügen</div>
+      <div class="recipe-step"><code>SolverFactory.java</code> — neuen <code>case MEIN_SOLVER: return new MeinSolver(cfg);</code> einfügen</div>
+      <div class="recipe-step"><code>-TEST</code> ausführen — alle 7 (+ neuer) Solver müssen konvergieren</div>
+    </div>
+  </div>
+
+  <div class="recipe">
+    <div class="recipe-title">Neue mathematische Funktion in CAS (z.B. SEC)</div>
+    <div class="recipe-steps">
+      <div class="recipe-step"><code>EqnData.java</code> → <code>FUNC_MAP</code> — einen Eintrag hinzufügen: <code>FUNC_MAP.put("SEC", "sec");</code> — an richtiger Position (längere Matches vor kürzeren)</div>
+      <div class="recipe-step">Prüfen ob CASprzak <code>\sec</code> unterstützt — wenn nicht, Alias auf vorhandene Funktion</div>
+      <div class="recipe-step">Testen mit einer CAS-Datei die SEC verwendet</div>
+    </div>
+  </div>
+
+  <div class="recipe">
+    <div class="recipe-title">Neue BIfunction hinzufügen</div>
+    <div class="recipe-steps">
+      <div class="recipe-step"><code>BIfunctions.java</code> — drei Methoden implementieren: <code>dFunc(output, inputs...)</code>, <code>dFunc(List&lt;Double&gt;)</code>, <code>funcDeriv(variables, values, partial)</code></div>
+      <div class="recipe-step"><code>BuildInProcedures.java</code> — Funktion registrieren (CALL-Name → Methode)</div>
+      <div class="recipe-step">In CAS-Datei: PROCEDURE-Block + CALL-Gleichung testen</div>
+    </div>
+  </div>
+
+  <div class="recipe">
+    <div class="recipe-title">Parser-Bug beheben (Gleichung wird falsch geparst)</div>
+    <div class="recipe-steps">
+      <div class="recipe-step"><code>EqnSysReader.java</code> — <code>readLine()</code> Methode, relevanter Branch (VARIABLE / INITIALIZE / Gleichung)</div>
+      <div class="recipe-step">ParseError-Ausgabe im Log prüfen — Zeilennummer + Kontext</div>
+      <div class="recipe-step">Unit-Test: CAS-Datei mit dem Sonderfall, <code>-TEST</code> ausführen</div>
+    </div>
+  </div>
+
+  <div class="recipe">
+    <div class="recipe-title">Solver konvergiert nicht — Diagnose</div>
+    <div class="recipe-steps">
+      <div class="recipe-step">Log nach <code>kappa</code>-Warnungen durchsuchen — κ &gt; 10¹² → LM versuchen</div>
+      <div class="recipe-step"><code>-DI</code> aktivieren — Startwertoptimierung</div>
+      <div class="recipe-step"><code>-DV:start.txt</code> — Startvektor inspizieren, physikalisch plausibel?</div>
+      <div class="recipe-step">Wenn alles scheitert: <code>-S:HOMOTOPY -SH:INNER=LEVENBERG_MARQUARDT -SH:STEPS=50 -SH:DS=0.02</code></div>
+    </div>
+  </div>
+</section>
+
+<!-- Checkliste -->
+<section id="checkliste" class="quick-only">
+  <h2>Checkliste vor jedem Commit</h2>
+
+  <ul class="checklist">
+    <li class="must"><strong>-TEST durchführen</strong> — alle 7 Solver auf SimpleSystem.cas konvergieren</li>
+    <li class="must"><strong>Kein System.out</strong> — nur <code>LOG.info/warning/severe</code></li>
+    <li class="must"><strong>Kein GUI-Import in Backend</strong> — kein <code>import javax.swing</code> in <code>apps/eqnParser/</code></li>
+    <li><strong>Javadoc bei neuen public Methoden</strong> — mindestens <code>@return</code> und <code>@param</code></li>
+    <li><strong>Neue Klasse in SolverFactory registriert</strong> — falls neuer Solver</li>
+    <li><strong>FUNC_MAP aktualisiert</strong> — falls neue CAS-Funktion</li>
+    <li class="warn"><strong>Nie v2.3 und v2.4 Dateien mischen</strong> — immer konsistenter Stand</li>
+    <li class="warn"><strong>EqnData: nur eine public class Deklaration</strong> — Javadoc muss VOR der Klasse stehen</li>
+    <li class="warn"><strong>EqnSysReader: nur ein try-finally Block</strong> in parseEquationSystemFile</li>
+    <li><strong>ZIP neu bauen</strong> + <strong>Commit + Push</strong> + <strong>Tag setzen</strong></li>
+  </ul>
+</section>
+
+<!-- ══════════════════════════════════════════════════════
+     VOLLSTÄNDIGE EINFÜHRUNG
+     ══════════════════════════════════════════════════════ -->
+
+<section id="architektur" class="full-only">
+  <h2>Architektur — Vollständige Paketstruktur</h2>
+
+  <div class="note blue">
+    <strong>Für:</strong> Ich kenne CMDSolver noch nicht. Ich möchte den Code
+    vollständig verstehen bevor ich Änderungen vornehme.
+  </div>
+
+  <p>
+    CMDSolver ist in drei logische Schichten aufgeteilt die klar voneinander
+    getrennt sind. Abhängigkeiten zeigen immer von oben nach unten —
+    die untere Schicht kennt die obere nicht.
+  </p>
+
+  <div class="arch">
+  <svg width="100%" viewBox="0 0 760 520" xmlns="http://www.w3.org/2000/svg"
+       font-family="IBM Plex Sans, sans-serif" font-size="12">
+
+    <!-- Schicht 1: CLI -->
+    <rect x="10" y="10" width="740" height="80" rx="8"
+          fill="rgba(74,158,255,.05)" stroke="rgba(74,158,255,.3)" stroke-width="1.5"/>
+    <text x="20" y="30" fill="#4a9eff" font-family="IBM Plex Mono" font-size="10"
+          letter-spacing=".1em" text-transform="uppercase">SCHICHT 1 — CLI / API</text>
+    <rect x="20" y="38" width="170" height="44" rx="4" fill="#13161b" stroke="#2e3540"/>
+    <text x="105" y="57" text-anchor="middle" fill="#c8cdd6" font-weight="500">CASSolver</text>
+    <text x="105" y="73" text-anchor="middle" fill="#4a5568" font-size="10">main() · CLI-Parsing</text>
+    <rect x="200" y="38" width="160" height="44" rx="4" fill="#13161b" stroke="#2e3540"/>
+    <text x="280" y="57" text-anchor="middle" fill="#c8cdd6" font-weight="500">SolverAPI</text>
+    <text x="280" y="73" text-anchor="middle" fill="#4a5568" font-size="10">Programmatischer Einstieg</text>
+    <rect x="370" y="38" width="160" height="44" rx="4" fill="#13161b" stroke="#2e3540"/>
+    <text x="450" y="57" text-anchor="middle" fill="#c8cdd6" font-weight="500">SolverResult</text>
+    <text x="450" y="73" text-anchor="middle" fill="#4a5568" font-size="10">Ergebnisobjekt</text>
+    <rect x="540" y="38" width="200" height="44" rx="4" fill="#13161b" stroke="#2e3540"/>
+    <text x="640" y="57" text-anchor="middle" fill="#c8cdd6" font-weight="500">BatchRunner</text>
+    <text x="640" y="73" text-anchor="middle" fill="#4a5568" font-size="10">Parallele Parameterstudien</text>
+
+    <!-- Pfeil 1→2 -->
+    <line x1="380" y1="90" x2="380" y2="108" stroke="#2e3540" stroke-width="1.5"
+          marker-end="url(#a)"/>
+
+    <!-- Schicht 2: Parser + Kern -->
+    <rect x="10" y="110" width="740" height="120" rx="8"
+          fill="rgba(62,207,142,.04)" stroke="rgba(62,207,142,.25)" stroke-width="1.5"/>
+    <text x="20" y="130" fill="#3ecf8e" font-family="IBM Plex Mono" font-size="10"
+          letter-spacing=".1em">SCHICHT 2 — PARSER &amp; KERN</text>
+
+    <rect x="20" y="138" width="170" height="84" rx="4" fill="#13161b" stroke="#2e3540"/>
+    <text x="105" y="162" text-anchor="middle" fill="#c8cdd6" font-weight="500">EqnSysReader</text>
+    <text x="105" y="178" text-anchor="middle" fill="#4a5568" font-size="10">CAS-Datei → SystemData</text>
+    <text x="105" y="193" text-anchor="middle" fill="#4a5568" font-size="10">1302 Zeilen · ELSEIF</text>
+    <text x="105" y="208" text-anchor="middle" fill="#4a5568" font-size="10">ParseError-Infrastruktur</text>
+
+    <rect x="200" y="138" width="170" height="84" rx="4" fill="#13161b" stroke="#2e3540"/>
+    <text x="285" y="162" text-anchor="middle" fill="#c8cdd6" font-weight="500">EqnData</text>
+    <text x="285" y="178" text-anchor="middle" fill="#4a5568" font-size="10">1 Gleichung · 4 Formen</text>
+    <text x="285" y="193" text-anchor="middle" fill="#4a5568" font-size="10">calcFunc() · getDerivatives()</text>
+    <text x="285" y="208" text-anchor="middle" fill="#4a5568" font-size="10">FUNC_MAP · IF/ELSE</text>
+
+    <rect x="380" y="138" width="170" height="84" rx="4" fill="#13161b" stroke="#2e3540"/>
+    <text x="465" y="162" text-anchor="middle" fill="#c8cdd6" font-weight="500">SystemData</text>
+    <text x="465" y="178" text-anchor="middle" fill="#4a5568" font-size="10">Gleichungen + Variablen</text>
+    <text x="465" y="193" text-anchor="middle" fill="#4a5568" font-size="10">ParseErrors · getValMap()</text>
+    <text x="465" y="208" text-anchor="middle" fill="#4a5568" font-size="10">Übergabe an Solver</text>
+
+    <rect x="560" y="138" width="180" height="84" rx="4" fill="#13161b" stroke="#2e3540"/>
+    <text x="650" y="162" text-anchor="middle" fill="#c8cdd6" font-weight="500">EqnSystem</text>
+    <text x="650" y="178" text-anchor="middle" fill="#4a5568" font-size="10">run() · runHomotopy()</text>
+    <text x="650" y="193" text-anchor="middle" fill="#4a5568" font-size="10">SolverFactory aufrufen</text>
+    <text x="650" y="208" text-anchor="middle" fill="#4a5568" font-size="10">InitGuessApplier</text>
+
+    <!-- Pfeil 2→3 -->
+    <line x1="380" y1="230" x2="380" y2="248" stroke="#2e3540" stroke-width="1.5"
+          marker-end="url(#a)"/>
+
+    <!-- Schicht 3: Solver -->
+    <rect x="10" y="250" width="740" height="130" rx="8"
+          fill="rgba(167,139,250,.04)" stroke="rgba(167,139,250,.25)" stroke-width="1.5"/>
+    <text x="20" y="270" fill="#a78bfa" font-family="IBM Plex Mono" font-size="10"
+          letter-spacing=".1em">SCHICHT 3 — SOLVER</text>
+
+    <rect x="20" y="278" width="160" height="94" rx="4"
+          fill="#1a1e25" stroke="#a78bfa" stroke-width="1.5"/>
+    <text x="100" y="302" text-anchor="middle" fill="#a78bfa" font-weight="600">AbstractSolver</text>
+    <text x="100" y="318" text-anchor="middle" fill="#4a5568" font-size="10">Hauptiteration</text>
+    <text x="100" y="333" text-anchor="middle" fill="#4a5568" font-size="10">buildJacobian()</text>
+    <text x="100" y="348" text-anchor="middle" fill="#4a5568" font-size="10">computeStep() abstract</text>
+    <text x="100" y="363" text-anchor="middle" fill="#4a5568" font-size="10">PhysicalProjector</text>
+
+    <rect x="190" y="278" width="105" height="44" rx="4" fill="#13161b" stroke="#2e3540"/>
+    <text x="242" y="300" text-anchor="middle" fill="#c8cdd6" font-size="11">NewtonArmijo</text>
+    <text x="242" y="315" text-anchor="middle" fill="#4a5568" font-size="10">J⁻¹ · Armijo</text>
+
+    <rect x="300" y="278" width="105" height="44" rx="4" fill="#13161b" stroke="#2e3540"/>
+    <text x="352" y="300" text-anchor="middle" fill="#c8cdd6" font-size="11">GSPAR</text>
+    <text x="352" y="315" text-anchor="middle" fill="#4a5568" font-size="10">Sparse-LU</text>
+
+    <rect x="410" y="278" width="105" height="44" rx="4" fill="#13161b" stroke="#2e3540"/>
+    <text x="462" y="300" text-anchor="middle" fill="#c8cdd6" font-size="11">LM</text>
+    <text x="462" y="315" text-anchor="middle" fill="#4a5568" font-size="10">JᵀJ + μI</text>
+
+    <rect x="190" y="330" width="105" height="44" rx="4" fill="#13161b" stroke="#2e3540"/>
+    <text x="242" y="352" text-anchor="middle" fill="#c8cdd6" font-size="11">Broyden</text>
+    <text x="242" y="367" text-anchor="middle" fill="#4a5568" font-size="10">Rang-1 Update</text>
+
+    <rect x="300" y="330" width="105" height="44" rx="4" fill="#13161b" stroke="#2e3540"/>
+    <text x="352" y="352" text-anchor="middle" fill="#c8cdd6" font-size="11">BroydenSparse</text>
+    <text x="352" y="367" text-anchor="middle" fill="#4a5568" font-size="10">Rang-1 + GSPAR</text>
+
+    <rect x="410" y="330" width="105" height="44" rx="4" fill="#13161b" stroke="#2e3540"/>
+    <text x="462" y="352" text-anchor="middle" fill="#c8cdd6" font-size="11">Homotopie</text>
+    <text x="462" y="367" text-anchor="middle" fill="#4a5568" font-size="10">Pfadverfolgung</text>
+
+    <!-- Pfeil 3→4 -->
+    <line x1="380" y1="380" x2="380" y2="398" stroke="#2e3540" stroke-width="1.5"
+          marker-end="url(#a)"/>
+
+    <!-- Schicht 4: Lineare Algebra + BIfunctions -->
+    <rect x="10" y="400" width="360" height="110" rx="8"
+          fill="rgba(45,212,191,.04)" stroke="rgba(45,212,191,.25)" stroke-width="1.5"/>
+    <text x="20" y="420" fill="#2dd4bf" font-family="IBM Plex Mono" font-size="10"
+          letter-spacing=".1em">SCHICHT 4 — LINEARE ALGEBRA</text>
+    <rect x="20" y="428" width="155" height="74" rx="4" fill="#13161b" stroke="#2e3540"/>
+    <text x="97" y="452" text-anchor="middle" fill="#c8cdd6">MatrixSimple</text>
+    <text x="97" y="468" text-anchor="middle" fill="#4a5568" font-size="10">Dichte LU O(n³)</text>
+    <text x="97" y="483" text-anchor="middle" fill="#4a5568" font-size="10">inverse() · solve()</text>
+    <text x="97" y="498" text-anchor="middle" fill="#4a5568" font-size="10">für Newton/LM/Broyden</text>
+    <rect x="185" y="428" width="175" height="74" rx="4" fill="#13161b" stroke="#2e3540"/>
+    <text x="272" y="452" text-anchor="middle" fill="#c8cdd6">GSPAR Sparse-LU</text>
+    <text x="272" y="468" text-anchor="middle" fill="#4a5568" font-size="10">CSR-Format · MIN_FILL</text>
+    <text x="272" y="483" text-anchor="middle" fill="#4a5568" font-size="10">O(nnz) · ~10× schneller</text>
+    <text x="272" y="498" text-anchor="middle" fill="#4a5568" font-size="10">für *_SPARSE Solver</text>
+
+    <rect x="390" y="400" width="360" height="110" rx="8"
+          fill="rgba(240,160,48,.04)" stroke="rgba(240,160,48,.25)" stroke-width="1.5"/>
+    <text x="400" y="420" fill="#f0a030" font-family="IBM Plex Mono" font-size="10"
+          letter-spacing=".1em">SCHICHT 4 — THERMODYNAMIK</text>
+    <rect x="400" y="428" width="155" height="74" rx="4" fill="#13161b" stroke="#2e3540"/>
+    <text x="477" y="452" text-anchor="middle" fill="#c8cdd6">BIfunctions</text>
+    <text x="477" y="468" text-anchor="middle" fill="#4a5568" font-size="10">18 Funktionen</text>
+    <text x="477" y="483" text-anchor="middle" fill="#4a5568" font-size="10">JANAF · ISA · cp · h</text>
+    <text x="477" y="498" text-anchor="middle" fill="#4a5568" font-size="10">num. Ableitungen O(h⁴)</text>
+    <rect x="565" y="428" width="175" height="74" rx="4" fill="#13161b" stroke="#2e3540"/>
+    <text x="652" y="452" text-anchor="middle" fill="#c8cdd6">ThermoConstants</text>
+    <text x="652" y="468" text-anchor="middle" fill="#4a5568" font-size="10">JANAF-Koeffizienten</text>
+    <text x="652" y="483" text-anchor="middle" fill="#4a5568" font-size="10">1509 Zeilen · const.</text>
+    <text x="652" y="498" text-anchor="middle" fill="#4a5568" font-size="10">N₂ O₂ Ar CO₂ …</text>
+
+    <defs>
+      <marker id="a" viewBox="0 0 10 10" refX="8" refY="5"
+              markerWidth="5" markerHeight="5" orient="auto">
+        <path d="M2 1L8 5L2 9" fill="none" stroke="#2e3540" stroke-width="1.5"/>
+      </marker>
+    </defs>
+  </svg>
+  </div>
+</section>
+
+<!-- Datenfluss -->
+<section id="datenfluss" class="full-only">
+  <h2>Datenfluss — CAS-Datei bis Ergebnis</h2>
+
+  <p>Der vollständige Datenfluss von der CAS-Datei bis zum Ergebnisobjekt:</p>
+
+  <pre><span class="cmt">// ── 1. Einstieg (CLI oder API) ──────────────────────────────</span>
+CASSolver.main()  <span class="kw">oder</span>  SolverAPI.solve()
+    │
+    ▼
+<span class="cmt">// ── 2. Parser ───────────────────────────────────────────────</span>
+EqnSysReader.parseEquationSystemFile(<span class="str">"model.cas"</span>)
+    │  liest Zeile für Zeile via readLine()
+    │  expandElseIf() — ELSEIF Pre-Processing
+    │  EqnSysReaderDataBlock sammelt während des Parsens
+    │
+    ▼ gibt zurück
+SystemData {
+    allEqnData: List&lt;EqnData&gt;   <span class="cmt">// alle Gleichungen</span>
+    allVaris:   List&lt;Variable&gt;   <span class="cmt">// alle Variablen</span>
+    parseErrors: List&lt;ParseError&gt; <span class="cmt">// Fehler mit Zeilennummer</span>
+    iniVals[], lowVals[], uppVals[] <span class="cmt">// Startwerte + Bounds</span>
+}
+
+<span class="cmt">// ── 3. Orchestrierung ───────────────────────────────────────</span>
+EqnSystem.run(sysData, useInit, solverCfg)
+    │  initStructSwitches() — IF(VAR.SPEC) auswerten
+    │  InitGuessApplier.apply() — INITIALIZE-Block anwenden
+    │  SolverFactory.create(cfg) → konkreter Solver
+    │
+    ▼
+AbstractSolver.solve(sysData, values, useInit)
+    │  Hauptiteration:
+    │  ┌─────────────────────────────────────────┐
+    │  │  buildJacobian() → DerivativeMatrix      │
+    │  │      EqnData.getDerivatives(values)      │
+    │  │      CASprzak symbolisch → GeneralFunction│
+    │  │  computeStep() → Δx  [solver-spezifisch] │
+    │  │  x ← x + α·Δx                           │
+    │  │  PhysicalProjector.project(x, sysData)   │
+    │  │  fsum = Σ|EqnData.calcFunc(values)|      │
+    │  │  if fsum &lt; tol: CONVERGED                │
+    │  └─────────────────────────────────────────┘
+    │
+    ▼ gibt zurück
+List&lt;OutputVariable&gt;  →  SolverResult
+
+<span class="cmt">// ── 4. Ergebnis ─────────────────────────────────────────────</span>
+SolverResult {
+    converged, iterations, finalResidual
+    getValue("PARTM.F060.PT")  <span class="cmt">// O(1) via HashMap</span>
+    writeToFile() / writeToWriter() / formatAsString()
+    getParseErrors()
+}</pre>
+
+  <h3>Schlüsselklassen und ihre Verantwortung</h3>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>Klasse</th><th>Verantwortung</th><th>Wichtigste Methoden</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><code>EqnSysReader</code></td>
+        <td>CAS-Datei parsen → SystemData</td>
+        <td><code>parseEquationSystemFile()</code> · <code>readLine()</code> · <code>expandElseIf()</code></td>
+      </tr>
+      <tr>
+        <td><code>EqnData</code></td>
+        <td>Eine Gleichung in 4 Formen</td>
+        <td><code>calcFunc()</code> · <code>getDerivatives()</code> · <code>setEquation()</code></td>
+      </tr>
+      <tr>
+        <td><code>SystemData</code></td>
+        <td>Datencontainer Parser → Solver</td>
+        <td><code>getValMap()</code> · <code>getParseErrors()</code> · <code>updateVariables()</code></td>
+      </tr>
+      <tr>
+        <td><code>AbstractSolver</code></td>
+        <td>Iterationsschleife + Jacobi</td>
+        <td><code>solve()</code> · <code>buildJacobian()</code> · <code>computeStep()</code> abstract</td>
+      </tr>
+      <tr>
+        <td><code>SolverFactory</code></td>
+        <td>Solver instanziieren</td>
+        <td><code>create(SolverConfig)</code> → konkreter Solver</td>
+      </tr>
+      <tr>
+        <td><code>PhysicalProjector</code></td>
+        <td>Bounds nach jedem Update enforzen</td>
+        <td><code>project()</code> · <code>detectPhysicalLimit()</code></td>
+      </tr>
+      <tr>
+        <td><code>EqnSystem</code></td>
+        <td>Orchestrierung Parser → Solver → Output</td>
+        <td><code>run()</code> · <code>runHomotopy()</code> · <code>initStructSwitches()</code></td>
+      </tr>
+      <tr>
+        <td><code>SolverAPI</code></td>
+        <td>Programmatischer Einstieg (kein main)</td>
+        <td><code>loadModel()</code> · <code>solve()</code> · <code>setVariableValue()</code></td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<!-- Erweiterung -->
+<section id="erweiterung" class="full-only">
+  <h2>Erweiterungspunkte — mit Code</h2>
+
+  <h3>Neuen Solver implementieren</h3>
+  <p>Das Strategy-Pattern macht neue Solver einfach — nur 3 Dateien ändern:</p>
+
+  <pre><span class="cmt">// ── Schritt 1: Neue Klasse ──────────────────────────────────</span>
+<span class="cmt">// apps/eqnParser/solver/MeinSolver.java</span>
+<span class="kw">public class</span> MeinSolver <span class="kw">extends</span> AbstractSolver {
+
+    <span class="kw">public</span> MeinSolver(SolverConfig cfg) { <span class="kw">super</span>(cfg); }
+
+    <span class="kw">@Override</span>
+    <span class="kw">public</span> String <span class="fn">getName</span>() { <span class="kw">return</span> <span class="str">"Mein Solver"</span>; }
+
+    <span class="kw">@Override</span>
+    <span class="kw">protected</span> <span class="kw">double</span>[] <span class="fn">computeStep</span>(SystemData sysData, MatrixSimple J,
+            <span class="kw">double</span>[] f, HashMap&lt;String,Double&gt; values,
+            <span class="kw">int</span> funcCount, <span class="kw">int</span> totalCount, <span class="kw">int</span> iter, <span class="kw">double</span> kappa) {
+
+        <span class="cmt">// Hier: Schritt Δx berechnen (z.B. eigene Methode)</span>
+        <span class="kw">double</span>[] dx = <span class="kw">new double</span>[funcCount];
+        <span class="cmt">// ... Algorithmus ...</span>
+        <span class="kw">return</span> dx;  <span class="cmt">// AbstractSolver kümmert sich um x ← x + dx</span>
+    }
+}
+
+<span class="cmt">// ── Schritt 2: SolverType erweitern ─────────────────────────</span>
+<span class="cmt">// apps/eqnParser/solver/SolverType.java</span>
+MEIN_SOLVER(<span class="str">"Mein Solver — Beschreibung"</span>),  <span class="cmt">// hinzufügen</span>
+
+<span class="cmt">// ── Schritt 3: SolverFactory registrieren ───────────────────</span>
+<span class="cmt">// apps/eqnParser/solver/SolverFactory.java</span>
+<span class="kw">case</span> MEIN_SOLVER: <span class="kw">return new</span> MeinSolver(cfg);  <span class="cmt">// hinzufügen</span></pre>
+
+  <h3>Neue mathematische Funktion in CAS</h3>
+  <pre><span class="cmt">// EqnData.java — FUNC_MAP (statischer Initializer)</span>
+<span class="kw">static</span> {
+    FUNC_MAP = <span class="kw">new</span> LinkedHashMap&lt;&gt;();
+    <span class="cmt">// ... bestehende Einträge ...</span>
+    FUNC_MAP.put(<span class="str">"SEC"</span>,  <span class="str">"sec"</span>);   <span class="cmt">// ← NEU: Sekans</span>
+    FUNC_MAP.put(<span class="str">"CSC"</span>,  <span class="str">"csc"</span>);   <span class="cmt">// ← NEU: Kosekans</span>
+}
+<span class="cmt">// FUNC_SPLIT_REGEX wird automatisch aktualisiert — kein weiterer Eingriff nötig</span></pre>
+
+  <div class="note amber">
+    <strong>Voraussetzung:</strong> CASprzak muss die Funktion als <code>\sec</code>
+    unterstützen. Prüfen mit einem einfachen Test-CAS.
+    Wenn nicht: Alias auf vorhandene Funktion (z.B. <code>sec(x) = 1/cos(x)</code>
+    als Gleichung formulieren).
+  </div>
+
+  <h3>Neue BIfunction hinzufügen</h3>
+  <pre><span class="cmt">// BIfunctions.java — drei Methoden implementieren</span>
+
+<span class="cmt">// 1. Physikalische Funktion</span>
+<span class="kw">public static double</span> <span class="fn">meineFunktion</span>(<span class="kw">double</span> temp, <span class="kw">double</span> p) {
+    <span class="kw">return</span> <span class="cmt">/* Berechnung */</span>;
+}
+
+<span class="cmt">// 2. Residuum (output - funktion = 0)</span>
+<span class="kw">public static double</span> <span class="fn">dMeineFunktion</span>(<span class="kw">double</span> output, <span class="kw">double</span> temp, <span class="kw">double</span> p) {
+    <span class="kw">return</span> output - meineFunktion(temp, p);
+}
+
+<span class="cmt">// 3. List-Form für EqnData-Aufruf</span>
+<span class="kw">public static double</span> <span class="fn">dMeineFunktion</span>(List&lt;Double&gt; values) {
+    <span class="kw">return</span> dMeineFunktion(values.get(0), values.get(1), values.get(2));
+}
+
+<span class="cmt">// 4. Partielle Ableitung (5-Punkte-Formel — Muster aus bestehenden kopieren)</span>
+<span class="kw">public static double</span> <span class="fn">meineFunktionDeriv</span>(
+        List&lt;String&gt; variables, List&lt;Double&gt; values, String partial) {
+    <span class="cmt">// Muster: identisch zu cpOfTDeriv — nur dMeineFunktion aufrufen</span>
+}</pre>
+</section>
+
+<!-- Bekannte Bugs -->
+<section id="bugs" class="full-only">
+  <h2>Bekannte Bugklassen — Geschichte und Fixes</h2>
+
+  <p>Diese Bugs sind behoben. Die Dokumentation verhindert dass sie erneut eingebaut werden.</p>
+
+  <div class="bug-card fixed">
+    <div class="bug-id">✅ BUG B27 — FIXED in v2.3</div>
+    <div class="bug-title">INITIALIZE-Block: Bounds für Mehrfach-Punktnamen</div>
+    <div class="bug-body">
+      <strong>Problem:</strong> <code>PARTM.F060.PS.Upper = ...</code> wurde falsch geparst.
+      Der Code verwendete <code>parts[0]</code> nach Split auf <code>"."</code> —
+      bei <code>PARTM.F060.PS.Upper</code> war das <code>PARTM</code> statt <code>PARTM.F060.PS</code>.
+      <br><br>
+      <strong>Fix:</strong> <code>lastIndexOf('.')</code> statt Split:
+      <pre style="margin-top:.5rem">String lhs = checkParts[0].trim();
+int lastDot = lhs.lastIndexOf('.');
+this.initFuncVar = (lastDot &gt; 0) ? lhs.substring(0, lastDot) : lhs;</pre>
+      <strong>Datei:</strong> <code>EqnData.java</code>, Methode <code>setEquation()</code>
+    </div>
+  </div>
+
+  <div class="bug-card fixed">
+    <div class="bug-id">✅ BUG B28 — FIXED in v2.3</div>
+    <div class="bug-title">INITIALIZE: Warnung bei normalem Mehrfach-Punktnamen</div>
+    <div class="bug-body">
+      <strong>Problem:</strong> <code>PARTM.F060.PS = 100000;</code> im INITIALIZE-Block
+      löste eine Warnung aus weil der Code dachte es wäre ein fehlerhafter <code>.Lower/.Upper</code>-Versuch.
+      <br><br>
+      <strong>Fix:</strong> Warnung nur ausgeben wenn <code>parts.length == 2</code>
+      (also genau ein Punkt im Namen):
+      <pre style="margin-top:.5rem">if (parts.length == 2) {
+    LOG.warning("Unexpected INITIALIZE option '" + parts[1] + "'...");
+}</pre>
+      <strong>Datei:</strong> <code>EqnData.java</code>, Methode <code>setEquation()</code>
+    </div>
+  </div>
+
+  <div class="bug-card fixed">
+    <div class="bug-id">✅ BUG — FIXED in v2.5</div>
+    <div class="bug-title">EqnData: doppelte Klassendeklaration durch falsch platzierten Javadoc</div>
+    <div class="bug-body">
+      <strong>Problem:</strong> Beim Javadoc-Refactoring wurde der Klassen-Javadoc-Kommentar
+      <strong>innerhalb</strong> der Klasse eingefügt statt davor — zwischen
+      <code>public class EqnData {</code> und den Feldern. Eclipse sah eine nested class.
+      <br><br>
+      <strong>Symptom:</strong> <code>"The nested type EqnData cannot hide an enclosing type"</code>
+      <br><br>
+      <strong>Regel:</strong> Javadoc muss <strong>vor</strong> <code>public class</code> stehen.
+      Prüfen: <code>grep -c "^public class EqnData" EqnData.java</code> muss 1 ergeben.
+      <br><br>
+      <strong>Datei:</strong> <code>EqnData.java</code>
+    </div>
+  </div>
+
+  <div class="bug-card fixed">
+    <div class="bug-id">✅ BUG — FIXED in v2.5</div>
+    <div class="bug-title">EqnSysReader: doppelter try-finally Block</div>
+    <div class="bug-body">
+      <strong>Problem:</strong> Beim Refactoring von <code>parseEquationSystemFile()</code>
+      entstand ein doppelter <code>try-finally</code> Block. Die Variable <code>stream</code>
+      war im zweiten <code>finally</code> nicht mehr im Scope.
+      <br><br>
+      <strong>Symptom:</strong> <code>"stream cannot be resolved"</code> · <code>"Syntax error on token 'finally'"</code>
+      <br><br>
+      <strong>Regel:</strong> <code>parseEquationSystemFile()</code> darf nur <strong>einen</strong>
+      <code>try-finally</code> Block haben — für das Schließen des BufferedReader.
+      Prüfen: <code>grep -c "finally" EqnSysReader.java</code> muss 1 ergeben.
+      <br><br>
+      <strong>Datei:</strong> <code>EqnSysReader.java</code>
+    </div>
+  </div>
+
+  <div class="bug-card fixed">
+    <div class="bug-id">✅ BUG — FIXED in v2.5</div>
+    <div class="bug-title">isCallEqn() beim FUNC_MAP Refactoring weggefallen</div>
+    <div class="bug-body">
+      <strong>Problem:</strong> Beim Einfügen der statischen <code>FUNC_MAP</code>
+      in <code>EqnData.java</code> wurde die Methode <code>isCallEqn()</code>
+      versehentlich gelöscht — sie stand genau an der Einfügestelle.
+      <br><br>
+      <strong>Symptom:</strong> <code>"The method isCallEqn() is undefined for the type EqnData"</code>
+      in vielen Solver-Klassen.
+      <br><br>
+      <strong>Regel:</strong> Nach jedem größeren Refactoring in <code>EqnData.java</code>
+      prüfen ob alle public Methoden noch vorhanden sind.
+    </div>
+  </div>
+</section>
+
+<!-- Fallstricke -->
+<section id="fallstricke" class="full-only">
+  <h2>Fallstricke — Was man nicht tun darf</h2>
+
+  <div class="note red">
+    <strong>GUI-Imports in Backend-Klassen</strong>
+    <br>Kein <code>import javax.swing.*</code> oder <code>import gui.utils.*</code>
+    in <code>apps/eqnParser/</code>. Das verhindert Einbettung in Frameworks ohne Swing.
+    Einzige Ausnahme: <code>writeEqn4c()</code> und <code>writeDeriv()</code> in <code>EqnData</code>
+    die explizit als GUI-only markiert sind und langfristig ausgelagert werden sollen.
+  </div>
+
+  <div class="note red">
+    <strong>System.out statt Logger</strong>
+    <br>Kein <code>System.out.println()</code> oder <code>System.err.println()</code>
+    in Backend-Klassen. Immer <code>LOG.info/warning/severe()</code> verwenden.
+    Für ein Framework ist unkontrollierter stdout-Output nicht akzeptabel.
+  </div>
+
+  <div class="note amber">
+    <strong>Versionen mischen</strong>
+    <br>Nie Dateien aus v2.3 und v2.4 im selben Eclipse-Projekt mischen.
+    v2.4 <code>EqnSysReader</code> ruft <code>ParseError</code> auf die in v2.3 nicht existiert.
+    Immer alle Dateien einer Version gleichzeitig einspielen.
+  </div>
+
+  <div class="note amber">
+    <strong>FUNC_MAP Reihenfolge</strong>
+    <br>Längere Funktionsnamen müssen vor kürzeren in <code>FUNC_MAP</code> stehen.
+    <code>ASINH</code> vor <code>SINH</code>, <code>ATANGENS</code> vor <code>TANGENS</code>.
+    Sonst wird z.B. <code>ASINH</code> zu <code>asinhH</code> weil <code>SINH</code>
+    zuerst matcht.
+  </div>
+
+  <div class="note amber">
+    <strong>Tag-Erstellung in Eclipse</strong>
+    <br>Tags nie über <code>Git Repositories → Tags → Create Tag</code> erstellen —
+    "Existing Targets" ist dort leer. Immer über
+    <code>Team → Show in History → Commit rechtsklicken → Create Tag</code>.
+  </div>
+
+  <div class="note blue">
+    <strong>HomotopySolver nicht über SolverFactory</strong>
+    <br><code>SolverFactory.create()</code> unterstützt <code>HOMOTOPY</code> nicht —
+    der Homotopie-Solver braucht eine eigene <code>HomotopyConfig</code>.
+    Immer direkt instantiieren oder über <code>EqnSystem.runHomotopy()</code>.
+  </div>
+</section>
+
+<!-- Build + Abhängigkeiten -->
+<section id="build" class="full-only">
+  <h2>Build-Umgebung und Abhängigkeiten</h2>
+
+  <h3>Voraussetzungen</h3>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>Komponente</th><th>Version</th><th>Pflicht</th><th>Beschreibung</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>Java</td><td>11+</td><td>Ja</td>
+        <td>Getestet mit GraalVM JDK 25 und OpenJDK 17/21</td>
+      </tr>
+      <tr>
+        <td>CASprzak</td><td>0.3.0</td><td>Ja</td>
+        <td>Symbolische Differentiation — <code>libs/CASprzak.jar</code>. Nicht im Repository.</td>
+      </tr>
+      <tr>
+        <td>Eclipse</td><td>2023+</td><td>Nein</td>
+        <td>IDE. Build Path: Source = <code>src/</code>, Libraries = <code>libs/CASprzak.jar</code></td>
+      </tr>
+      <tr>
+        <td>GSPAR</td><td>intern</td><td>Ja</td>
+        <td>Sparse-LU Bibliothek — im Repository unter <code>solver/gspar/</code></td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Eclipse Build Path</h3>
+  <pre><span class="cmt">// Properties → Java Build Path → Source:</span>
+CMDSolver_repo/src           <span class="cmt">← Source-Ordner</span>
+
+<span class="cmt">// Properties → Java Build Path → Libraries → Classpath:</span>
+CMDSolver_repo/libs/CASprzak.jar   <span class="cmt">← externe JAR</span>
+JRE System Library               <span class="cmt">← automatisch</span></pre>
+
+  <h3>Testprozess nach Änderungen</h3>
+  <pre><span class="cmt">// 1. Basis-Test: alle 7 Solver auf SimpleSystem.cas</span>
+java CASSolver -I:example/SimpleSystem.cas -TEST
+
+<span class="cmt">// Erwartetes Ergebnis: alle CONVERGED, Residuen identisch zu vorherigen Läufen</span>
+<span class="cmt">// Newton: 3 Iter · 3.16e-11    LM: 36 Iter · 8.30e-09</span>
+<span class="cmt">// Broyden: 25 Iter · 8.02e-08  BroydenSparse: 3 Iter · 3.16e-11</span>
+
+<span class="cmt">// 2. Erweiterter Test wenn Parser geändert wurde:</span>
+java CASSolver -I:example/NozzleSystem_4_fixed.cas -S:NEWTON_SPARSE_ARMIJO
+
+<span class="cmt">// 3. Neuer Solver: prüfen ob er in -TEST erscheint</span>
+java CASSolver -I:example/SimpleSystem.cas -TEST
+<span class="cmt">// → muss 8 Zeilen (7 + neuer) ausgeben</span></pre>
+
+  <h3>Logging-Level konfigurieren</h3>
+  <pre><span class="cmt">// SolverLogger.java — Logging-Level ändern</span>
+<span class="cmt">// Standard: INFO. Für Debug-Output:</span>
+Logger logger = SolverLogger.get(MeineKlasse.class);
+logger.setLevel(java.util.logging.Level.FINE);  <span class="cmt">// LOG.fine() wird sichtbar</span>
+
+<span class="cmt">// FINE  = Debug-Ausgaben (Armijo-α, Konditionszahl pro Iteration)</span>
+<span class="cmt">// INFO  = Konvergenz, Solver-Start, Datei-Ausgaben</span>
+<span class="cmt">// WARNING = κ-Warnungen, Parse-Probleme</span>
+<span class="cmt">// SEVERE  = fatale Fehler</span></pre>
+</section>
+
+<!-- Checkliste auch in Full-Mode -->
+<section id="checkliste-full" class="full-only">
+  <h2>Checkliste vor jedem Commit</h2>
+  <ul class="checklist">
+    <li class="must"><strong>-TEST durchführen</strong> — alle Solver auf SimpleSystem.cas konvergieren</li>
+    <li class="must"><strong>Kein System.out in Backend</strong> — nur LOG.*</li>
+    <li class="must"><strong>Kein GUI-Import in apps/eqnParser/</strong> — kein javax.swing</li>
+    <li><code>grep -c "^public class EqnData" EqnData.java</code> → muss 1 ergeben</li>
+    <li><code>grep -c "finally" EqnSysReader.java</code> → muss 1 ergeben</li>
+    <li>Neue Solver: in SolverType + SolverFactory registriert</li>
+    <li>Neue CAS-Funktionen: in FUNC_MAP (längere vor kürzeren Matches)</li>
+    <li>Neue BIfunctions: alle 3 Signaturen implementiert</li>
+    <li class="warn">Dateien nur aus einer Version — nie mischen</li>
+    <li>Commit + Push + Tag setzen + ZIP aktualisieren</li>
+  </ul>
+</section>
+
+</main>
+
+<script>
+function setMode(mode) {
+  const body = document.body;
+  const btnQuick = document.getElementById('btn-quick');
+  const btnFull  = document.getElementById('btn-full');
+
+  if (mode === 'full') {
+    body.classList.add('full-mode');
+    btnFull.classList.add('active');
+    btnQuick.classList.remove('active');
+  } else {
+    body.classList.remove('full-mode');
+    btnQuick.classList.add('active');
+    btnFull.classList.remove('active');
+  }
+  // URL-Hash für direkten Link
+  location.hash = mode === 'full' ? 'full' : 'quick';
+}
+
+// Beim Laden: Hash auswerten
+if (location.hash === '#full') setMode('full');
+</script>
+
+<footer>
+  <span>CMDSolver Docs · Wartung &amp; Entwicklung · v2.5</span>
+  <span>
+    <a href="bifunctions_reference.html">← BIfunctions</a> &nbsp;|&nbsp;
+    <a href="index.html">← Übersicht</a>
+  </span>
+</footer>
+</body>
+</html>

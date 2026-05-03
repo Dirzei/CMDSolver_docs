@@ -1,0 +1,1331 @@
+VARIABLE ITOTALPRESSURE
+LOWER: 5000.;
+VALUE: 150000.;
+UPPER: 300000.;
+UNIT: "Pa";
+END
+
+VARIABLE ISTATICPRESSURE
+LOWER: 1000.;
+VALUE: 140000.;
+UPPER: 290000.;
+UNIT: "Pa";
+END
+
+VARIABLE OTOTALPRESSURE
+LOWER: 5000.;
+VALUE: 150000.;
+UPPER: 300000.;
+UNIT: "Pa";
+END
+
+VARIABLE OSTATICPRESSURE
+LOWER: 1000.;
+VALUE: 140000.;
+UPPER: 290000.;
+UNIT: "Pa";
+END
+
+PROCEDURE pCPOFT
+CALL: CPOFTNOZ;
+INPUTS: REAL, REAL, REAL;
+OUTPUTS: REAL;
+END
+
+GLOBAL.STATICSWITCH AS REAL (Description: "Switch for static or total", Lower: 0.0, Value: 1., Upper: 1., Spec: Fixed, Unit: "none");
+GLOBAL.FFSWITCH1 AS REAL (Description: "", Lower: 0.0, Value: 1., Upper: 1., Spec: Fixed, Unit: "none");
+GLOBAL.MASSFMMEAN AS REAL (Description: "", Lower: 0.0, Value: 0., Upper: 1., Spec: Fixed, Unit: "none");
+GLOBAL.WSHSWITCH AS REAL (Description: "", Lower: 0.0, Value: 0., Upper: 1., Spec: Fixed, Unit: "none");
+GLOBAL.MASSPMMEAN AS REAL (Description: "", Lower: 0.0, Value: 0., Upper: 1., Spec: Fixed, Unit: "none");
+GLOBAL.FFSWITCH2 AS REAL (Description: "", Lower: 0.0, Value: 1., Upper: 1., Spec: Fixed, Unit: "none");
+GLOBAL.SWSHEAR AS REAL (Description: "", Lower: 0.0, Value: 0., Upper: 1., Spec: Fixed, Unit: "none");
+GLOBAL.SWCV AS REAL (Description: "", Lower: 0.0, Value: 1., Upper: 1., Spec: Fixed, Unit: "none");
+GLOBAL.FMCHUTELOSS AS REAL (Description: "", Lower: 0.0, Value: 1., Upper: 1., Spec: Fixed, Unit: "none");
+GLOBAL.FMWITHLOSS AS REAL (Description: "", Lower: 0.0, Value: 1., Upper: 1., Spec: Fixed, Unit: "none");
+
+GLOBAL.PIVALUE AS REAL (Description: "PI", Lower: 0.0, Value: 3.14159265358979, Upper: 1., Spec: Fixed, Unit: "none", Latex: "\pi");
+GLOBAL.RUNIV AS REAL (Description: "Universal gas constant", Lower: 200.0, Value: 8314.3, Upper: 1000., Spec: Fixed, Unit: "J/kg/K", Latex: "R_{univ}");
+
+GEOM.RMIXERSTART AS REAL (Description: "Mixer start radius", Lower: 0.0, Value: 0.0789, Upper: 10., Spec: Fixed, Unit: "m", Latex: "r_{mixer_start}");
+GEOM.MIXERP AS REAL (Description: "Mixer Perimeter", Lower: 0.0, Value: 1.4732, Upper: 10., Spec: Fixed, Unit: "m", Latex: "p_{mixer}");
+GEOM.RBULLETSTART AS REAL (Description: "Bullet start radius", Lower: 0.0, Value: 0.0488, Upper: 10., Spec: Fixed, Unit: "m", Latex: "r_{bullet_start}");
+GEOM.RBULLETEND AS REAL (Description: "Bullet end radius", Lower: 0.0, Value: 0.0454, Upper: 10., Spec: Fixed, Unit: "m", Latex: "r_{bullet_end}");
+GEOM.KR AS REAL (Description: "von Karman Constant", Lower: 0.0, Value: 0.41, Upper: 10., Spec: Fixed, Unit: "none", Latex: "\kappa_{r}");
+GEOM.LMIXER AS REAL (Description: "Mixer length", Lower: 0.0, Value: 0.0834, Upper: 10., Spec: Fixed, Unit: "m", Latex: "l_{mixer}");
+GEOM.GVALUE AS REAL (Description: "", Lower: 0.0, Value: 1.5, Upper: 10., Spec: Fixed, Unit: "none", Latex: "G");
+GEOM.RJETPIPE AS REAL (Description: "Jetpipe radius", Lower: 0.0, Value: 0.133, Upper: 10., Spec: Fixed, Unit: "m", Latex: "r_{jetpipe}");
+GEOM.NOZLENGTH AS REAL (Description: "Nozzle length", Lower: 0.0, Value: 0.07606, Upper: 10., Spec: Fixed, Unit: "m", Latex: "l_{nozzle}");
+GEOM.LJETPIPE AS REAL (Description: "Nozzle length", Lower: 0.0, Value: 0.31936, Upper: 10., Spec: Fixed, Unit: "m", Latex: "l_{jetpipe}");
+GEOM.CJ AS REAL (Description: "", Lower: 0.0, Value: 0.09, Upper: 10., Spec: Fixed, Unit: "none", Latex: "\C_{j}");
+GEOM.CONDIRATIO AS REAL (Description: "Nozzle condi ratio", Lower: 0.0, Value: 1.005, Upper: 10., Spec: Fixed, Unit: "m", Latex: "cdr");
+
+AMB.PS AS REAL (Description: "Ambient pressure", Lower: 1000.0, Value: 98136.535, Upper: 200000., Spec: Fixed, Unit: "Pa", Latex: "P_{s,010}");
+
+//--------------------------------BLOCK START - STATION 060 (Core Station) ---------------------------
+PARTM.F060.RGAS AS REAL (Description: "Core cas constant at 060", Lower: 0.0, Value: 287., Upper: 1000., Spec: Free, Unit: "J/kg/K", Latex: "R_{gas,060}");
+PARTM.F060.CPT AS REAL (Description: "Heat capacity total at 060", Lower: 700.0, Value: 1100., Upper: 2000., Spec: Free, Unit: "J/kg/K", Latex: "c_{p,T,060}");
+PARTM.F060.GAMMAT AS REAL (Description: "Isentropic exponent for total temperature at 060", Lower: 1.0, Value: 1.35, Upper: 2., Spec: Free, Unit: "none", Latex: "\gamma_{T,060}");
+PARTM.F060.CPS AS REAL (Description: "Heat capacity static at 060", Lower: 700.0, Value: 1100., Upper: 2000., Spec: Free, Unit: "J/kg/K", Latex: "c_{p,s,060}");
+PARTM.F060.GAMMAS AS REAL (Description: "Isentropic exponent for static temperature at 060", Lower: 1.0, Value: 1.35, Upper: 2., Spec: Free, Unit: "none", Latex: "\gamma_{s,060}");
+PARTM.F060.CP AS REAL (Description: "Heat capacity at 060", Lower: 700.0, Value: 1100., Upper: 2000., Spec: Free, Unit: "J/kg/K", Latex: "c_{p,060}");
+PARTM.F060.GAMMA AS REAL (Description: "Isentropic exponent at 060", Lower: 1.0, Value: 1.35, Upper: 2., Spec: Free, Unit: "none", Latex: "\gamma_{060}");
+PARTM.F060.TT AS REAL (Description: "Total temperature at 060", Lower: 200.0, Value: 289.83, Upper: 1500., Spec: Fixed, Unit: "K", Latex: "T_{T,060}");
+PARTM.F060.PT AS REAL (Description: "Total pressure at 060", Lower: 1000.0, Value: 196273.07, Upper: 300000., Spec: Fixed, Unit: "Pa", Latex: "P_{T,060}");
+PARTM.F060.FAR AS REAL (Description: "Fuel air ratio at 060", Lower: 0., Value: 0., Upper: 0.1, Spec: Fixed, Unit: "none", Latex: "FAR_{060}");
+PARTM.F060.WGR AS REAL (Description: "Water gas ratio at 060", Lower: 0., Value: 0., Upper: 0.1, Spec: Fixed, Unit: "none", Latex: "WGR_{060}");
+PARTM.F060.W AS REAL (Description: "Core mass flow", Lower: 0.1, Value: 2.79880586679233, Upper: 100., Spec: Free, Unit: "kg/s", Latex: "W_{060}");
+PARTM.F060.Q AS REAL (Description: "Flow function at 060", Lower: 0., Value: 0.05, Upper: 2., Spec: Free, Unit: "SQRT_kgK/J", Latex: "Q_{060}");
+PARTM.F060.WMAX AS REAL (Description: "Max possible core mass flow", Lower: 0.1, Value: 10., Upper: 100., Spec: Free, Unit: "kg/s", Latex: "W_{max,060}");
+PARTM.F060.AG AS REAL (Description: "Core geometric area at 060", Lower: 0.001, Value: 0.433884582, Upper: 2., Spec: Free, Unit: "m2", Latex: "A_{g,060}");
+PARTM.F060.PS AS REAL (Description: "Static pressure at 060", Lower: 1000.0, Value: 100000., Upper: 300000., Spec: Free, Unit: "Pa", Latex: "P_{s,060}");
+PARTM.F060.TS AS REAL (Description: "Static temperature at 060", Lower: 190.0, Value: 780., Upper: 1200., Spec: Free, Unit: "K", Latex: "T_{s,060}");
+PARTM.F060.MN AS REAL (Description: "Mach number at 060", Lower: 0., Value: 0.483168896261495, Upper: 0.9, Spec: Free, Unit: "none", Latex: "M_{060}");
+PARTM.F060.RHO AS REAL (Description: "Density at 060", Lower: 0., Value: 0.5, Upper: 10., Spec: Free, Unit: "kg/m3", Latex: "\rho_{060}");
+PARTM.F060.VT AS REAL (Description: "Total velocity at 060", Lower: 0., Value: 300., Upper: 2000., Spec: Free, Unit: "m/s", Latex: "V_{T,060}");
+//--------------------------------BLOCK END - STATION 060 (Core Station) ---------------------------
+
+
+//--------------------------------BLOCK START - STATION 160 (Bypass Station) ---------------------------
+PARTM.F160.RGAS AS REAL (Description: "Core cas constant at 160", Lower: 0.0, Value: 287., Upper: 1000., Spec: Free, Unit: "J/kg/K", Latex: "R_{gas,160}");
+PARTM.F160.CPT AS REAL (Description: "Heat capacity total at 160", Lower: 700.0, Value: 1000., Upper: 2000., Spec: Free, Unit: "J/kg/K", Latex: "c_{p,T,160}");
+PARTM.F160.GAMMAT AS REAL (Description: "Isentropic exponent for total temperature at 060", Lower: 1.0, Value: 1.4, Upper: 2., Spec: Free, Unit: "none", Latex: "\gamma_{T,160}");
+PARTM.F160.CPS AS REAL (Description: "Heat capacity static at 160", Lower: 700.0, Value: 1000., Upper: 2000., Spec: Free, Unit: "J/kg/K", Latex: "c_{p,s,160}");
+PARTM.F160.GAMMAS AS REAL (Description: "Isentropic exponent for static temperature at 160", Lower: 1.0, Value: 1.4, Upper: 2., Spec: Free, Unit: "none", Latex: "\gamma_{s,160}");
+PARTM.F160.CP AS REAL (Description: "Heat capacity at 160", Lower: 700.0, Value: 1000., Upper: 2000., Spec: Free, Unit: "J/kg/K", Latex: "c_{p,160}");
+PARTM.F160.GAMMA AS REAL (Description: "Isentropic exponent at 160", Lower: 1.0, Value: 1.4, Upper: 2., Spec: Free, Unit: "none", Latex: "\gamma_{160}");
+PARTM.F160.TT AS REAL (Description: "Total temperature at 160", Lower: 200.0, Value: 289.83, Upper: 1500., Spec: Fixed, Unit: "K", Latex: "T_{T,160}");
+PARTM.F160.PT AS REAL (Description: "Total pressure at 160", Lower: 1000.0, Value: 206086.7235, Upper: 300000., Spec: Fixed, Unit: "Pa", Latex: "P_{T,160}");
+PARTM.F160.FAR AS REAL (Description: "Fuel air ratio at 160", Lower: 0., Value: 0., Upper: 0.1, Spec: Fixed, Unit: "none", Latex: "FAR_{160}");
+PARTM.F160.WGR AS REAL (Description: "Water gas ratio at 160", Lower: 0., Value: 0., Upper: 0.1, Spec: Fixed, Unit: "none", Latex: "WGR_{160}");
+PARTM.F160.W AS REAL (Description: "Bypass mass flow", Lower: 0.1, Value: 14.8229521823562, Upper: 100., Spec: Free, Unit: "kg/s", Latex: "W_{160}");
+PARTM.F160.Q AS REAL (Description: "Flow function at 160", Lower: 0., Value: 0.05, Upper: 2., Spec: Free, Unit: "SQRT_kgK/J", Latex: "Q_{160}");
+PARTM.F160.WMAX AS REAL (Description: "Max possible bypass mass flow", Lower: 0.1, Value: 10., Upper: 100., Spec: Free, Unit: "kg/s", Latex: "W_{max,160}");
+PARTM.F160.AG AS REAL (Description: "Bypass geometric area at 160", Lower: 0.01, Value: 0.604794654, Upper: 2., Spec: Free, Unit: "m2", Latex: "A_{g,160}");
+PARTM.F160.PS AS REAL (Description: "Static pressure at 160", Lower: 1000.0, Value: 100000., Upper: 300000., Spec: Free, Unit: "Pa", Latex: "P_{s,160}");
+PARTM.F160.TS AS REAL (Description: "Static temperature at 160", Lower: 190.0, Value: 300., Upper: 1200., Spec: Free, Unit: "K", Latex: "T_{s,160}");
+PARTM.F160.MN AS REAL (Description: "Mach number at 160", Lower: 0., Value: 0.556564820533992, Upper: 0.9, Spec: Free, Unit: "none", Latex: "M_{160}");
+PARTM.F160.RHO AS REAL (Description: "Density at 160", Lower: 0., Value: 0.5, Upper: 10., Spec: Free, Unit: "kg/m3", Latex: "\rho_{160}");
+PARTM.F160.VT AS REAL (Description: "Total velocity at 160", Lower: 0., Value: 300., Upper: 2000., Spec: Free, Unit: "m/s", Latex: "V_{T,160}");
+
+GLOBAL.WTOTAL AS REAL (Description: "Total inlet mass flow", Lower: 0.1, Value: 17.62175805, Upper: 100., Spec: Free, Unit: "kg/s", Latex: "W_{total}");
+//--------------------------------BLOCK END - STATION 160 (Bypass Station) ---------------------------
+
+
+//--------------------------------BLOCK START - STATION 066 (Core Station) ---------------------------
+GLOBAL.REFMU AS REAL (Description: "Reference viscosity", Lower: 0.0, Value: 0.00001716, Upper: 1., Spec: Fixed, Unit: "kg/m/s", Latex: "\mu_{ref}");
+GLOBAL.TTREF AS REAL (Description: "Reference temperature for sutherland", Lower: 0.0, Value: 273.15, Upper: 400., Spec: Fixed, Unit: "K", Latex: "T_{t,ref}");
+GLOBAL.SC AS REAL (Description: "Sutherland constant", Lower: 0.0, Value: 110.4, Upper: 400., Spec: Fixed, Unit: "K", Latex: "S_{c}");
+GLOBAL.LL AS REAL (Description: "Reference length", Lower: 0.0, Value: 1., Upper: 10., Spec: Fixed, Unit: "K", Latex: "L_{ref}");
+
+GEOM.STARTPMIXER AS REAL (Description: "Mixer start perimeter", Lower: 0.0, Value: 2.5, Upper: 100., Spec: Free, Unit: "m", Latex: "p_{mixer,start}");
+GEOM.PCORE AS REAL (Description: "Core perimeter", Lower: 0.0, Value: 5., Upper: 100., Spec: Free, Unit: "m", Latex: "p_{core}");
+PARTM.F066.CF AS REAL (Description: "", Lower: 0.0, Value: 0., Upper: 1000., Spec: Free, Unit: "none", Latex: "c_{f,core}");
+PARTM.F066.FF AS REAL (Description: "", Lower: 0.0, Value: 0., Upper: 1000., Spec: Free, Unit: "none", Latex: "F_{f,core}");
+
+PARTM.F066.PT AS REAL (Description: "Total pressure at 066", Lower: 15000.0, Value: 150000., Upper: 350000., Spec: Free, Unit: "Pa", Latex: "P_{T,066}");
+PARTM.F066.PS AS REAL (Description: "Static pressure at 066", Lower: 10000.0, Value: 100000., Upper: 300000., Spec: Free, Unit: "Pa", Latex: "P_{s,066}");
+PARTM.F066.TT AS REAL (Description: "Total temperature at 066", Lower: 200.0, Value: 800., Upper: 1500., Spec: Free, Unit: "K", Latex: "T_{T,066}");
+PARTM.F066.TS AS REAL (Description: "Static temperature at 066", Lower: 190.0, Value: 780., Upper: 1500., Spec: Free, Unit: "K", Latex: "T_{s,066}");
+PARTM.F066.MN AS REAL (Description: "Mach number at 066", Lower: 0., Value: 0.5, Upper: 0.9, Spec: Free, Unit: "none", Latex: "M_{066}");
+PARTM.F066.Q AS REAL (Description: "Flow function at 066", Lower: 0., Value: 0.05, Upper: 2., Spec: Free, Unit: "SQRT_kgK/J", Latex: "Q_{066}");
+PARTM.F066.WX AS REAL (Description: "Mass flow iteration at 066", Lower: 0.1, Value: 1.24760784967238, Upper: 100., Spec: Free, Unit: "kg/s", Latex: "W_{x,066}");
+PARTM.F066.W AS REAL (Description: "Mass flow at 066", Lower: 0.1, Value: 1.24760784967238, Upper: 100., Spec: Free, Unit: "kg/s", Latex: "W_{066}");
+PARTM.F066.AG AS REAL (Description: "Geometric area at 066", Lower: 0.01, Value: 0.0099096576, Upper: 2., Spec: Fixed, Unit: "m2", Latex: "A_{g,066}");
+PARTM.F066.CPT AS REAL (Description: "Heat capacity total at 066", Lower: 700.0, Value: 1100., Upper: 2000., Spec: Free, Unit: "J/kg/K", Latex: "c_{p,T,066}");
+PARTM.F066.GAMMAT AS REAL (Description: "Isentropic exponent for total temperature at 066", Lower: 1.0, Value: 1.35, Upper: 2., Spec: Free, Unit: "none", Latex: "\gamma_{T,066}");
+PARTM.F066.CPS AS REAL (Description: "Heat capacity static at 066", Lower: 700.0, Value: 1100., Upper: 2000., Spec: Free, Unit: "J/kg/K", Latex: "c_{p,s,066}");
+PARTM.F066.GAMMAS AS REAL (Description: "Isentropic exponent for static temperature at 066", Lower: 1.0, Value: 1.35, Upper: 2., Spec: Free, Unit: "none", Latex: "\gamma_{s,066}");
+PARTM.F066.CP AS REAL (Description: "Heat capacity at 066", Lower: 700.0, Value: 1100., Upper: 2000., Spec: Free, Unit: "J/kg/K", Latex: "c_{p,066}");
+PARTM.F066.GAMMA AS REAL (Description: "Isentropic exponent at 066", Lower: 1.0, Value: 1.35, Upper: 2., Spec: Free, Unit: "none", Latex: "\gamma_{066}");
+PARTM.F066.VT AS REAL (Description: "Total velocity at 066", Lower: 0., Value: 300., Upper: 2000., Spec: Free, Unit: "m/s", Latex: "V_{T,066}");
+PARTM.F066.RHO AS REAL (Description: "Density at 066", Lower: 0., Value: 0.5, Upper: 10., Spec: Free, Unit: "kg/m3", Latex: "\rho_{066}");
+
+PARTM.F066.MU AS REAL (Description: "Viscosity at 066", Lower: 0.0, Value: 0.00001798, Upper: 1000., Spec: Free, Unit: "J/kg/K", Latex: "\mu_{066}");
+PARTM.F066.RE AS REAL (Description: "Renolds number at 066", Lower: 0.0, Value: 1500000, Upper: 100000000., Spec: Free, Unit: "J/kg/K", Latex: "Re_{066}");
+//--------------------------------BLOCK END - STATION 066 (Core Station) ---------------------------
+
+
+//--------------------------------BLOCK START - STATION 166 (Bypass Station) ---------------------------
+GEOM.PFAN AS REAL (Description: "Bypass perimeter", Lower: 0.0, Value: 9., Upper: 100., Spec: Free, Unit: "m", Latex: "p_{fan}");
+PARTM.F166.CF AS REAL (Description: "", Lower: 0.0, Value: 0., Upper: 1000., Spec: Free, Unit: "none", Latex: "c_{f,bypass}");
+PARTM.F166.FF AS REAL (Description: "", Lower: 0.0, Value: 0., Upper: 1000., Spec: Free, Unit: "none", Latex: "F_{f,bypass}");
+
+PARTM.F166.PT AS REAL (Description: "Total pressure at 166", Lower: 15000.0, Value: 150000., Upper: 350000., Spec: Free, Unit: "Pa", Latex: "P_{T,166}");
+PARTM.F166.PS AS REAL (Description: "Static pressure at 160", Lower: 10000.0, Value: 223319.508245099, Upper: 300000., Spec: Free, Unit: "Pa", Latex: "P_{s,166}");
+PARTM.F166.TT AS REAL (Description: "Total temperature at 166", Lower: 200.0, Value: 320., Upper: 1500., Spec: Free, Unit: "K", Latex: "T_{T,166}");
+PARTM.F166.TS AS REAL (Description: "Static temperature at 166", Lower: 190.0, Value: 300., Upper: 1500., Spec: Free, Unit: "K", Latex: "T_{s,166}");
+PARTM.F166.MN AS REAL (Description: "Mach number at 166", Lower: 0., Value: 0.461744161, Upper: 0.9, Spec: Free, Unit: "none", Latex: "M_{166}");
+PARTM.F166.Q AS REAL (Description: "Flow function at 166", Lower: 0., Value: 0.05, Upper: 2., Spec: Free, Unit: "SQRT_kgK/J", Latex: "Q_{166}");
+PARTM.F166.W AS REAL (Description: "Mass flow at 166", Lower: 0.1, Value: 5.02047854870014, Upper: 100., Spec: Free, Unit: "kg/s", Latex: "W_{166}");
+PARTM.F166.AG AS REAL (Description: "Geometric area at 160", Lower: 0.01, Value: 0.0289289744, Upper: 2., Spec: Fixed, Unit: "m2", Latex: "A_{g,166}");
+PARTM.F166.CPT AS REAL (Description: "Heat capacity total at 166", Lower: 700.0, Value: 1000., Upper: 2000., Spec: Free, Unit: "J/kg/K", Latex: "c_{p,T,166}");
+PARTM.F166.GAMMAT AS REAL (Description: "Isentropic exponent for total temperature at 166", Lower: 1.0, Value: 1.4, Upper: 2., Spec: Free, Unit: "none", Latex: "\gamma_{T,166}");
+PARTM.F166.CPS AS REAL (Description: "Heat capacity static at 166", Lower: 700.0, Value: 1000., Upper: 2000., Spec: Free, Unit: "J/kg/K", Latex: "c_{p,s,166}");
+PARTM.F166.GAMMAS AS REAL (Description: "Isentropic exponent for static temperature at 166", Lower: 1.0, Value: 1.4, Upper: 2., Spec: Free, Unit: "none", Latex: "\gamma_{s,166}");
+PARTM.F166.CP AS REAL (Description: "Heat capacity at 166", Lower: 700.0, Value: 1000., Upper: 2000., Spec: Free, Unit: "J/kg/K", Latex: "c_{p,166}");
+PARTM.F166.GAMMA AS REAL (Description: "Isentropic exponent at 166", Lower: 1.0, Value: 1.4, Upper: 2., Spec: Free, Unit: "none", Latex: "\gamma_{166}");
+PARTM.F166.VT AS REAL (Description: "Total velocity at 166", Lower: 0., Value: 200., Upper: 2000., Spec: Free, Unit: "m/s", Latex: "V_{T,166}");
+PARTM.F166.RHO AS REAL (Description: "Density at 166", Lower: 0., Value: 0.5, Upper: 10., Spec: Free, Unit: "kg/m3", Latex: "\rho_{166}");
+
+PARTM.F166.MU AS REAL (Description: "Viscosity at 166", Lower: 0.0, Value: 0.00001798, Upper: 1000., Spec: Free, Unit: "J/kg/K", Latex: "\mu_{166}");
+PARTM.F166.RE AS REAL (Description: "Renolds number at 166", Lower: 0.0, Value: 4200000, Upper: 100000000., Spec: Free, Unit: "J/kg/K", Latex: "Re_{166}");
+
+PARTM.F066.DPP AS REAL (Description: "Pressure loss 060 to 066", Lower: -1.0, Value: 0., Upper: 1., Spec: Free, Unit: "none", Latex: "dPp_{066}");
+PARTM.F166.DPP AS REAL (Description: "Pressure loss 160 to 166", Lower: -1.0, Value: 0., Upper: 1., Spec: Free, Unit: "none", Latex: "dPp_{166}");
+
+GLOBAL.RHOAVG AS REAL (Description: "average Density at 066 and 166", Lower: 0., Value: 0.3, Upper: 10., Spec: Free, Unit: "kg/m3", Latex: "\rho_{avg}");
+GLOBAL.DELTAV AS REAL (Description: "delta velocity at 066 and 166", Lower: -1000., Value: 100., Upper: 2000., Spec: Free, Unit: "m/s", Latex: "\Delta V");
+GLOBAL.VTAVG AS REAL (Description: "average velocity at 066 and 166", Lower: 0., Value: 250., Upper: 2000., Spec: Free, Unit: "m/s", Latex: "V_{T,avg}");
+
+GEOM.NOZL1 AS REAL (Description: "nozzle length 1", Lower: 0.0, Value: 0.2, Upper: 10., Spec: Free, Unit: "m", Latex: "l_{nozzle,1}");
+GEOM.NOZL2 AS REAL (Description: "nozzle length 2", Lower: 0.0, Value: 0.2, Upper: 10., Spec: Free, Unit: "m", Latex: "l_{nozzle,2}");
+
+GLOBAL.DWTRULEAK AS REAL (Description: "TRU leakage flow", Lower: 0.0, Value: 0., Upper: 10., Spec: Free, Unit: "none", Latex: "\Delta W_{TRU,leakage}"); 
+GLOBAL.WQTRULEAK AS REAL (Description: "TRU leakage flow fraction", Lower: 0.0, Value: 0., Upper: 10., Spec: Fixed, Unit: "none", Latex: "WQ_{TRU,leakage}"); 
+
+MASSMIX.FAR7MIX AS REAL (Description: "", Lower: 0.0, Value: 0., Upper: 0.1, Spec: Free, Unit: "none", Latex: "FAR_{7,mixed}"); 
+MASSMIX.WGR7MIX AS REAL (Description: "T", Lower: 0.0, Value: 0., Upper: 0.1, Spec: Free, Unit: "none", Latex: "WGR_{7,mixed}"); 
+MASSMIX.RGAS7MIX AS REAL (Description: "", Lower: 0.0, Value: 287., Upper: 1000., Spec: Free, Unit: "J/kg/K", Latex: "R_{gas,7,mixed}"); 
+//--------------------------------BLOCK END - STATION 166 (Bypass Station) ---------------------------
+
+
+//--------------------------------BLOCK START - STATION 060 Fully Mixed (Core Station) ---------------------------
+FULLM.F060.CPT AS REAL (Description: "Heat capacity total at 060", Lower: 700.0, Value: 1100., Upper: 2000., Spec: Free, Unit: "J/kg/K", Latex: "c_{p,T,fm,060}");
+FULLM.F060.GAMMAT AS REAL (Description: "Isentropic exponent for total temperature at 060", Lower: 1.0, Value: 1.35, Upper: 2., Spec: Free, Unit: "none", Latex: "\gamma_{T,fm,060}");
+FULLM.F060.CPS AS REAL (Description: "Heat capacity static at 060", Lower: 700.0, Value: 1100., Upper: 2000., Spec: Free, Unit: "J/kg/K", Latex: "c_{p,s,fm,060}");
+FULLM.F060.GAMMAS AS REAL (Description: "Isentropic exponent for static temperature at 060", Lower: 1.0, Value: 1.35, Upper: 2., Spec: Free, Unit: "none", Latex: "\gamma_{s,fm,060}");
+FULLM.F060.CP AS REAL (Description: "Heat capacity at 060", Lower: 700.0, Value: 1100., Upper: 2000., Spec: Free, Unit: "J/kg/K", Latex: "c_{p,fm,060}");
+FULLM.F060.GAMMA AS REAL (Description: "Isentropic exponent at 060", Lower: 1.0, Value: 1.35, Upper: 2., Spec: Free, Unit: "none", Latex: "\gamma_{fm,060}");
+FULLM.F060.W AS REAL (Description: "Core mass flow", Lower: 0.1, Value: 2.79880586679233, Upper: 100., Spec: Free, Unit: "kg/s", Latex: "W_{fm,060}");
+FULLM.F060.AG AS REAL (Description: "Core geometric area at 060", Lower: 0.001, Value: 0.433884582, Upper: 2., Spec: Free, Unit: "m2", Latex: "A_{g,fm,060}");
+FULLM.F060.MN AS REAL (Description: "Mach number at 060", Lower: 0., Value: 0.483168896261495, Upper: 0.9, Spec: Free, Unit: "none", Latex: "M_{fm,060}");
+FULLM.F060.PT AS REAL (Description: "Total pressure at 060", Lower: 1000.0, Value: 196273.07, Upper: 300000., Spec: Free, Unit: "Pa", Latex: "P_{Tfm,,060}");
+FULLM.F060.TT AS REAL (Description: "Total temperature at 060", Lower: 200.0, Value: 289.83, Upper: 1500., Spec: Free, Unit: "K", Latex: "T_{T,fm,060}");
+FULLM.F060.PS AS REAL (Description: "Static pressure at 060", Lower: 1000.0, Value: 100000., Upper: 300000., Spec: Free, Unit: "Pa", Latex: "P_{s,fm,060}");
+FULLM.F060.TS AS REAL (Description: "Static temperature at 060", Lower: 190.0, Value: 780., Upper: 1200., Spec: Free, Unit: "K", Latex: "T_{s,fm,060}");
+FULLM.F060.RHO AS REAL (Description: "Density at 060", Lower: 0., Value: 0.5, Upper: 10., Spec: Free, Unit: "kg/m3", Latex: "\rho_{fm,060}");
+FULLM.F060.VT AS REAL (Description: "Total velocity at 060", Lower: 0., Value: 300., Upper: 2000., Spec: Free, Unit: "m/s", Latex: "V_{T,fm,060}");
+//--------------------------------BLOCK END - STATION 060 Fully Mixed (Core Station) ---------------------------
+
+
+//--------------------------------BLOCK START - STATION 066 Fully Mixed (Core Station) ---------------------------
+FULLM.F066.CF AS REAL (Description: "", Lower: 0.0, Value: 0., Upper: 1000., Spec: Free, Unit: "none", Latex: "c_{f,fm,core}");
+FULLM.F066.FF AS REAL (Description: "", Lower: 0.0, Value: 0., Upper: 1000., Spec: Free, Unit: "none", Latex: "F_{f,fm,core}");
+
+FULLM.F066.PT AS ITOTALPRESSURE (Description: "Total pressure at 066", Lower: 15000.0, Value: 150000., Upper: 350000., Spec: Free, Unit: "Pa", Latex: "P_{T,fm,066}");
+FULLM.F066.CPT AS REAL (Description: "Heat capacity total at 066", Lower: 700.0, Value: 1100., Upper: 2000., Spec: Free, Unit: "J/kg/K", Latex: "c_{p,T,fm,066}");
+FULLM.F066.GAMMAT AS REAL (Description: "Isentropic exponent for total temperature at 066", Lower: 1.0, Value: 1.35, Upper: 2., Spec: Free, Unit: "none", Latex: "\gamma_{T,fm,066}");
+FULLM.F066.CPS AS REAL (Description: "Heat capacity static at 066", Lower: 700.0, Value: 1100., Upper: 2000., Spec: Free, Unit: "J/kg/K", Latex: "c_{p,s,fm,066}");
+FULLM.F066.GAMMAS AS REAL (Description: "Isentropic exponent for static temperature at 066", Lower: 1.0, Value: 1.35, Upper: 2., Spec: Free, Unit: "none", Latex: "\gamma_{s,fm,066}");
+FULLM.F066.CP AS REAL (Description: "Heat capacity at 066", Lower: 700.0, Value: 1100., Upper: 2000., Spec: Free, Unit: "J/kg/K", Latex: "c_{p,fm,066}");
+FULLM.F066.GAMMA AS REAL (Description: "Isentropic exponent at 066", Lower: 1.0, Value: 1.35, Upper: 2., Spec: Free, Unit: "none", Latex: "\gamma_{fm,066}");
+FULLM.F066.MN AS REAL (Description: "Mach number at 066", Lower: 0., Value: 0.5, Upper: 1., Spec: Free, Unit: "none", Latex: "M_{fm,066}");
+FULLM.F066.PS AS ISTATICPRESSURE (Description: "Static pressure at 066", Lower: 10000.0, Value: 100000., Upper: 300000., Spec: Free, Unit: "Pa", Latex: "P_{s,fm,066}");
+FULLM.F066.TT AS REAL (Description: "Total temperature at 066", Lower: 200.0, Value: 800., Upper: 1500., Spec: Free, Unit: "K", Latex: "T_{T,fm,066}");
+FULLM.F066.TS AS REAL (Description: "Static temperature at 066", Lower: 190.0, Value: 780., Upper: 1500., Spec: Free, Unit: "K", Latex: "T_{s,fm,066}");
+FULLM.F066.AG AS REAL (Description: "Geometric area at 066", Lower: 0.001, Value: 0.0099096576, Upper: 2., Spec: Free, Unit: "m2", Latex: "A_{g,fm,066}");
+FULLM.F066.Q AS REAL (Description: "Flow function at 066", Lower: 0., Value: 0.05, Upper: 2., Spec: Free, Unit: "SQRT_kgK/J", Latex: "Q_{fm,066}");
+FULLM.F066.WX AS REAL (Description: "Mass flow iteration at 066", Lower: 0.1, Value: 50., Upper: 100., Spec: Free, Unit: "kg/s", Latex: "W_{x,fm,066}");
+FULLM.F066.W AS REAL (Description: "Mass flow at 066", Lower: 0.1, Value: 50., Upper: 100., Spec: Free, Unit: "kg/s", Latex: "W_{fm,066}");
+FULLM.F066.VT AS REAL (Description: "Total velocity at 066", Lower: 0., Value: 300., Upper: 2000., Spec: Free, Unit: "m/s", Latex: "V_{T,fm,066}");
+FULLM.F066.RHO AS REAL (Description: "Density at 066", Lower: 0., Value: 0.2, Upper: 10., Spec: Free, Unit: "kg/m3", Latex: "\rho_{fm,066}");
+FULLM.F066.MU AS REAL (Description: "Viscosity at 066", Lower: 0.0, Value: 0.00001798, Upper: 1000., Spec: Free, Unit: "J/kg/K", Latex: "\mu_{fm,066}");
+FULLM.F066.RE AS REAL (Description: "Renolds number at 066", Lower: 0.0, Value: 1500000, Upper: 100000000., Spec: Free, Unit: "J/kg/K", Latex: "Re_{fm,066}");
+//--------------------------------BLOCK END - STATION 066 Fully Mixed (Core Station) ---------------------------
+
+
+//--------------------------------BLOCK START - STATION 160 (Bypass Station) ---------------------------
+FULLM.F160.CPT AS REAL (Description: "Heat capacity total at 160", Lower: 700.0, Value: 1000., Upper: 2000., Spec: Free, Unit: "J/kg/K", Latex: "c_{p,T,fm,160}");
+FULLM.F160.GAMMAT AS REAL (Description: "Isentropic exponent for total temperature at 060", Lower: 1.0, Value: 1.4, Upper: 2., Spec: Free, Unit: "none", Latex: "\gamma_{T,fm,160}");
+FULLM.F160.CPS AS REAL (Description: "Heat capacity static at 160", Lower: 700.0, Value: 1000., Upper: 2000., Spec: Free, Unit: "J/kg/K", Latex: "c_{p,s,fm,160}");
+FULLM.F160.GAMMAS AS REAL (Description: "Isentropic exponent for static temperature at 160", Lower: 1.0, Value: 1.4, Upper: 2., Spec: Free, Unit: "none", Latex: "\gamma_{s,fm,160}");
+FULLM.F160.CP AS REAL (Description: "Heat capacity at 160", Lower: 700.0, Value: 1000., Upper: 2000., Spec: Free, Unit: "J/kg/K", Latex: "c_{p,fm,160}");
+FULLM.F160.GAMMA AS REAL (Description: "Isentropic exponent at 160", Lower: 1.0, Value: 1.4, Upper: 2., Spec: Free, Unit: "none", Latex: "\gamma_{fm,160}");
+FULLM.F160.W AS REAL (Description: "Bypass mass flow", Lower: 0.1, Value: 14.8229521823562, Upper: 100., Spec: Free, Unit: "kg/s", Latex: "W_{fm,160}");
+FULLM.F160.AG AS REAL (Description: "Bypass geometric area at 160", Lower: 0.01, Value: 0.604794654, Upper: 2., Spec: Free, Unit: "m2", Latex: "A_{g,fm,160}");
+FULLM.F160.MN AS REAL (Description: "Mach number at 160", Lower: 0., Value: 0.556564820533992, Upper: 0.9, Spec: Free, Unit: "none", Latex: "M_{fm,160}");
+FULLM.F160.PT AS REAL (Description: "Total pressure at 160", Lower: 1000.0, Value: 206086.7235, Upper: 300000., Spec: Free, Unit: "Pa", Latex: "P_{T,fm,160}");
+FULLM.F160.TT AS REAL (Description: "Total temperature at 160", Lower: 200.0, Value: 289.83, Upper: 1500., Spec: Free, Unit: "K", Latex: "T_{T,fm,160}");
+FULLM.F160.PS AS REAL (Description: "Static pressure at 160", Lower: 1000.0, Value: 100000., Upper: 300000., Spec: Free, Unit: "Pa", Latex: "P_{s,fm,160}");
+FULLM.F160.TS AS REAL (Description: "Static temperature at 160", Lower: 190.0, Value: 300., Upper: 1200., Spec: Free, Unit: "K", Latex: "T_{s,fm,160}");
+FULLM.F160.RHO AS REAL (Description: "Density at 160", Lower: 0., Value: 0.5, Upper: 10., Spec: Free, Unit: "kg/m3", Latex: "\rho_{fm,160}");
+FULLM.F160.VT AS REAL (Description: "Total velocity at 160", Lower: 0., Value: 300., Upper: 2000., Spec: Free, Unit: "m/s", Latex: "V_{T,fm,160}");
+
+FULLM.WTOTAL AS REAL (Description: "Total inlet mass flow", Lower: 0.1, Value: 17.62175805, Upper: 100., Spec: Free, Unit: "kg/s", Latex: "W_{fm,total}");
+//--------------------------------BLOCK END - STATION 160 (Bypass Station) ---------------------------
+
+
+//--------------------------------BLOCK START - STATION 166 Fully Mixed (Bypass Station) ---------------------------
+FULLM.F166.CF AS REAL (Description: "", Lower: 0.0, Value: 0., Upper: 1000., Spec: Free, Unit: "none", Latex: "c_{f,fm,bypass}");
+FULLM.F166.FF AS REAL (Description: "", Lower: 0.0, Value: 0., Upper: 1000., Spec: Free, Unit: "none", Latex: "F_{f,fm,bypass}");
+
+FULLM.F166.PT AS REAL (Description: "Total pressure at 166", Lower: 15000.0, Value: 150000., Upper: 350000., Spec: Free, Unit: "Pa", Latex: "P_{T,fm,166}");
+FULLM.F166.PS AS REAL (Description: "Static pressure at 166", Lower: 10000.0, Value: 166172.037176815, Upper: 300000., Spec: Free, Unit: "Pa", Latex: "P_{s,fm,166}");
+FULLM.F166.TT AS REAL (Description: "Total temperature at 166", Lower: 200.0, Value: 320., Upper: 1500., Spec: Free, Unit: "K", Latex: "T_{T,fm,166}");
+FULLM.F166.TS AS REAL (Description: "Static temperature at 166", Lower: 190.0, Value: 300., Upper: 1500., Spec: Free, Unit: "K", Latex: "T_{s,fm,166}");
+FULLM.F166.MN AS REAL (Description: "Mach number at 166", Lower: 0., Value: 0.461744161, Upper: 0.9, Spec: Free, Unit: "none", Latex: "M_{fm,166}");
+FULLM.F166.Q AS REAL (Description: "Flow function at 166", Lower: 0., Value: 0.05, Upper: 2., Spec: Free, Unit: "SQRT_kgK/J", Latex: "Q_{fm,166}");
+FULLM.F166.W AS REAL (Description: "Mass flow at 166", Lower: 0.1, Value: 11.365474238695, Upper: 100., Spec: Free, Unit: "kg/s", Latex: "W_{fm,166}");
+FULLM.F166.AG AS REAL (Description: "Geometric area at 166", Lower: 0.01, Value: 0.0289289744, Upper: 2., Spec: Free, Unit: "m2", Latex: "A_{g,fm,166}");
+FULLM.F166.CPT AS REAL (Description: "Heat capacity total at 166", Lower: 700.0, Value: 1000., Upper: 2000., Spec: Free, Unit: "J/kg/K", Latex: "c_{p,T,fm,166}");
+FULLM.F166.GAMMAT AS REAL (Description: "Isentropic exponent for total temperature at 166", Lower: 1.0, Value: 1.4, Upper: 2., Spec: Free, Unit: "none", Latex: "\gamma_{T,fm,166}");
+FULLM.F166.CPS AS REAL (Description: "Heat capacity static at 166", Lower: 700.0, Value: 1000., Upper: 2000., Spec: Free, Unit: "J/kg/K", Latex: "c_{p,s,fm,166}");
+FULLM.F166.GAMMAS AS REAL (Description: "Isentropic exponent for static temperature at 166", Lower: 1.0, Value: 1.4, Upper: 2., Spec: Free, Unit: "none", Latex: "\gamma_{s,fm,166}");
+FULLM.F166.CP AS REAL (Description: "Heat capacity at 166", Lower: 700.0, Value: 1000., Upper: 2000., Spec: Free, Unit: "J/kg/K", Latex: "c_{p,fm,166}");
+FULLM.F166.GAMMA AS REAL (Description: "Isentropic exponent at 166", Lower: 1.0, Value: 1.4, Upper: 2., Spec: Free, Unit: "none", Latex: "\gamma_{fm,166}");
+FULLM.F166.VT AS REAL (Description: "Total velocity at 166", Lower: 0., Value: 200., Upper: 2000., Spec: Free, Unit: "m/s", Latex: "V_{T,fm,166}");
+FULLM.F166.RHO AS REAL (Description: "Density at 166", Lower: 0., Value: 0.5, Upper: 10., Spec: Free, Unit: "kg/m3", Latex: "\rho_{fm,166}");
+
+FULLM.F166.MU AS REAL (Description: "Viscosity at 166", Lower: 0.0, Value: 0.00001798, Upper: 1000., Spec: Free, Unit: "J/kg/K", Latex: "\mu_{fm,166}");
+FULLM.F166.RE AS REAL (Description: "Renolds number at 166", Lower: 0.0, Value: 4200000, Upper: 100000000., Spec: Free, Unit: "J/kg/K", Latex: "Re_{fm,166}");
+
+FULLM.RHOAVG AS REAL (Description: "average Density at 066 and 166", Lower: 0., Value: 0.3, Upper: 10., Spec: Free, Unit: "kg/m3", Latex: "\rho_{avg}");
+FULLM.DELTAV AS REAL (Description: "delta velocity at 066 and 166", Lower: -1000., Value: 100., Upper: 2000., Spec: Free, Unit: "m/s", Latex: "\Delta V");
+FULLM.VTAVG AS REAL (Description: "average velocity at 066 and 166", Lower: 0., Value: 250., Upper: 2000., Spec: Free, Unit: "m/s", Latex: "V_{T,avg}");
+//--------------------------------BLOCK END - STATION 166 Fully Mixed (Bypass Station) ---------------------------
+
+
+//--------------------------------BLOCK START - STATION 070 Fully Mixed (Core Station) ---------------------------
+FULLM.DWTRULEAK AS REAL (Description: "TRU leakage flow", Lower: 0.0, Value: 0., Upper: 10., Spec: Free, Unit: "none", Latex: "\Delta W_{TRU,leakage}"); 
+
+FULLM.F070.FARMIX AS REAL (Description: "", Lower: 0.0, Value: 0., Upper: 0.1, Spec: Free, Unit: "none", Latex: "FAR_{fm,070,mixed}"); 
+FULLM.F070.WGRMIX AS REAL (Description: "", Lower: 0.0, Value: 0., Upper: 0.1, Spec: Free, Unit: "none", Latex: "WGR_{fm,070,mixed}"); 
+FULLM.F070.RGASMIX AS REAL (Description: "", Lower: 0.0, Value: 287., Upper: 1000., Spec: Free, Unit: "J/kg/K", Latex: "R_{gas,fm,070,mixed}"); 
+
+FULLM.F070.FAR AS REAL (Description: "Fuel air ratio at 070", Lower: 0.0, Value: 0., Upper: 0.1, Spec: Free, Unit: "none", Latex: "FAR_{fm,070}"); 
+FULLM.F070.WGR AS REAL (Description: "Water gas ratio at 070", Lower: 0.0, Value: 0., Upper: 0.1, Spec: Free, Unit: "none", Latex: "WGR_{fm,070}"); 
+FULLM.F070.RGAS AS REAL (Description: "Gas constant at 070", Lower: 0.0, Value: 287., Upper: 1000., Spec: Free, Unit: "J/kg/K", Latex: "R_{gas,fm,070}"); 
+FULLM.F070.CPT AS REAL (Description: "Heat capacity total at 070", Lower: 700.0, Value: 1100., Upper: 2000., Spec: Free, Unit: "J/kg/K", Latex: "c_{p,T,fm,070}");
+FULLM.F070.GAMMAT AS REAL (Description: "Isentropic exponent for total temperature at 070", Lower: 1.0, Value: 1.35, Upper: 2., Spec: Free, Unit: "none", Latex: "\gamma_{T,fm,070}");
+FULLM.F070.CPS AS REAL (Description: "Heat capacity static at 070", Lower: 700.0, Value: 1100., Upper: 2000., Spec: Free, Unit: "J/kg/K", Latex: "c_{p,s,fm,070}");
+FULLM.F070.GAMMAS AS REAL (Description: "Isentropic exponent for static temperature at 070", Lower: 1.0, Value: 1.35, Upper: 2., Spec: Free, Unit: "none", Latex: "\gamma_{s,fm,070}");
+FULLM.F070.CP AS REAL (Description: "Heat capacity at 070", Lower: 700.0, Value: 1100., Upper: 2000., Spec: Free, Unit: "J/kg/K", Latex: "c_{p,fm,070}");
+FULLM.F070.GAMMA AS REAL (Description: "Isentropic exponent at 070", Lower: 1.0, Value: 1.35, Upper: 2., Spec: Free, Unit: "none", Latex: "\gamma_{fm,070}");
+FULLM.F070.W AS REAL (Description: "Core mass flow", Lower: 0.1, Value: 50., Upper: 100., Spec: Free, Unit: "kg/s", Latex: "W_{fm,070}");
+FULLM.F070.TT AS REAL (Description: "Total temperature at 070", Lower: 200.0, Value: 400., Upper: 1500., Spec: Free, Unit: "K", Latex: "T_{T,fm,070}");
+FULLM.F070.PT AS ITOTALPRESSURE (Description: "Total pressure at 070", Lower: 1000.0, Value: 150000, Upper: 300000., Spec: Free, Unit: "Pa", Latex: "P_{Tfm,,070}");
+FULLM.F070.PS AS ISTATICPRESSURE (Description: "Static pressure at 070", Lower: 1000.0, Value: 100000., Upper: 300000., Spec: Free, Unit: "Pa", Latex: "P_{s,fm,070}");
+FULLM.F070.MN AS REAL (Description: "Mach number at 070", Lower: 0., Value: 0.4, Upper: 0.9, Spec: Free, Unit: "none", Latex: "M_{fm,070}");
+FULLM.F070.AG AS REAL (Description: "Core geometric area at 070", Lower: 0.001, Value: 0.0099096576, Upper: 2., Spec: Free, Unit: "m2", Latex: "A_{g,fm,070}");
+FULLM.F070.TS AS REAL (Description: "Static temperature at 070", Lower: 190.0, Value: 380., Upper: 1200., Spec: Free, Unit: "K", Latex: "T_{s,fm,070}");
+FULLM.F070.RHO AS REAL (Description: "Density at 070", Lower: 0., Value: 0.5, Upper: 10., Spec: Free, Unit: "kg/m3", Latex: "\rho_{fm,070}");
+FULLM.F070.VT AS REAL (Description: "Total velocity at 070", Lower: 0., Value: 200., Upper: 2000., Spec: Free, Unit: "m/s", Latex: "V_{T,fm,070}");
+//--------------------------------BLOCK END - STATION 070 Fully Mixed (Core Station) ---------------------------
+
+
+//--------------------------------BLOCK START - STATION 170 Fully Mixed (Bypass Station) ---------------------------
+FULLM.F170.FAR AS REAL (Description: "Fuel air ratio at 170", Lower: 0.0, Value: 0., Upper: 0.1, Spec: Free, Unit: "none", Latex: "FAR_{fm,170}"); 
+FULLM.F170.WGR AS REAL (Description: "Water gas ratio at 170", Lower: 0.0, Value: 0., Upper: 0.1, Spec: Free, Unit: "none", Latex: "WGR_{fm,170}"); 
+FULLM.F170.RGAS AS REAL (Description: "Gas constant at 170", Lower: 0.0, Value: 287., Upper: 1000., Spec: Free, Unit: "J/kg/K", Latex: "R_{gas,fm,170}"); 
+FULLM.F170.CPT AS REAL (Description: "Heat capacity total at 170", Lower: 700.0, Value: 1000., Upper: 2000., Spec: Free, Unit: "J/kg/K", Latex: "c_{p,T,fm,170}");
+FULLM.F170.GAMMAT AS REAL (Description: "Isentropic exponent for total temperature at 170", Lower: 1.0, Value: 1.4, Upper: 2., Spec: Free, Unit: "none", Latex: "\gamma_{T,fm,170}");
+FULLM.F170.CPS AS REAL (Description: "Heat capacity static at 170", Lower: 700.0, Value: 1000., Upper: 2000., Spec: Free, Unit: "J/kg/K", Latex: "c_{p,s,fm,170}");
+FULLM.F170.GAMMAS AS REAL (Description: "Isentropic exponent for static temperature at 170", Lower: 1.0, Value: 1.4, Upper: 2., Spec: Free, Unit: "none", Latex: "\gamma_{s,fm,170}");
+FULLM.F170.CP AS REAL (Description: "Heat capacity at 170", Lower: 700.0, Value: 1000., Upper: 2000., Spec: Free, Unit: "J/kg/K", Latex: "c_{p,fm,170}");
+FULLM.F170.GAMMA AS REAL (Description: "Isentropic exponent at 170", Lower: 1.0, Value: 1.4, Upper: 2., Spec: Free, Unit: "none", Latex: "\gamma_{fm,170}");
+FULLM.F170.W AS REAL (Description: "Core mass flow", Lower: 0.1, Value: 100., Upper: 100., Spec: Free, Unit: "kg/s", Latex: "W_{fm,170}");
+FULLM.F170.TT AS REAL (Description: "Total temperature at 170", Lower: 200.0, Value: 400., Upper: 1200., Spec: Free, Unit: "K", Latex: "T_{T,fm,170}");
+FULLM.F170.PT AS OTOTALPRESSURE (Description: "Total pressure at 170", Lower: 1000.0, Value: 150000, Upper: 300000., Spec: Free, Unit: "Pa", Latex: "P_{T,fm,170}");
+FULLM.F170.PS AS OSTATICPRESSURE (Description: "Static pressure at 170", Lower: 1000.0, Value: 100000., Upper: 300000., Spec: Free, Unit: "Pa", Latex: "P_{s,fm,170}");
+FULLM.F170.MN AS REAL (Description: "Mach number at 170", Lower: 0., Value: 0.4, Upper: 0.9, Spec: Free, Unit: "none", Latex: "M_{fm,170}");
+FULLM.F170.AG AS REAL (Description: "Core geometric area at 170", Lower: 0.001, Value: 0.0289289744, Upper: 2., Spec: Free, Unit: "m2", Latex: "A_{g,fm,170}");
+FULLM.F170.TS AS REAL (Description: "Static temperature at 170", Lower: 190.0, Value: 380., Upper: 1200., Spec: Free, Unit: "K", Latex: "T_{s,fm,170}");
+FULLM.F170.RHO AS REAL (Description: "Density at 170", Lower: 0., Value: 0.5, Upper: 10., Spec: Free, Unit: "kg/m3", Latex: "\rho_{fm,170}");
+FULLM.F170.VT AS REAL (Description: "Total velocity at 170", Lower: 0., Value: 200., Upper: 2000., Spec: Free, Unit: "m/s", Latex: "V_{T,fm,170}");
+
+FULLM.HTMAX AS REAL (Description: "Mixing enthalpy fully mixed", Lower: 0., Value: 95.05946468, Upper: 100000000., Spec: Free, Unit: "J/kg", Latex: "H_{T,max}");
+//--------------------------------BLOCK END - STATION 170 Fully Mixed (Bypass Station) ---------------------------
+
+
+FULLM.LOSS.RNOZZLE1 AS REAL (Description: "", Lower: 0., Value: 0.55, Upper: 10., Spec: Free, Unit: "m", Latex: "r_{nozzle,1,fm}");
+FULLM.LOSS.RNOZZLE2 AS REAL (Description: "", Lower: 0., Value: 0.55, Upper: 10., Spec: Free, Unit: "m", Latex: "r_{nozzle,2,fm}");
+FULLM.LOSS.PJETPIPE AS REAL (Description: "", Lower: 0., Value: 4., Upper: 10., Spec: Free, Unit: "m", Latex: "r_{jetpipe,fm}");
+FULLM.LOSS.PNOZZLE1 AS REAL (Description: "", Lower: 0., Value: 3.5, Upper: 10., Spec: Free, Unit: "m", Latex: "p_{nozzle,1,fm}");
+FULLM.LOSS.PNOZZLE2 AS REAL (Description: "", Lower: 0., Value: 3.5, Upper: 10., Spec: Free, Unit: "m", Latex: "p_{nozzle,2,fm}");
+FULLM.LOSS.CFJETPIPE AS REAL (Description: "", Lower: 0., Value: 0., Upper: 1000., Spec: Free, Unit: "m", Latex: "c_{f,jetpipe,fm}");
+FULLM.LOSS.CFNOZZLE1 AS REAL (Description: "", Lower: 0., Value: 0., Upper: 1000., Spec: Free, Unit: "m", Latex: "c_{f,nozzle,1,fm}");
+FULLM.LOSS.CFNOZZLE2 AS REAL (Description: "", Lower: 0., Value: 0., Upper: 1000., Spec: Free, Unit: "m", Latex: "c_{f,nozzle,2,fm}");
+FULLM.LOSS.FFJETPIPE AS REAL (Description: "", Lower: 0., Value: 200., Upper: 3000., Spec: Free, Unit: "N", Latex: "F_{f,jetpipe,fm}");
+FULLM.LOSS.FFNOZ1 AS REAL (Description: "", Lower: 0., Value: 100., Upper: 1000., Spec: Free, Unit: "N", Latex: "F_{f,nozzle,1,fm}");
+FULLM.LOSS.FFNOZ2 AS REAL (Description: "", Lower: 0., Value: 600., Upper: 2000., Spec: Free, Unit: "N", Latex: "F_{f,nozzle,2,fm}");
+FULLM.LOSS.FFSHEAR AS REAL (Description: "", Lower: 0., Value: 100., Upper: 10000., Spec: Free, Unit: "N", Latex: "F_{f,shear,fm}");
+FULLM.LOSS.FFTOTAL AS REAL (Description: "", Lower: -1000., Value: 0., Upper: 20000., Spec: Free, Unit: "N", Latex: "F_{total,fm}");
+
+
+//--------------------------------BLOCK START - STATION 071 Fully Mixed (Core Station) ---------------------------
+FULLM.F071.FAR AS REAL (Description: "Fuel air ratio at 071", Lower: 0.0, Value: 0., Upper: 0.1, Spec: Free, Unit: "none", Latex: "FAR_{fm,071}"); 
+FULLM.F071.WGR AS REAL (Description: "Water gas ratio at 071", Lower: 0.0, Value: 0., Upper: 0.1, Spec: Free, Unit: "none", Latex: "WGR_{fm,071}"); 
+FULLM.F071.RGAS AS REAL (Description: "Gas constant at 071", Lower: 0.0, Value: 287., Upper: 1000., Spec: Free, Unit: "J/kg/K", Latex: "R_{gas,fm,071}"); 
+FULLM.F071.W AS REAL (Description: "Core mass flow", Lower: 0.1, Value: 50., Upper: 100., Spec: Free, Unit: "kg/s", Latex: "W_{fm,071}");
+FULLM.F071.TT AS REAL (Description: "Total temperature at 071", Lower: 200.0, Value: 420., Upper: 1500., Spec: Free, Unit: "K", Latex: "T_{T,fm,071}");
+FULLM.F071.PT AS ITOTALPRESSURE (Description: "Total pressure at 071", Lower: 1000.0, Value: 150000, Upper: 300000., Spec: Free, Unit: "Pa", Latex: "P_{Tfm,,071}");
+FULLM.F071.PS AS ISTATICPRESSURE (Description: "Static pressure at 071", Lower: 1000.0, Value: 100000., Upper: 300000., Spec: Free, Unit: "Pa", Latex: "P_{s,fm,071}");
+FULLM.F071.TS AS REAL (Description: "Static temperature at 071", Lower: 190.0, Value: 400., Upper: 1200., Spec: Free, Unit: "K", Latex: "T_{s,fm,071}");
+FULLM.F071.VT AS REAL (Description: "Total velocity at 071", Lower: 0., Value: 200., Upper: 2000., Spec: Free, Unit: "m/s", Latex: "V_{T,fm,071}");
+FULLM.F071.RHO AS REAL (Description: "Density at 071", Lower: 0., Value: 0.5, Upper: 10., Spec: Free, Unit: "kg/m3", Latex: "\rho_{fm,071}");
+FULLM.F071.MN AS REAL (Description: "Mach number at 071", Lower: 0., Value: 0.5, Upper: 0.9, Spec: Free, Unit: "none", Latex: "M_{fm,071}");
+FULLM.F071.AG AS REAL (Description: "Core geometric area at 071", Lower: 0.001, Value: 0.0099096576, Upper: 2., Spec: Free, Unit: "m2", Latex: "A_{g,fm,071}");
+FULLM.F071.CPT AS REAL (Description: "Heat capacity total at 071", Lower: 700.0, Value: 1100., Upper: 2000., Spec: Free, Unit: "J/kg/K", Latex: "c_{p,T,fm,071}");
+FULLM.F071.GAMMAT AS REAL (Description: "Isentropic exponent for total temperature at 071", Lower: 1.0, Value: 1.35, Upper: 2., Spec: Free, Unit: "none", Latex: "\gamma_{T,fm,071}");
+FULLM.F071.CPS AS REAL (Description: "Heat capacity static at 071", Lower: 700.0, Value: 1100., Upper: 2000., Spec: Free, Unit: "J/kg/K", Latex: "c_{p,s,fm,071}");
+FULLM.F071.GAMMAS AS REAL (Description: "Isentropic exponent for static temperature at 071", Lower: 1.0, Value: 1.35, Upper: 2., Spec: Free, Unit: "none", Latex: "\gamma_{s,fm,071}");
+FULLM.F071.CP AS REAL (Description: "Heat capacity at 071", Lower: 700.0, Value: 1100., Upper: 2000., Spec: Free, Unit: "J/kg/K", Latex: "c_{p,fm,071}");
+FULLM.F071.GAMMA AS REAL (Description: "Isentropic exponent at 071", Lower: 1.0, Value: 1.35, Upper: 2., Spec: Free, Unit: "none", Latex: "\gamma_{fm,071}");
+//--------------------------------BLOCK END - STATION 071 Fully Mixed (Core Station) ---------------------------
+
+
+//--------------------------------BLOCK START - STATION 171 Fully Mixed (Bypass Station) ---------------------------
+FULLM.F171.FAR AS REAL (Description: "Fuel air ratio at 171", Lower: 0.0, Value: 0., Upper: 0.1, Spec: Free, Unit: "none", Latex: "FAR_{fm,171}"); 
+FULLM.F171.WGR AS REAL (Description: "Water gas ratio at 171", Lower: 0.0, Value: 0., Upper: 0.1, Spec: Free, Unit: "none", Latex: "WGR_{fm,171}"); 
+FULLM.F171.RGAS AS REAL (Description: "Gas constant at 171", Lower: 0.0, Value: 287., Upper: 1000., Spec: Free, Unit: "J/kg/K", Latex: "R_{gas,fm,171}"); 
+FULLM.F171.W AS REAL (Description: "Core mass flow", Lower: 0.1, Value: 100., Upper: 400., Spec: Free, Unit: "kg/s", Latex: "W_{fm,171}");
+FULLM.F171.TT AS REAL (Description: "Total temperature at 171", Lower: 200.0, Value: 420., Upper: 1200., Spec: Free, Unit: "K", Latex: "T_{T,fm,171}");
+FULLM.F171.PS AS OSTATICPRESSURE (Description: "Static pressure at 171", Lower: 1000.0, Value: 100000., Upper: 300000., Spec: Free, Unit: "Pa", Latex: "P_{s,fm,171}");
+FULLM.F171.PT AS OTOTALPRESSURE (Description: "Total pressure at 171", Lower: 1000.0, Value: 150000, Upper: 300000., Spec: Free, Unit: "Pa", Latex: "P_{T,fm,171}");
+FULLM.F171.TS AS REAL (Description: "Static temperature at 171", Lower: 190.0, Value: 400., Upper: 1200., Spec: Free, Unit: "K", Latex: "T_{s,fm,171}");
+FULLM.F171.VT AS REAL (Description: "Total velocity at 171", Lower: 0., Value: 200., Upper: 2000., Spec: Free, Unit: "m/s", Latex: "V_{T,fm,171}");
+FULLM.F171.RHO AS REAL (Description: "Density at 171", Lower: 0., Value: 0.5, Upper: 10., Spec: Free, Unit: "kg/m3", Latex: "\rho_{fm,171}");
+FULLM.F171.MN AS REAL (Description: "Mach number at 171", Lower: 0., Value: 0.5, Upper: 0.9, Spec: Free, Unit: "none", Latex: "M_{fm,171}");
+FULLM.F171.AG AS REAL (Description: "Core geometric area at 171", Lower: 0.001, Value: 0.0289289744, Upper: 2., Spec: Free, Unit: "m2", Latex: "A_{g,fm,171}");
+FULLM.F171.CPT AS REAL (Description: "Heat capacity total at 171", Lower: 700.0, Value: 1000., Upper: 2000., Spec: Free, Unit: "J/kg/K", Latex: "c_{p,T,fm,171}");
+FULLM.F171.GAMMAT AS REAL (Description: "Isentropic exponent for total temperature at 171", Lower: 1.0, Value: 1.4, Upper: 2., Spec: Free, Unit: "none", Latex: "\gamma_{T,fm,171}");
+FULLM.F171.CPS AS REAL (Description: "Heat capacity static at 171", Lower: 700.0, Value: 1000., Upper: 2000., Spec: Free, Unit: "J/kg/K", Latex: "c_{p,s,fm,171}");
+FULLM.F171.GAMMAS AS REAL (Description: "Isentropic exponent for static temperature at 171", Lower: 1.0, Value: 1.4, Upper: 2., Spec: Free, Unit: "none", Latex: "\gamma_{s,fm,171}");
+FULLM.F171.CP AS REAL (Description: "Heat capacity at 171", Lower: 700.0, Value: 1000., Upper: 2000., Spec: Free, Unit: "J/kg/K", Latex: "c_{p,fm,171}");
+FULLM.F171.GAMMA AS REAL (Description: "Isentropic exponent at 171", Lower: 1.0, Value: 1.4, Upper: 2., Spec: Free, Unit: "none", Latex: "\gamma_{fm,171}");
+FULLM.F171.MU AS REAL (Description: "Viscosity at 171", Lower: 0.0, Value: 0.00001798, Upper: 1000., Spec: Free, Unit: "kg/m/s", Latex: "\mu_{fm,171}");
+FULLM.F171.RE AS REAL (Description: "Renolds number at 171", Lower: 0.0, Value: 4200000, Upper: 100000000., Spec: Free, Unit: "none", Latex: "Re_{fm,171}");
+//--------------------------------BLOCK END - STATION 171 Fully Mixed (Bypass Station) ---------------------------
+
+
+//--------------------------------BLOCK START - STATION 080 Fully Mixed (Core Station) ---------------------------
+FULLM.F080.FAR AS REAL (Description: "Fuel air ratio at 080", Lower: 0.0, Value: 0., Upper: 0.1, Spec: Free, Unit: "none", Latex: "FAR_{fm,080}"); 
+FULLM.F080.WGR AS REAL (Description: "Water gas ratio at 080", Lower: 0.0, Value: 0., Upper: 0.1, Spec: Free, Unit: "none", Latex: "WGR_{fm,080}"); 
+FULLM.F080.RGAS AS REAL (Description: "Gas constant at 080", Lower: 0.0, Value: 287., Upper: 1000., Spec: Free, Unit: "J/kg/K", Latex: "R_{gas,fm,080}"); 
+FULLM.F080.TT AS REAL (Description: "Total temperature at 080", Lower: 200.0, Value: 420., Upper: 1500., Spec: Free, Unit: "K", Latex: "T_{T,fm,080}");
+FULLM.F080.PT AS ITOTALPRESSURE (Description: "Total pressure at 080", Lower: 1000.0, Value: 150000, Upper: 300000., Spec: Free, Unit: "Pa", Latex: "P_{Tfm,,080}");
+FULLM.F080.CPT AS REAL (Description: "Heat capacity total at 080", Lower: 700.0, Value: 1100., Upper: 2000., Spec: Free, Unit: "J/kg/K", Latex: "c_{p,T,fm,080}");
+FULLM.F080.GAMMAT AS REAL (Description: "Isentropic exponent for total temperature at 080", Lower: 1.0, Value: 1.35, Upper: 2., Spec: Free, Unit: "none", Latex: "\gamma_{T,fm,080}");
+FULLM.F080.CPS AS REAL (Description: "Heat capacity static at 080", Lower: 700.0, Value: 1100., Upper: 2000., Spec: Free, Unit: "J/kg/K", Latex: "c_{p,s,fm,080}");
+FULLM.F080.GAMMAS AS REAL (Description: "Isentropic exponent for static temperature at 080", Lower: 1.0, Value: 1.35, Upper: 2., Spec: Free, Unit: "none", Latex: "\gamma_{s,fm,080}");
+FULLM.F080.CP AS REAL (Description: "Heat capacity at 080", Lower: 700.0, Value: 1100., Upper: 2000., Spec: Free, Unit: "J/kg/K", Latex: "c_{p,fm,080}");
+FULLM.F080.GAMMA AS REAL (Description: "Isentropic exponent at 080", Lower: 1.0, Value: 1.35, Upper: 2., Spec: Free, Unit: "none", Latex: "\gamma_{fm,080}");
+FULLM.F080.TS AS REAL (Description: "Static temperature at 080", Lower: 190.0, Value: 400., Upper: 1200., Spec: Free, Unit: "K", Latex: "T_{s,fm,080}");
+FULLM.F080.PCRIT AS REAL (Description: "", Lower: 5000.0, Value: 150000., Upper: 350000., Spec: Free, Unit: "Pa", Latex: "P_{crit,fm,080}");
+FULLM.F080.PTQPCRIT AS REAL (Description: "", Lower: 0.1, Value: 1., Upper: 10., Spec: Free, Unit: "none", Latex: "{P_{T,fm,080}}/{P_{crit,fm,080}}");
+FULLM.F080.PTQPAMB AS REAL (Description: "", Lower: 0.1, Value: 1., Upper: 10., Spec: Free, Unit: "none", Latex: "{P_{T,fm,080}}/{P_{amb}}");
+FULLM.F080.TMPMN AS REAL (Description: "Tmep Mach number at 080", Lower: 0., Value: 1., Upper: 1., Spec: Free, Unit: "none", Latex: "M_{tmp,fm,080}");
+FULLM.F080.MN AS REAL (Description: "Mach number at 080", Lower: 0., Value: 1., Upper: 1., Spec: Free, Unit: "none", Latex: "M_{fm,080}");
+FULLM.F080.PS AS ISTATICPRESSURE (Description: "Static pressure at 080", Lower: 1000.0, Value: 100000., Upper: 300000., Spec: Free, Unit: "Pa", Latex: "P_{s,fm,080}");
+FULLM.F080.VT AS REAL (Description: "Total velocity at 080", Lower: 0., Value: 200., Upper: 2000., Spec: Free, Unit: "m/s", Latex: "V_{T,fm,080}");
+FULLM.F080.RHO AS REAL (Description: "Density at 080", Lower: 0., Value: 0.5, Upper: 10., Spec: Free, Unit: "kg/m3", Latex: "\rho_{fm,080}");
+FULLM.F080.AG AS REAL (Description: "Core geometric area at 080", Lower: 0.001, Value: 0.0099096576, Upper: 2., Spec: Free, Unit: "m2", Latex: "A_{g,fm,080}");
+FULLM.F080.Q AS REAL (Description: "Flow function at 080", Lower: 0., Value: 0.05, Upper: 2., Spec: Free, Unit: "SQRT_kgK/J", Latex: "Q_{fm,080}");
+FULLM.F080.AE AS REAL (Description: "Core effective area at 080", Lower: 0.001, Value: 0.0099096576, Upper: 2., Spec: Free, Unit: "m2", Latex: "A_{eff,fm,080}");
+FULLM.F080.W AS REAL (Description: "Core mass flow", Lower: 0.1, Value: 50., Upper: 100., Spec: Free, Unit: "kg/s", Latex: "W_{fm,080}");
+//--------------------------------BLOCK END - STATION 080 Fully Mixed (Core Station) ---------------------------
+
+
+//--------------------------------BLOCK START - STATION 180 Fully Mixed (Bypass Station) ---------------------------
+FULLM.F180.FAR AS REAL (Description: "Fuel air ratio at 180", Lower: 0.0, Value: 0., Upper: 0.1, Spec: Free, Unit: "none", Latex: "FAR_{fm,180}"); 
+FULLM.F180.WGR AS REAL (Description: "Water gas ratio at 180", Lower: 0.0, Value: 0., Upper: 0.1, Spec: Free, Unit: "none", Latex: "WGR_{fm,180}"); 
+FULLM.F180.RGAS AS REAL (Description: "Gas constant at 180", Lower: 0.0, Value: 287., Upper: 1000., Spec: Free, Unit: "J/kg/K", Latex: "R_{gas,fm,180}"); 
+FULLM.F180.TT AS REAL (Description: "Total temperature at 180", Lower: 200.0, Value: 420., Upper: 1500., Spec: Free, Unit: "K", Latex: "T_{T,fm,180}");
+FULLM.F180.PT AS OTOTALPRESSURE (Description: "Total pressure at 180", Lower: 1000.0, Value: 150000, Upper: 300000., Spec: Free, Unit: "Pa", Latex: "P_{Tfm,180}");
+FULLM.F180.CPT AS REAL (Description: "Heat capacity total at 180", Lower: 700.0, Value: 1000., Upper: 2000., Spec: Free, Unit: "J/kg/K", Latex: "c_{p,T,fm,180}");
+FULLM.F180.GAMMAT AS REAL (Description: "Isentropic exponent for total temperature at 180", Lower: 1.0, Value: 1.4, Upper: 2., Spec: Free, Unit: "none", Latex: "\gamma_{T,fm,180}");
+FULLM.F180.CPS AS REAL (Description: "Heat capacity static at 180", Lower: 700.0, Value: 1000., Upper: 2000., Spec: Free, Unit: "J/kg/K", Latex: "c_{p,s,fm,180}");
+FULLM.F180.GAMMAS AS REAL (Description: "Isentropic exponent for static temperature at 180", Lower: 1.0, Value: 1.4, Upper: 2., Spec: Free, Unit: "none", Latex: "\gamma_{s,fm,180}");
+FULLM.F180.CP AS REAL (Description: "Heat capacity at 180", Lower: 700.0, Value: 1000., Upper: 2000., Spec: Free, Unit: "J/kg/K", Latex: "c_{p,fm,180}");
+FULLM.F180.GAMMA AS REAL (Description: "Isentropic exponent at 180", Lower: 1.0, Value: 1.4, Upper: 2., Spec: Free, Unit: "none", Latex: "\gamma_{fm,180}");
+FULLM.F180.TS AS REAL (Description: "Static temperature at 180", Lower: 190.0, Value: 400., Upper: 1200., Spec: Free, Unit: "K", Latex: "T_{s,fm,180}");
+FULLM.F180.PCRIT AS REAL (Description: "", Lower: 5000.0, Value: 150000., Upper: 350000., Spec: Free, Unit: "Pa", Latex: "P_{crit,fm,180}");
+FULLM.F180.PTQPCRIT AS REAL (Description: "", Lower: 0.1, Value: 1., Upper: 10., Spec: Free, Unit: "none", Latex: "{P_{T,fm,180}}/{P_{crit,fm,180}}");
+FULLM.F180.PTQPAMB AS REAL (Description: "", Lower: 0.1, Value: 1., Upper: 10., Spec: Free, Unit: "none", Latex: "{P_{T,fm,180}}/{P_{amb}}");
+FULLM.F180.TMPMN AS REAL (Description: "Tmep Mach number at 180", Lower: 0., Value: 1., Upper: 1., Spec: Free, Unit: "none", Latex: "M_{tmp,fm,180}");
+FULLM.F180.MN AS REAL (Description: "Mach number at 180", Lower: 0., Value: 1., Upper: 1., Spec: Free, Unit: "none", Latex: "M_{fm,180}");
+FULLM.F180.PS AS OSTATICPRESSURE (Description: "Static pressure at 180", Lower: 1000.0, Value: 100000., Upper: 300000., Spec: Free, Unit: "Pa", Latex: "P_{s,fm,180}");
+FULLM.F180.VT AS REAL (Description: "Total velocity at 180", Lower: 0., Value: 200., Upper: 2000., Spec: Free, Unit: "m/s", Latex: "V_{T,fm,180}");
+FULLM.F180.RHO AS REAL (Description: "Density at 180", Lower: 0., Value: 0.5, Upper: 10., Spec: Free, Unit: "kg/m3", Latex: "\rho_{fm,180}");
+FULLM.F180.AG AS REAL (Description: "Core geometric area at 180", Lower: 0.001, Value: 0.0099096576, Upper: 2., Spec: Free, Unit: "m2", Latex: "A_{g,fm,180}");
+FULLM.F180.Q AS REAL (Description: "Flow function at 180", Lower: 0., Value: 0.05, Upper: 2., Spec: Free, Unit: "SQRT_kgK/J", Latex: "Q_{fm,180}");
+FULLM.F180.AE AS REAL (Description: "Core effective area at 180", Lower: 0.001, Value: 0.0099096576, Upper: 2., Spec: Free, Unit: "m2", Latex: "A_{eff,fm,180}");
+FULLM.F180.WX AS REAL (Description: "Core mass flow", Lower: 0.1, Value: 100., Upper: 100., Spec: Free, Unit: "kg/s", Latex: "W_{fm,180}");
+FULLM.F180.W AS REAL (Description: "Core mass flow", Lower: 0.1, Value: 100., Upper: 100., Spec: Free, Unit: "kg/s", Latex: "W_{fm,180}");
+
+FULLM.GEOM.AFRAC AS REAL (Description: "", Lower: 0.0, Value: 0.5, Upper: 2., Spec: Free, Unit: "none", Latex: "A_{frac,fm}");
+//--------------------------------BLOCK END - STATION 180 Fully Mixed (Bypass Station) ---------------------------
+
+/*
+//--------------------------------BLOCK START - STATION 090 Fully Mixed (Core Station) ---------------------------
+FULLM.F090.FAR AS REAL (Description: "Fuel air ratio at 090", Lower: 0.0, Value: 0., Upper: 0.1, Spec: Free, Unit: "none", Latex: "FAR_{fm,090}"); 
+FULLM.F090.WGR AS REAL (Description: "Water gas ratio at 090", Lower: 0.0, Value: 0., Upper: 0.1, Spec: Free, Unit: "none", Latex: "WGR_{fm,090}"); 
+FULLM.F090.RGAS AS REAL (Description: "Gas constant at 090", Lower: 0.0, Value: 287., Upper: 1000., Spec: Free, Unit: "J/kg/K", Latex: "R_{gas,fm,090}"); 
+FULLM.F090.TT AS REAL (Description: "Total temperature at 090", Lower: 200.0, Value: 420., Upper: 1500., Spec: Free, Unit: "K", Latex: "T_{T,fm,090}");
+FULLM.F090.PT AS ITOTALPRESSURE (Description: "Total pressure at 090", Lower: 1000.0, Value: 150000, Upper: 300000., Spec: Free, Unit: "Pa", Latex: "P_{Tfm,,090}");
+FULLM.F090.PS AS ISTATICPRESSURE (Description: "Static pressure at 090", Lower: 1000.0, Value: 100000., Upper: 300000., Spec: Free, Unit: "Pa", Latex: "P_{s,fm,090}");
+FULLM.F090.MN AS REAL (Description: "Mach number at 090", Lower: 0., Value: 1., Upper: 1., Spec: Free, Unit: "none", Latex: "M_{fm,090}");
+FULLM.F090.TS AS REAL (Description: "Static temperature at 090", Lower: 190.0, Value: 400., Upper: 1200., Spec: Free, Unit: "K", Latex: "T_{s,fm,090}");
+FULLM.F090.CPT AS REAL (Description: "Heat capacity total at 090", Lower: 700.0, Value: 1100., Upper: 2000., Spec: Free, Unit: "J/kg/K", Latex: "c_{p,T,fm,090}");
+FULLM.F090.GAMMAT AS REAL (Description: "Isentropic exponent for total temperature at 090", Lower: 1.0, Value: 1.35, Upper: 2., Spec: Free, Unit: "none", Latex: "\gamma_{T,fm,090}");
+FULLM.F090.CPS AS REAL (Description: "Heat capacity static at 090", Lower: 700.0, Value: 1100., Upper: 2000., Spec: Free, Unit: "J/kg/K", Latex: "c_{p,s,fm,090}");
+FULLM.F090.GAMMAS AS REAL (Description: "Isentropic exponent for static temperature at 090", Lower: 1.0, Value: 1.35, Upper: 2., Spec: Free, Unit: "none", Latex: "\gamma_{s,fm,090}");
+FULLM.F090.CP AS REAL (Description: "Heat capacity at 090", Lower: 700.0, Value: 1100., Upper: 2000., Spec: Free, Unit: "J/kg/K", Latex: "c_{p,fm,090}");
+FULLM.F090.GAMMA AS REAL (Description: "Isentropic exponent at 090", Lower: 1.0, Value: 1.35, Upper: 2., Spec: Free, Unit: "none", Latex: "\gamma_{fm,090}");
+FULLM.F090.VT AS REAL (Description: "Total velocity at 090", Lower: 0., Value: 200., Upper: 2000., Spec: Free, Unit: "m/s", Latex: "V_{T,fm,090}");
+FULLM.F090.RHO AS REAL (Description: "Density at 090", Lower: 0., Value: 0.5, Upper: 10., Spec: Free, Unit: "kg/m3", Latex: "\rho_{fm,090}");
+FULLM.F090.AG AS REAL (Description: "Core geometric area at 090", Lower: 0.001, Value: 0.0099096576, Upper: 2., Spec: Free, Unit: "m2", Latex: "A_{g,fm,090}");
+FULLM.F090.FB AS REAL (Description: "", Lower: 0.001, Value: 0.0099096576, Upper: 2., Spec: Free, Unit: "m2", Latex: "A_{eff,fm,090}");
+//--------------------------------BLOCK END - STATION 090 Fully Mixed (Core Station) ---------------------------
+
+
+//--------------------------------BLOCK START - STATION 090 Fully Mixed (Condi nozzle)(Core Station) ---------------------------
+FULLM.CONDI.F090.MN AS REAL (Description: "Mach number at 090", Lower: 0., Value: 1., Upper: 1., Spec: Free, Unit: "none", Latex: "M_{fm,090}");
+FULLM.CONDI.F090.AG AS REAL (Description: "Core geometric area at 090", Lower: 0.001, Value: 0.0099096576, Upper: 2., Spec: Free, Unit: "m2", Latex: "A_{g,fm,090}");
+FULLM.CONDI.F090.PS AS ISTATICPRESSURE (Description: "Static pressure at 090", Lower: 1000.0, Value: 100000., Upper: 300000., Spec: Free, Unit: "Pa", Latex: "P_{s,fm,090}");
+FULLM.CONDI.F090.TS AS REAL (Description: "Static temperature at 090", Lower: 190.0, Value: 400., Upper: 1200., Spec: Free, Unit: "K", Latex: "T_{s,fm,090}");
+FULLM.CONDI.F090.VT AS REAL (Description: "Total velocity at 090", Lower: 0., Value: 200., Upper: 2000., Spec: Free, Unit: "m/s", Latex: "V_{T,fm,090}");
+FULLM.CONDI.F090.RHO AS REAL (Description: "Density at 090", Lower: 0., Value: 0.5, Upper: 10., Spec: Free, Unit: "kg/m3", Latex: "\rho_{fm,090}");
+FULLM.CONDI.F090.CPS AS REAL (Description: "Heat capacity static at 090", Lower: 700.0, Value: 1100., Upper: 2000., Spec: Free, Unit: "J/kg/K", Latex: "c_{p,s,fm,090}");
+FULLM.CONDI.F090.GAMMAS AS REAL (Description: "Isentropic exponent for static temperature at 090", Lower: 1.0, Value: 1.35, Upper: 2., Spec: Free, Unit: "none", Latex: "\gamma_{s,fm,090}");
+FULLM.CONDI.F090.FB AS REAL (Description: "", Lower: 0.001, Value: 0.0099096576, Upper: 2., Spec: Free, Unit: "m2", Latex: "A_{eff,fm,090}");
+//--------------------------------BLOCK END - STATION 090 Fully Mixed (Condi nozzle)(Core Station) ---------------------------
+
+
+//--------------------------------BLOCK START - STATION 190 Fully Mixed (Bypass Station) ---------------------------
+FULLM.F190.FAR AS REAL (Description: "Fuel air ratio at 190", Lower: 0.0, Value: 0., Upper: 0.1, Spec: Free, Unit: "none", Latex: "FAR_{fm,190}"); 
+FULLM.F190.WGR AS REAL (Description: "Water gas ratio at 190", Lower: 0.0, Value: 0., Upper: 0.1, Spec: Free, Unit: "none", Latex: "WGR_{fm,190}"); 
+FULLM.F190.RGAS AS REAL (Description: "Gas constant at 190", Lower: 0.0, Value: 287., Upper: 1000., Spec: Free, Unit: "J/kg/K", Latex: "R_{gas,fm,190}"); 
+FULLM.F190.TT AS REAL (Description: "Total temperature at 190", Lower: 200.0, Value: 420., Upper: 1500., Spec: Free, Unit: "K", Latex: "T_{T,fm,190}");
+FULLM.F190.PT AS OTOTALPRESSURE (Description: "Total pressure at 190", Lower: 1000.0, Value: 150000, Upper: 300000., Spec: Free, Unit: "Pa", Latex: "P_{Tfm,,190}");
+FULLM.F190.PS AS OSTATICPRESSURE (Description: "Static pressure at 190", Lower: 1000.0, Value: 100000., Upper: 300000., Spec: Free, Unit: "Pa", Latex: "P_{s,fm,190}");
+FULLM.F190.MN AS REAL (Description: "Mach number at 190", Lower: 0., Value: 1., Upper: 1., Spec: Free, Unit: "none", Latex: "M_{fm,190}");
+FULLM.F190.TS AS REAL (Description: "Static temperature at 190", Lower: 190.0, Value: 400., Upper: 1200., Spec: Free, Unit: "K", Latex: "T_{s,fm,190}");
+FULLM.F190.CPT AS REAL (Description: "Heat capacity total at 190", Lower: 700.0, Value: 1100., Upper: 2000., Spec: Free, Unit: "J/kg/K", Latex: "c_{p,T,fm,190}");
+FULLM.F190.GAMMAT AS REAL (Description: "Isentropic exponent for total temperature at 190", Lower: 1.0, Value: 1.35, Upper: 2., Spec: Free, Unit: "none", Latex: "\gamma_{T,fm,190}");
+FULLM.F190.CPS AS REAL (Description: "Heat capacity static at 190", Lower: 700.0, Value: 1100., Upper: 2000., Spec: Free, Unit: "J/kg/K", Latex: "c_{p,s,fm,190}");
+FULLM.F190.GAMMAS AS REAL (Description: "Isentropic exponent for static temperature at 190", Lower: 1.0, Value: 1.35, Upper: 2., Spec: Free, Unit: "none", Latex: "\gamma_{s,fm,190}");
+FULLM.F190.CP AS REAL (Description: "Heat capacity at 190", Lower: 700.0, Value: 1100., Upper: 2000., Spec: Free, Unit: "J/kg/K", Latex: "c_{p,fm,190}");
+FULLM.F190.GAMMA AS REAL (Description: "Isentropic exponent at 190", Lower: 1.0, Value: 1.35, Upper: 2., Spec: Free, Unit: "none", Latex: "\gamma_{fm,190}");
+FULLM.F190.VT AS REAL (Description: "Total velocity at 190", Lower: 0., Value: 200., Upper: 2000., Spec: Free, Unit: "m/s", Latex: "V_{T,fm,190}");
+FULLM.F190.RHO AS REAL (Description: "Density at 190", Lower: 0., Value: 0.5, Upper: 10., Spec: Free, Unit: "kg/m3", Latex: "\rho_{fm,190}");
+FULLM.F190.AG AS REAL (Description: "Core geometric area at 190", Lower: 0.001, Value: 0.0099096576, Upper: 2., Spec: Free, Unit: "m2", Latex: "A_{g,fm,190}");
+FULLM.F190.FB AS REAL (Description: "", Lower: 0.001, Value: 0.0099096576, Upper: 2., Spec: Free, Unit: "m2", Latex: "A_{eff,fm,190}");
+//--------------------------------BLOCK END - STATION 190 Fully Mixed (Bypass Station) ---------------------------
+
+
+//--------------------------------BLOCK START - STATION 190 Fully Mixed (Condi nozzle)(Bypass Station) ---------------------------
+FULLM.CONDI.F190.MN AS REAL (Description: "Mach number at 190", Lower: 0., Value: 1., Upper: 1., Spec: Free, Unit: "none", Latex: "M_{fm,190}");
+FULLM.CONDI.F190.AG AS REAL (Description: "Core geometric area at 190", Lower: 0.001, Value: 0.0099096576, Upper: 2., Spec: Free, Unit: "m2", Latex: "A_{g,fm,190}");
+FULLM.CONDI.F190.PS AS OSTATICPRESSURE (Description: "Static pressure at 190", Lower: 1000.0, Value: 100000., Upper: 300000., Spec: Free, Unit: "Pa", Latex: "P_{s,fm,190}");
+FULLM.CONDI.F190.TS AS REAL (Description: "Static temperature at 190", Lower: 190.0, Value: 400., Upper: 1200., Spec: Free, Unit: "K", Latex: "T_{s,fm,190}");
+FULLM.CONDI.F190.VT AS REAL (Description: "Total velocity at 190", Lower: 0., Value: 200., Upper: 2000., Spec: Free, Unit: "m/s", Latex: "V_{T,fm,190}");
+FULLM.CONDI.F190.RHO AS REAL (Description: "Density at 190", Lower: 0., Value: 0.5, Upper: 10., Spec: Free, Unit: "kg/m3", Latex: "\rho_{fm,190}");
+FULLM.CONDI.F190.CPS AS REAL (Description: "Heat capacity static at 190", Lower: 700.0, Value: 1100., Upper: 2000., Spec: Free, Unit: "J/kg/K", Latex: "c_{p,s,fm,190}");
+FULLM.CONDI.F190.GAMMAS AS REAL (Description: "Isentropic exponent for static temperature at 190", Lower: 1.0, Value: 1.35, Upper: 2., Spec: Free, Unit: "none", Latex: "\gamma_{s,fm,190}");
+FULLM.CONDI.F190.FB AS REAL (Description: "", Lower: 0.001, Value: 0.0099096576, Upper: 2., Spec: Free, Unit: "m2", Latex: "A_{eff,fm,190}");
+//--------------------------------BLOCK END - STATION 190 Fully Mixed (Condi nozzle)(Bypass Station) ---------------------------
+*/
+
+//--------------------------------BLOCK START - STATION 070 (Core Station) ---------------------------
+PARTM.F070.W AS REAL (Description: "Mass flow at 070", Lower: 0.1, Value: 3.362394288100235, Upper: 100., Spec: Fixed, Unit: "kg/s", Latex: "W_{070}");
+//--------------------------------BLOCK START - STATION 070 (Core Station) ---------------------------
+
+//--------------------------------BLOCK START - STATION 170 (Bypass Station) ---------------------------
+PARTM.F170.W AS REAL (Description: "Mass flow at 170", Lower: 0.1, Value: 11.36758967151245, Upper: 100., Spec: Fixed, Unit: "kg/s", Latex: "W_{170}");
+//--------------------------------BLOCK START - STATION 170 (Bypass Station) ---------------------------
+
+//--------------------------------BLOCK START - STATION 080 (Core Station) ---------------------------
+PARTM.F080.MN AS REAL (Description: "Mach number at 080", Lower: 0.1, Value: 1., Upper: 1., Spec: Fixed, Unit: "none", Latex: "M_{080}");
+//--------------------------------BLOCK START - STATION 080 (Core Station) ---------------------------
+
+//--------------------------------BLOCK START - STATION 180 (Bypass Station) ---------------------------
+PARTM.GEOM.ATHROAT AS REAL (Description: "Nozzle throat area", Lower: 0.01, Value: 0.03072768048, Upper: 5., Spec: Fixed, Unit: "none", Latex: "A_{g,throat}");
+//--------------------------------BLOCK START - STATION 180 (Bypass Station) ---------------------------
+
+//FULLM.F170.AG AS REAL (Description: "Core geometric area at 170", Lower: 0.001, Value: 0.029973424885452, Upper: 2., Spec: Fixed, Unit: "m2", Latex: "A_{g,fm,170}");
+//FULLM.F171.W AS REAL (Description: "Mass flow at 171", Lower: 0.1, Value: 11.36584796276943, Upper: 100., Spec: Fixed, Unit: "kg/s", Latex: "W_{171}");
+//FULLM.HTMAX AS REAL (Description: "Mixing enthalpy fully mixed", Lower: 0., Value: 95.05946468, Upper: 100000000., Spec: Fixed, Unit: "J/kg", Latex: "H_{T,max}");
+//FULLM.F170.AG AS REAL (Description: "Core geometric area at 170", Lower: 0.001, Value: 0.029973424885452, Upper: 2., Spec: Fixed, Unit: "m2", Latex: "A_{g,fm,170}");
+//FULLM.F170.TS AS REAL (Description: "Static temperature at 170", Lower: 190.0, Value: 273.8604941090351, Upper: 1200., Spec: Fixed, Unit: "K", Latex: "T_{s,fm,170}");
+//FULLM.F171.VT AS REAL (Description: "Total velocity at 171", Lower: 0., Value: 180.4638628501712, Upper: 2000., Spec: Fixed, Unit: "m/s", Latex: "V_{T,fm,171}");
+//FULLM.F171.RE AS REAL (Description: "Renolds number at 171", Lower: 0.0, Value: 22228001.354390353, Upper: 100000000., Spec: Fixed, Unit: "none", Latex: "Re_{fm,171}");
+//FULLM.F171.PT AS OTOTALPRESSURE (Description: "Total pressure at 171", Lower: 1000.0, Value: 201854.5775267969, Upper: 300000., Spec: Fixed, Unit: "Pa", Latex: "P_{T,fm,171}");
+//FULLM.F071.PS AS ISTATICPRESSURE (Description: "Static pressure at 071", Lower: 1000.0, Value: 165030.6148090408, Upper: 300000., Spec: Fixed, Unit: "Pa", Latex: "P_{s,fm,071}");
+
+//FULLM.F080.MN AS REAL (Description: "Mach number at 080", Lower: 0.1, Value: 1., Upper: 1., Spec: Fixed, Unit: "none", Latex: "M_{fm,080}");
+//FULLM.F180.MN AS REAL (Description: "Mach number at 080", Lower: 0.1, Value: 1., Upper: 1., Spec: Fixed, Unit: "none", Latex: "M_{fm,080}");
+
+//FULLM.F180.W AS REAL (Description: "Mass flow at 180", Lower: 0.1, Value: 11.36584796276943, Upper: 100., Spec: Fixed, Unit: "kg/s", Latex: "W_{180}");
+
+//FULLM.F180.VT AS REAL (Description: "Total velocity at 180", Lower: 0., Value: 311.5869909570571, Upper: 2000., Spec: Fixed, Unit: "m/s", Latex: "V_{T,fm,180}");
+FULLM.F190.VT AS REAL (Description: "Total velocity at 190", Lower: 0., Value: 329.2813898580988, Upper: 2000., Spec: Fixed, Unit: "m/s", Latex: "V_{T,fm,190}");
+
+FULLM.CONDI.F090.AG AS REAL (Description: "Core geometric area at 090", Lower: 0.001, Value: 0.007048891110862, Upper: 2., Spec: Fixed, Unit: "m2", Latex: "A_{g,fm,090}");
+FULLM.CONDI.F190.AG AS REAL (Description: "Core geometric area at 190", Lower: 0.001, Value: 0.023832427771537, Upper: 2., Spec: Fixed, Unit: "m2", Latex: "A_{g,fm,190}");
+
+
+INITIALIZE
+
+PARTM.F060.W = 0.4*(PARTM.F066.AG*SQRT(1.35/287)*PARTM.F060.PT*0.99/SQRT(PARTM.F060.TT*0.95));
+PARTM.F160.W = 0.4*(PARTM.F166.AG*SQRT(1.4/287)*PARTM.F160.PT*0.99/SQRT(PARTM.F160.TT*0.95));
+PARTM.F066.W = 0.4*(PARTM.F066.AG*SQRT(1.35/287)*PARTM.F060.PT*0.99/SQRT(PARTM.F060.TT*0.95));
+PARTM.F166.W = 0.4*(PARTM.F166.AG*SQRT(1.4/287)*PARTM.F160.PT*0.99/SQRT(PARTM.F160.TT*0.95));
+
+FULLM.F060.W = 0.4*(PARTM.F066.AG*SQRT(1.35/287)*PARTM.F060.PT*0.99/SQRT(PARTM.F060.TT*0.95));
+FULLM.F066.WX = 0.4*(PARTM.F066.AG*SQRT(1.35/287)*PARTM.F060.PT*0.99/SQRT(PARTM.F060.TT*0.95));
+FULLM.F160.W = 0.4*(PARTM.F166.AG*SQRT(1.4/287)*PARTM.F160.PT*0.99/SQRT(PARTM.F160.TT*0.95));
+FULLM.F166.W = 0.4*(PARTM.F166.AG*SQRT(1.4/287)*PARTM.F160.PT*0.99/SQRT(PARTM.F160.TT*0.95));
+FULLM.F070.W = 0.4*(PARTM.F066.AG*SQRT(1.35/287)*PARTM.F060.PT*0.99/SQRT(PARTM.F060.TT*0.95));
+FULLM.F170.W = 0.4*(PARTM.F166.AG*SQRT(1.4/287)*PARTM.F160.PT*0.99/SQRT(PARTM.F160.TT*0.95));
+FULLM.F071.W = 0.4*(PARTM.F066.AG*SQRT(1.35/287)*PARTM.F060.PT*0.99/SQRT(PARTM.F060.TT*0.95));
+FULLM.F171.W = 0.4*(PARTM.F166.AG*SQRT(1.4/287)*PARTM.F160.PT*0.99/SQRT(PARTM.F160.TT*0.95));
+FULLM.F080.W = 0.4*(PARTM.F066.AG*SQRT(1.35/287)*PARTM.F060.PT*0.99/SQRT(PARTM.F060.TT*0.95));
+FULLM.F180.WX = 0.4*(PARTM.F166.AG*SQRT(1.4/287)*PARTM.F160.PT*0.99/SQRT(PARTM.F160.TT*0.95));
+FULLM.F180.W = 0.4*(PARTM.F166.AG*SQRT(1.4/287)*PARTM.F160.PT*0.99/SQRT(PARTM.F160.TT*0.95));
+
+IF (PARTM.F060.PT.SPEC==FIXED)
+   PARTM.F066.PT = PARTM.F060.PT;
+   
+   PARTM.F060.PS = PARTM.F060.PT*0.85;
+   PARTM.F066.PS = PARTM.F060.PT*0.85;
+   
+   FULLM.F066.PT = PARTM.F060.PT*0.99;
+   FULLM.F070.PT = PARTM.F060.PT*0.99;
+
+   FULLM.F060.PS = PARTM.F060.PT*0.85;
+   FULLM.F066.PS = PARTM.F060.PT*0.85;
+   FULLM.F070.PS = PARTM.F060.PT*0.85;
+   FULLM.F071.PS = PARTM.F060.PT*0.85;
+   FULLM.F080.PS = PARTM.F060.PT*0.85;
+   
+   //PARTM.F066.PT.Lower = AMB.PS*1.1;
+
+   //PARTM.F066.PS.Lower = AMB.PS;
+   
+   //PARTM.F060.PS.Upper = AMB.PS*4.5;
+   //PARTM.F066.PS.Upper = AMB.PS*4.5;
+ENDIF
+
+IF (PARTM.F060.TT.SPEC==FIXED)
+   PARTM.F066.TT = PARTM.F060.TT;
+   
+   PARTM.F060.TS = PARTM.F060.TT*0.95;
+   PARTM.F066.TS = PARTM.F060.TT*0.95;
+   
+   FULLM.F066.TT = PARTM.F060.TT;
+   FULLM.F070.TT = (PARTM.F060.TT+PARTM.F160.TT)*0.5;
+   FULLM.F071.TT = (PARTM.F060.TT+PARTM.F160.TT)*0.5;
+   FULLM.F080.TT = (PARTM.F060.TT+PARTM.F160.TT)*0.5;
+
+   FULLM.F060.TS = PARTM.F060.TT*0.95;
+   FULLM.F066.TS = PARTM.F060.TT*0.95;
+   FULLM.F070.TS = (PARTM.F060.TT+PARTM.F160.TT)*0.5*0.95;
+   FULLM.F071.TS = (PARTM.F060.TT+PARTM.F160.TT)*0.5*0.95;
+   FULLM.F080.TS = (PARTM.F060.TT+PARTM.F160.TT)*0.5*0.95;
+   
+   //PARTM.F066.TT.Upper = PARTM.F060.TT*1.5;
+   
+   //PARTM.F060.TS.Upper = PARTM.F060.TT*1.5*0.95;
+   //PARTM.F066.TS.Upper = PARTM.F060.TT*1.5*0.95;
+ENDIF
+
+IF (PARTM.F066.AG.SPEC==FIXED)
+   PARTM.F060.AG = PARTM.F066.AG;
+   
+   FULLM.F060.AG = PARTM.F066.AG;
+   FULLM.F066.AG = PARTM.F066.AG;
+   FULLM.F070.AG = PARTM.F066.AG*0.9;
+   FULLM.F071.AG = PARTM.F066.AG*0.9;
+   FULLM.F080.AG = PARTM.F066.AG*0.9;
+
+ENDIF
+
+
+IF (PARTM.F160.PT.SPEC==FIXED)
+   PARTM.F166.PT = PARTM.F160.PT;
+   
+   PARTM.F160.PS = PARTM.F160.PT*0.9;
+   PARTM.F166.PS = PARTM.F160.PT*0.85;
+   
+   FULLM.F166.PT = PARTM.F160.PT*0.99;
+   FULLM.F170.PT = PARTM.F160.PT*0.99;
+   FULLM.F171.PT = PARTM.F160.PT*0.99;
+   FULLM.F180.PT = PARTM.F160.PT*0.99;
+
+   FULLM.F160.PS = PARTM.F160.PT*0.9;
+   FULLM.F166.PS = PARTM.F160.PT*0.9;
+   FULLM.F170.PS = PARTM.F160.PT*0.9;
+   FULLM.F171.PS = PARTM.F160.PT*0.9;
+   FULLM.F180.PS = PARTM.F160.PT*0.9;
+   
+   //PARTM.F166.PT.Lower = AMB.PS*1.1;
+
+   //PARTM.F166.PS.Lower = AMB.PS;
+   
+   //PARTM.F160.PS.Upper = AMB.PS*4.5;
+   //PARTM.F166.PS.Upper = AMB.PS*4.5;
+ENDIF
+
+
+IF (PARTM.F160.TT.SPEC==FIXED)
+   PARTM.F166.TT = PARTM.F160.TT;
+   
+   PARTM.F160.TS = PARTM.F160.TT*0.95;
+   PARTM.F166.TS = PARTM.F160.TT*0.95;
+   
+   FULLM.F166.TT = PARTM.F160.TT;
+   FULLM.F170.TT = (PARTM.F060.TT+PARTM.F160.TT)*0.5*0.95;
+   FULLM.F171.TT = (PARTM.F060.TT+PARTM.F160.TT)*0.5*0.95;
+   FULLM.F180.TT = (PARTM.F060.TT+PARTM.F160.TT)*0.5*0.95;
+
+   FULLM.F160.TS = PARTM.F160.TT*0.95;
+   FULLM.F166.TS = PARTM.F160.TT*0.95;
+   FULLM.F170.TS = (PARTM.F060.TT+PARTM.F160.TT)*0.5*0.95;
+   FULLM.F171.TS = (PARTM.F060.TT+PARTM.F160.TT)*0.5*0.95;
+   FULLM.F180.TS = (PARTM.F060.TT+PARTM.F160.TT)*0.5*0.95;
+   
+   //PARTM.F166.TT.Upper = PARTM.F160.TT*1.5;
+   
+   //PARTM.F160.TS.Upper = PARTM.F160.TT*1.5*0.95;
+   //PARTM.F166.TS.Upper = PARTM.F160.TT*1.5*0.95;
+ENDIF
+
+
+IF (PARTM.F166.AG.SPEC==FIXED)
+   PARTM.F160.AG = PARTM.F166.AG;
+   
+   FULLM.F160.AG = PARTM.F166.AG;
+   FULLM.F166.AG = PARTM.F166.AG;
+   FULLM.F170.AG = PARTM.F166.AG*1.05;
+   FULLM.F171.AG = PARTM.F166.AG*1.05;
+   FULLM.F180.AG = PARTM.F166.AG*1.05;
+
+ENDIF
+
+GEOM.NOZL1 = GEOM.NOZLENGTH*1/3;
+GEOM.NOZL2 = GEOM.NOZLENGTH*2/3;
+
+ENDINIT
+
+
+//--------------------------------BLOCK START - STATION 060 (Core Station) ---------------------------
+PARTM.F060.RGAS = GLOBAL.RUNIV*(PARTM.F060.WGR+0.6219811)/((PARTM.F060.WGR+1)*18.01534);
+CALL(PARTM.F060.CPT) = pCPOFT(PARTM.F060.TT, PARTM.F060.WGR, PARTM.F060.FAR);
+PARTM.F060.GAMMAT = PARTM.F060.CPT/(PARTM.F060.CPT-PARTM.F060.RGAS);
+CALL(PARTM.F060.CPS) = pCPOFT(PARTM.F060.TS, PARTM.F060.WGR, PARTM.F060.FAR);
+PARTM.F060.GAMMAS = PARTM.F060.CPS/(PARTM.F060.CPS-PARTM.F060.RGAS);
+IF (GLOBAL.STATICSWITCH.EQ.0)
+  PARTM.F060.CP = PARTM.F060.CPT;
+  PARTM.F060.GAMMA = PARTM.F060.GAMMAT;
+ELSE
+  PARTM.F060.CP = PARTM.F060.CPS;
+  PARTM.F060.GAMMA = PARTM.F060.GAMMAS;
+ENDIF
+PARTM.F060.W = PARTM.F066.W;
+IF (PARTM.F060.PS<PARTM.F060.PT)
+   PARTM.F060.Q = (PARTM.F060.PS/PARTM.F060.PT)^(1/PARTM.F060.GAMMA)*SQRT(2*PARTM.F060.GAMMA/(PARTM.F060.RGAS*(PARTM.F060.GAMMA-1))*(1-(PARTM.F060.PS/PARTM.F060.PT)^((PARTM.F060.GAMMA-1)/PARTM.F060.GAMMA)));
+ELSE
+   PARTM.F060.Q = 0.02;
+ENDIF
+PARTM.F060.WMAX = (PARTM.F060.AG*SQRT(PARTM.F060.GAMMA/PARTM.F060.RGAS)*PARTM.F060.PS/SQRT(PARTM.F060.TS));
+PARTM.F060.AG = PARTM.F066.AG;
+PARTM.F060.PS = PARTM.F060.PT*(PARTM.F060.TS/PARTM.F060.TT)^(PARTM.F060.GAMMA/(PARTM.F060.GAMMA-1));
+PARTM.F060.TS = PARTM.F060.TT/(1+(PARTM.F060.GAMMA-1)/2*PARTM.F060.MN^2);
+PARTM.F060.MN = PARTM.F060.W/(PARTM.F060.AG*SQRT(PARTM.F060.GAMMA/PARTM.F060.RGAS)*PARTM.F060.PS/SQRT(PARTM.F060.TS));
+PARTM.F060.RHO = PARTM.F060.PT/(PARTM.F060.RGAS*PARTM.F060.TT)*(PARTM.F060.PS/PARTM.F060.PT)^(1/PARTM.F060.GAMMA);
+PARTM.F060.VT = PARTM.F060.MN*SQRT(PARTM.F060.GAMMA*PARTM.F060.RGAS*PARTM.F060.TS);
+//--------------------------------BLOCK END - STATION 060 (Core Station) ---------------------------
+
+
+//--------------------------------BLOCK START - STATION 160 (Bypass Station) ---------------------------
+PARTM.F160.RGAS = GLOBAL.RUNIV*(PARTM.F160.WGR+0.6219811)/((PARTM.F160.WGR+1)*18.01534);
+CALL(PARTM.F160.CPT) = pCPOFT(PARTM.F160.TT, PARTM.F160.WGR, PARTM.F160.FAR);
+PARTM.F160.GAMMAT = PARTM.F160.CPT/(PARTM.F160.CPT-PARTM.F160.RGAS);
+CALL(PARTM.F160.CPS) = pCPOFT(PARTM.F160.TS, PARTM.F160.WGR, PARTM.F160.FAR);
+PARTM.F160.GAMMAS = PARTM.F160.CPS/(PARTM.F160.CPS-PARTM.F160.RGAS);
+IF (GLOBAL.STATICSWITCH.EQ.0)
+  PARTM.F160.CP = PARTM.F160.CPT;
+  PARTM.F160.GAMMA = PARTM.F160.GAMMAT;
+ELSE
+  PARTM.F160.CP = PARTM.F160.CPS;
+  PARTM.F160.GAMMA = PARTM.F160.GAMMAS;
+ENDIF
+PARTM.F160.W = PARTM.F166.W;
+IF (PARTM.F160.PS<PARTM.F160.PT)
+   PARTM.F160.Q = (PARTM.F160.PS/PARTM.F160.PT)^(1/PARTM.F160.GAMMA)*SQRT(2*PARTM.F160.GAMMA/(PARTM.F160.RGAS*(PARTM.F160.GAMMA-1))*(1-(PARTM.F160.PS/PARTM.F160.PT)^((PARTM.F160.GAMMA-1)/PARTM.F160.GAMMA)));
+ELSE
+   PARTM.F160.Q = 0.02;
+ENDIF
+PARTM.F160.WMAX = (PARTM.F160.AG*SQRT(PARTM.F160.GAMMA/PARTM.F160.RGAS)*PARTM.F160.PS/SQRT(PARTM.F160.TS));
+PARTM.F160.AG = PARTM.F166.AG;
+PARTM.F160.PS = PARTM.F160.PT*(PARTM.F160.TS/PARTM.F160.TT)^(PARTM.F160.GAMMA/(PARTM.F160.GAMMA-1));
+PARTM.F160.TS = PARTM.F160.TT/(1+(PARTM.F160.GAMMA-1)/2*PARTM.F160.MN^2);
+PARTM.F160.MN = PARTM.F160.W/(PARTM.F160.AG*SQRT(PARTM.F160.GAMMA/PARTM.F160.RGAS)*PARTM.F160.PS/SQRT(PARTM.F160.TS));
+PARTM.F160.RHO = PARTM.F160.PT/(PARTM.F160.RGAS*PARTM.F160.TT)*(PARTM.F160.PS/PARTM.F160.PT)^(1/PARTM.F160.GAMMA);
+PARTM.F160.VT = PARTM.F160.MN*SQRT(PARTM.F160.GAMMA*PARTM.F160.RGAS*PARTM.F160.TS);
+
+GLOBAL.WTOTAL = PARTM.F060.W+PARTM.F160.W;
+//--------------------------------BLOCK END - STATION 060 (Bypass Station) ---------------------------
+
+
+//--------------------------------BLOCK START - STATION 066 (Core Station) ---------------------------
+GEOM.STARTPMIXER = 2*GLOBAL.PIVALUE*GEOM.RMIXERSTART;
+GEOM.PCORE = 0.5*(GEOM.STARTPMIXER+GEOM.MIXERP)+2*GLOBAL.PIVALUE*0.5*(GEOM.RBULLETSTART+GEOM.RBULLETEND);
+IF (PARTM.F066.RE>0)
+   PARTM.F066.CF = 2*(GEOM.KR/LN(PARTM.F066.RE)*GEOM.GVALUE)^2;
+ELSE
+   PARTM.F066.CF = 0;
+ENDIF
+IF (GLOBAL.FFSWITCH1.EQ.0)
+   PARTM.F066.FF = 0;
+ELSE
+   PARTM.F066.FF = PARTM.F066.CF*PARTM.F066.RHO*0.5*PARTM.F066.VT^2*GEOM.PCORE*GEOM.LMIXER;
+ENDIF
+PARTM.F066.PT = (PARTM.F060.PT*PARTM.F060.AG*(1+PARTM.F060.GAMMA*PARTM.F060.MN^2)*(1+(PARTM.F060.GAMMA-1)/2*PARTM.F060.MN^2)^(-PARTM.F060.GAMMA/(PARTM.F060.GAMMA-1))-PARTM.F066.FF)/(PARTM.F066.AG*(1+PARTM.F066.GAMMA*PARTM.F066.MN^2)*(1+(PARTM.F066.GAMMA-1)/2*PARTM.F066.MN^2)^(-PARTM.F066.GAMMA/(PARTM.F066.GAMMA-1)));
+PARTM.F066.PS = PARTM.F166.PS;
+PARTM.F066.TT = PARTM.F060.TT;
+PARTM.F066.TS = PARTM.F066.TT*(PARTM.F066.PS/PARTM.F066.PT)^((PARTM.F066.GAMMA-1)/PARTM.F066.GAMMA);
+PARTM.F066.MN = PARTM.F066.W/(PARTM.F066.AG*SQRT(PARTM.F066.GAMMA/PARTM.F060.RGAS)*PARTM.F066.PS/SQRT(PARTM.F066.TS));
+IF (PARTM.F066.PS<PARTM.F066.PT)
+   PARTM.F066.Q = (PARTM.F066.PS/PARTM.F066.PT)^(1/PARTM.F066.GAMMA)*SQRT(2*PARTM.F066.GAMMA/(PARTM.F060.RGAS*(PARTM.F066.GAMMA-1))*(1-(PARTM.F066.PS/PARTM.F066.PT)^((PARTM.F066.GAMMA-1)/PARTM.F066.GAMMA)));
+   PARTM.F066.WX = PARTM.F066.Q*PARTM.F066.AG*PARTM.F066.PT/SQRT(PARTM.F066.TT);
+ELSE
+   PARTM.F066.Q = 0.02;
+   PARTM.F066.WX = PARTM.F070.W;
+ENDIF
+IF (PARTM.F080.MN<1)
+   PARTM.F066.W = PARTM.F066.WX*GEOM.CONDIRATIO;
+ELSE
+   PARTM.F066.W = PARTM.F066.WX;
+ENDIF
+CALL(PARTM.F066.CPT) = pCPOFT(PARTM.F066.TT, PARTM.F060.WGR, PARTM.F060.FAR);
+PARTM.F066.GAMMAT = PARTM.F066.CPT/(PARTM.F066.CPT-PARTM.F060.RGAS);
+CALL(PARTM.F066.CPS) = pCPOFT(PARTM.F066.TS, PARTM.F060.WGR, PARTM.F060.FAR);
+PARTM.F066.GAMMAS = PARTM.F066.CPS/(PARTM.F066.CPS-PARTM.F060.RGAS);
+IF (GLOBAL.STATICSWITCH.EQ.0)
+  PARTM.F066.CP = PARTM.F066.CPT;
+  PARTM.F066.GAMMA = PARTM.F066.GAMMAT;
+ELSE
+  PARTM.F066.CP = PARTM.F066.CPS;
+  PARTM.F066.GAMMA = PARTM.F066.GAMMAS;
+ENDIF
+PARTM.F066.VT = PARTM.F066.MN*SQRT(PARTM.F066.GAMMA*PARTM.F060.RGAS*PARTM.F066.TS);
+PARTM.F066.RHO = PARTM.F066.PT/(PARTM.F060.RGAS*PARTM.F066.TT)*(PARTM.F066.PS/PARTM.F066.PT)^(1/PARTM.F066.GAMMA);
+PARTM.F066.MU = GLOBAL.REFMU*(PARTM.F066.TS/GLOBAL.TTREF)^(3/2)*(GLOBAL.TTREF+GLOBAL.SC)/(PARTM.F066.TS+GLOBAL.SC);
+PARTM.F066.RE = PARTM.F066.RHO*PARTM.F066.VT*GLOBAL.LL/PARTM.F066.MU;
+//--------------------------------BLOCK END - STATION 066 (Core Station) ---------------------------
+
+
+//--------------------------------BLOCK START - STATION 166 (Bypass Station) ---------------------------
+GEOM.PFAN = 0.5*(GEOM.STARTPMIXER+GEOM.MIXERP)+2*GLOBAL.PIVALUE*GEOM.RJETPIPE;
+
+IF (PARTM.F166.RE>0)
+   PARTM.F166.CF = 2*(GEOM.KR/LN(PARTM.F166.RE)*GEOM.GVALUE)^2;
+ELSE
+   PARTM.F166.CF = 0;
+ENDIF
+IF (GLOBAL.FFSWITCH1.EQ.0)
+   PARTM.F166.FF = 0;
+ELSE
+   PARTM.F166.FF = PARTM.F166.CF*PARTM.F166.RHO*0.5*PARTM.F166.VT^2*GEOM.PFAN*GEOM.LMIXER;
+ENDIF
+
+PARTM.F166.PT = (PARTM.F160.PT*PARTM.F160.AG*(1+PARTM.F160.GAMMA*PARTM.F160.MN^2)*(1+(PARTM.F160.GAMMA-1)/2*PARTM.F160.MN^2)^(-PARTM.F160.GAMMA/(PARTM.F160.GAMMA-1))-PARTM.F166.FF)/(PARTM.F166.AG*(1+PARTM.F166.GAMMA*PARTM.F166.MN^2)*(1+(PARTM.F166.GAMMA-1)/2*PARTM.F166.MN^2)^(-PARTM.F166.GAMMA/(PARTM.F166.GAMMA-1)));
+PARTM.F166.PS = PARTM.F166.PT*(PARTM.F166.TS/PARTM.F166.TT)^(PARTM.F166.GAMMA/(PARTM.F166.GAMMA-1));
+PARTM.F166.TT = PARTM.F160.TT;
+PARTM.F166.TS = PARTM.F166.TT/(1+(PARTM.F166.GAMMA-1)/2*PARTM.F166.MN^2);
+PARTM.F166.MN = PARTM.F166.W/(PARTM.F166.AG*SQRT(PARTM.F166.GAMMA/PARTM.F160.RGAS)*PARTM.F166.PS/SQRT(PARTM.F166.TS));
+IF (PARTM.F166.PS<PARTM.F166.PT)
+   PARTM.F166.Q = (PARTM.F166.PS/PARTM.F166.PT)^(1/PARTM.F166.GAMMA)*SQRT(2*PARTM.F166.GAMMA/(PARTM.F160.RGAS*(PARTM.F166.GAMMA-1))*(1-(PARTM.F166.PS/PARTM.F166.PT)^((PARTM.F166.GAMMA-1)/PARTM.F166.GAMMA)));
+ELSE
+   PARTM.F166.Q = 0.01;
+ENDIF
+PARTM.F166.W = PARTM.F170.W;
+CALL(PARTM.F166.CPT) = pCPOFT(PARTM.F166.TT, PARTM.F160.WGR, PARTM.F160.FAR);
+PARTM.F166.GAMMAT = PARTM.F166.CPT/(PARTM.F166.CPT-PARTM.F160.RGAS);
+CALL(PARTM.F166.CPS) = pCPOFT(PARTM.F166.TS, PARTM.F160.WGR, PARTM.F160.FAR);
+PARTM.F166.GAMMAS = PARTM.F166.CPS/(PARTM.F166.CPS-PARTM.F160.RGAS);
+IF (GLOBAL.STATICSWITCH.EQ.0)
+  PARTM.F166.CP = PARTM.F166.CPT;
+  PARTM.F166.GAMMA = PARTM.F166.GAMMAT;
+ELSE
+  PARTM.F166.CP = PARTM.F166.CPS;
+  PARTM.F166.GAMMA = PARTM.F166.GAMMAS;
+ENDIF
+PARTM.F166.VT = PARTM.F166.MN*SQRT(PARTM.F166.GAMMA*PARTM.F160.RGAS*PARTM.F166.TS);
+PARTM.F166.RHO = PARTM.F166.PT/(PARTM.F160.RGAS*PARTM.F166.TT)*(PARTM.F166.PS/PARTM.F166.PT)^(1/PARTM.F166.GAMMA);
+PARTM.F166.MU = GLOBAL.REFMU*(PARTM.F166.TS/GLOBAL.TTREF)^(3/2)*(GLOBAL.TTREF+GLOBAL.SC)/(PARTM.F166.TS+GLOBAL.SC);
+PARTM.F166.RE = PARTM.F166.RHO*PARTM.F166.VT*GLOBAL.LL/PARTM.F166.MU;
+
+PARTM.F066.DPP = (PARTM.F060.PT-PARTM.F066.PT)/PARTM.F060.PT;
+PARTM.F166.DPP = (PARTM.F160.PT-PARTM.F166.PT)/PARTM.F160.PT;
+
+GLOBAL.RHOAVG = (PARTM.F066.RHO+PARTM.F166.RHO)/2;
+GLOBAL.DELTAV = PARTM.F066.VT-PARTM.F166.VT;
+GLOBAL.VTAVG = (PARTM.F066.VT+PARTM.F166.VT)/2;
+GEOM.NOZL1 = GEOM.NOZLENGTH*1/3;
+GEOM.NOZL2 = GEOM.NOZLENGTH*2/3;
+GLOBAL.DWTRULEAK = (PARTM.F060.W+PARTM.F160.W)*GLOBAL.WQTRULEAK;
+IF (PARTM.F060.FAR>0)
+   MASSMIX.FAR7MIX = (PARTM.F066.W*PARTM.F060.FAR+PARTM.F166.W*PARTM.F160.FAR)/(PARTM.F066.W+PARTM.F166.W);
+ELSE
+   MASSMIX.FAR7MIX = 0;
+ENDIF
+MASSMIX.WGR7MIX = (PARTM.F066.W*PARTM.F060.WGR+PARTM.F166.W*PARTM.F160.WGR)/(PARTM.F066.W+PARTM.F166.W);
+MASSMIX.RGAS7MIX = GLOBAL.RUNIV*(MASSMIX.WGR7MIX+0.6219811)/((MASSMIX.WGR7MIX+1)*18.01534);
+//--------------------------------BLOCK END - STATION 166 (Bypass Station) ---------------------------
+
+
+//--------------------------------BLOCK START - STATION 060 Fully Mixed (Core Station) ---------------------------
+FULLM.F060.CPT = PARTM.F060.CPT;
+FULLM.F060.GAMMAT = PARTM.F060.GAMMAT;
+CALL(FULLM.F060.CPS) = pCPOFT(FULLM.F060.TS, PARTM.F060.WGR, PARTM.F060.FAR);
+FULLM.F060.GAMMAS = PARTM.F060.CPS/(PARTM.F060.CPS-PARTM.F060.RGAS);
+IF (GLOBAL.STATICSWITCH.EQ.0)
+  FULLM.F060.CP = FULLM.F060.CPT;
+  FULLM.F060.GAMMA = FULLM.F060.GAMMAT;
+ELSE
+  FULLM.F060.CP = FULLM.F060.CPS;
+  FULLM.F060.GAMMA = FULLM.F060.GAMMAS;
+ENDIF
+FULLM.F060.W = FULLM.F066.W;
+FULLM.F060.AG = PARTM.F066.AG;
+IF (FULLM.F060.TT>FULLM.F060.TS)
+   FULLM.F060.MN = FULLM.F060.W/(FULLM.F060.AG*SQRT(FULLM.F060.GAMMA/PARTM.F060.RGAS)*FULLM.F060.PS/SQRT(FULLM.F060.TS));
+ELSE
+   FULLM.F060.MN = PARTM.F060.MN;
+ENDIF
+FULLM.F060.PT = PARTM.F060.PT;
+FULLM.F060.TT = PARTM.F060.TT;
+FULLM.F060.PS = FULLM.F060.PT*(FULLM.F060.TS/FULLM.F060.TT)^(FULLM.F060.GAMMA/(FULLM.F060.GAMMA-1));
+FULLM.F060.TS = FULLM.F060.TT/(1+(FULLM.F060.GAMMA-1)/2*FULLM.F060.MN^2);
+FULLM.F060.RHO = FULLM.F060.PT/(PARTM.F060.RGAS*FULLM.F060.TT)*(FULLM.F060.PS/FULLM.F060.PT)^(1/FULLM.F060.GAMMA);
+FULLM.F060.VT = FULLM.F060.MN*SQRT(FULLM.F060.GAMMA*PARTM.F060.RGAS*FULLM.F060.TS);
+//--------------------------------BLOCK END - STATION 060 Fully Mixed (Core Station) ---------------------------
+
+
+//--------------------------------BLOCK START - STATION 066 Fully Mixed (Core Station) ---------------------------
+IF (FULLM.F066.RE>0)
+   FULLM.F066.CF = 2*(GEOM.KR/LN(FULLM.F066.RE)*GEOM.GVALUE)^2;
+ELSE
+   FULLM.F066.CF = 0;
+ENDIF
+IF (GLOBAL.FFSWITCH1.EQ.0)
+   FULLM.F066.FF = 0;
+ELSE
+   FULLM.F066.FF = FULLM.F066.CF*FULLM.F066.RHO*0.5*FULLM.F066.VT^2*GEOM.PCORE*GEOM.LMIXER;
+ENDIF
+FULLM.F066.PT = (FULLM.F060.PT*FULLM.F060.AG*(1+FULLM.F060.GAMMA*FULLM.F060.MN^2)*(1+(FULLM.F060.GAMMA-1)/2*FULLM.F060.MN^2)^(-FULLM.F060.GAMMA/(FULLM.F060.GAMMA-1))-FULLM.F066.FF)/(FULLM.F066.AG*(1+FULLM.F066.GAMMA*FULLM.F066.MN^2)*(1+(FULLM.F066.GAMMA-1)/2*FULLM.F066.MN^2)^(-FULLM.F066.GAMMA/(FULLM.F066.GAMMA-1)));
+CALL(FULLM.F066.CPT) = pCPOFT(FULLM.F066.TT, PARTM.F060.WGR, PARTM.F060.FAR);
+FULLM.F066.GAMMAT = FULLM.F066.CPT/(FULLM.F066.CPT-PARTM.F060.RGAS);
+CALL(FULLM.F066.CPS) = pCPOFT(FULLM.F066.TS, PARTM.F060.WGR, PARTM.F060.FAR);
+FULLM.F066.GAMMAS = FULLM.F066.CPS/(FULLM.F066.CPS-PARTM.F060.RGAS);
+IF (GLOBAL.STATICSWITCH.EQ.0)
+  FULLM.F066.CP = FULLM.F066.CPT;
+  FULLM.F066.GAMMA = FULLM.F066.GAMMAT;
+ELSE
+  FULLM.F066.CP = FULLM.F066.CPS;
+  FULLM.F066.GAMMA = FULLM.F066.GAMMAS;
+ENDIF
+FULLM.F066.MN = FULLM.F066.W/(FULLM.F066.AG*SQRT(FULLM.F066.GAMMA/PARTM.F060.RGAS)*FULLM.F066.PS/SQRT(FULLM.F066.TS));
+FULLM.F066.PS = FULLM.F166.PS;
+FULLM.F066.TT = FULLM.F060.TT;
+FULLM.F066.TS = FULLM.F066.TT*(FULLM.F066.PS/FULLM.F066.PT)^((FULLM.F066.GAMMA-1)/FULLM.F066.GAMMA);
+FULLM.F066.AG = FULLM.F060.AG;
+IF (FULLM.F066.PS<FULLM.F066.PT)
+   FULLM.F066.Q = (FULLM.F066.PS/FULLM.F066.PT)^(1/FULLM.F066.GAMMA)*SQRT(2*FULLM.F066.GAMMA/(PARTM.F060.RGAS*(FULLM.F066.GAMMA-1))*(1-(FULLM.F066.PS/FULLM.F066.PT)^((FULLM.F066.GAMMA-1)/FULLM.F066.GAMMA)));
+   FULLM.F066.WX = FULLM.F066.Q*FULLM.F066.AG*FULLM.F066.PT/SQRT(FULLM.F066.TT);
+ELSE
+   FULLM.F066.Q = 0.02;
+   FULLM.F066.WX = FULLM.F070.W;
+ENDIF
+IF (FULLM.F080.MN<1)
+   FULLM.F066.W = FULLM.F066.WX*GEOM.CONDIRATIO;
+ELSE
+   FULLM.F066.W = FULLM.F066.WX;
+ENDIF
+FULLM.F066.VT = FULLM.F066.MN*SQRT(FULLM.F066.GAMMA*PARTM.F060.RGAS*FULLM.F066.TS);
+FULLM.F066.RHO = FULLM.F066.PT/(PARTM.F060.RGAS*FULLM.F066.TT)*(FULLM.F066.PS/FULLM.F066.PT)^(1/FULLM.F066.GAMMA);
+FULLM.F066.MU = GLOBAL.REFMU*(FULLM.F066.TS/GLOBAL.TTREF)^(3/2)*(GLOBAL.TTREF+GLOBAL.SC)/(FULLM.F066.TS+GLOBAL.SC);
+FULLM.F066.RE = FULLM.F066.RHO*FULLM.F066.VT*GLOBAL.LL/FULLM.F066.MU;
+//--------------------------------BLOCK END - STATION 066 Fully Mixed (Core Station) ---------------------------
+
+
+//--------------------------------BLOCK START - STATION 160 Fully Mixed (Bypass Station) ---------------------------
+FULLM.F160.CPT = PARTM.F160.CPT;
+FULLM.F160.GAMMAT = PARTM.F160.GAMMAT;
+CALL(FULLM.F160.CPS) = pCPOFT(FULLM.F160.TS, PARTM.F160.WGR, PARTM.F160.FAR);
+FULLM.F160.GAMMAS = FULLM.F160.CPS/(FULLM.F160.CPS-PARTM.F160.RGAS);
+IF (GLOBAL.STATICSWITCH.EQ.0)
+  FULLM.F160.CP = FULLM.F160.CPT;
+  FULLM.F160.GAMMA = FULLM.F160.GAMMAT;
+ELSE
+  FULLM.F160.CP = FULLM.F160.CPS;
+  FULLM.F160.GAMMA = FULLM.F160.GAMMAS;
+ENDIF
+FULLM.F160.W = FULLM.F166.W;
+FULLM.F160.AG = PARTM.F166.AG;
+IF (FULLM.F160.TT>FULLM.F160.TS)
+   FULLM.F160.MN = FULLM.F160.W/(FULLM.F160.AG*SQRT(FULLM.F160.GAMMA/PARTM.F160.RGAS)*FULLM.F160.PS/SQRT(FULLM.F160.TS));
+ELSE
+   FULLM.F160.MN = PARTM.F160.MN;
+ENDIF
+FULLM.F160.PT = PARTM.F160.PT;
+FULLM.F160.TT = PARTM.F160.TT;
+
+FULLM.F160.PS = FULLM.F160.PT*(FULLM.F160.TS/FULLM.F160.TT)^(FULLM.F160.GAMMA/(FULLM.F160.GAMMA-1));
+FULLM.F160.TS = FULLM.F160.TT/(1+(FULLM.F160.GAMMA-1)/2*FULLM.F160.MN^2);
+FULLM.F160.RHO = FULLM.F160.PT/(PARTM.F160.RGAS*FULLM.F160.TT)*(FULLM.F160.PS/FULLM.F160.PT)^(1/FULLM.F160.GAMMA);
+FULLM.F160.VT = FULLM.F160.MN*SQRT(FULLM.F160.GAMMA*PARTM.F160.RGAS*FULLM.F160.TS);
+
+FULLM.WTOTAL = FULLM.F060.W+FULLM.F160.W;
+//--------------------------------BLOCK END - STATION 060 Fully Mixed (Bypass Station) ---------------------------
+
+
+//--------------------------------BLOCK START - STATION 166 Fully Mixed (Bypass Station) ---------------------------
+IF (FULLM.F166.RE>0)
+   FULLM.F166.CF = 2*(GEOM.KR/LN(FULLM.F166.RE)*GEOM.GVALUE)^2;
+ELSE
+   FULLM.F166.CF = 0;
+ENDIF
+IF (GLOBAL.FFSWITCH1.EQ.0)
+   FULLM.F166.FF = 0;
+ELSE
+   FULLM.F166.FF = FULLM.F166.CF*FULLM.F166.RHO*0.5*FULLM.F166.VT^2*GEOM.PFAN*GEOM.LMIXER;
+ENDIF
+
+FULLM.F166.PT = (FULLM.F160.PT*FULLM.F160.AG*(1+FULLM.F160.GAMMA*FULLM.F160.MN^2)*(1+(FULLM.F160.GAMMA-1)/2*FULLM.F160.MN^2)^(-FULLM.F160.GAMMA/(FULLM.F160.GAMMA-1))-FULLM.F166.FF)/(FULLM.F166.AG*(1+FULLM.F166.GAMMA*FULLM.F166.MN^2)*(1+(FULLM.F166.GAMMA-1)/2*FULLM.F166.MN^2)^(-FULLM.F166.GAMMA/(FULLM.F166.GAMMA-1)));
+IF (FULLM.F166.PT>FULLM.F166.PS)
+   FULLM.F166.PS = FULLM.F166.PT*(FULLM.F166.TS/FULLM.F166.TT)^(FULLM.F166.GAMMA/(FULLM.F166.GAMMA-1));
+ELSE
+   FULLM.F166.PS = FULLM.F166.PT*0.85;
+ENDIF
+FULLM.F166.TT = FULLM.F160.TT;
+FULLM.F166.TS = FULLM.F166.TT/(1+(FULLM.F166.GAMMA-1)/2*FULLM.F166.MN^2);
+FULLM.F166.MN = FULLM.F166.W/(FULLM.F166.AG*SQRT(FULLM.F166.GAMMA/PARTM.F160.RGAS)*FULLM.F166.PS/SQRT(FULLM.F166.TS));
+IF (FULLM.F166.PS<FULLM.F166.PT)
+   FULLM.F166.Q = (FULLM.F166.PS/FULLM.F166.PT)^(1/FULLM.F166.GAMMA)*SQRT(2*FULLM.F166.GAMMA/(PARTM.F160.RGAS*(FULLM.F166.GAMMA-1))*(1-(FULLM.F166.PS/FULLM.F166.PT)^((FULLM.F166.GAMMA-1)/FULLM.F166.GAMMA)));
+ELSE
+   FULLM.F166.Q = 0.01;
+ENDIF
+FULLM.F166.W = FULLM.F170.W;
+FULLM.F166.AG = FULLM.F160.AG;
+CALL(FULLM.F166.CPT) = pCPOFT(FULLM.F166.TT, PARTM.F160.WGR, PARTM.F160.FAR);
+FULLM.F166.GAMMAT = FULLM.F166.CPT/(FULLM.F166.CPT-PARTM.F160.RGAS);
+CALL(FULLM.F166.CPS) = pCPOFT(FULLM.F166.TS, PARTM.F160.WGR, PARTM.F160.FAR);
+FULLM.F166.GAMMAS = FULLM.F166.CPS/(FULLM.F166.CPS-PARTM.F160.RGAS);
+IF (GLOBAL.STATICSWITCH.EQ.0)
+  FULLM.F166.CP = FULLM.F166.CPT;
+  FULLM.F166.GAMMA = FULLM.F166.GAMMAT;
+ELSE
+  FULLM.F166.CP = FULLM.F166.CPS;
+  FULLM.F166.GAMMA = FULLM.F166.GAMMAS;
+ENDIF
+FULLM.F166.VT = FULLM.F166.MN*SQRT(FULLM.F166.GAMMA*PARTM.F160.RGAS*FULLM.F166.TS);
+FULLM.F166.RHO = FULLM.F166.PT/(PARTM.F160.RGAS*FULLM.F166.TT)*(FULLM.F166.PS/FULLM.F166.PT)^(1/FULLM.F166.GAMMA);
+FULLM.F166.MU = GLOBAL.REFMU*(FULLM.F166.TS/GLOBAL.TTREF)^(3/2)*(GLOBAL.TTREF+GLOBAL.SC)/(FULLM.F166.TS+GLOBAL.SC);
+FULLM.F166.RE = FULLM.F166.RHO*FULLM.F166.VT*GLOBAL.LL/FULLM.F166.MU;
+
+FULLM.RHOAVG = (FULLM.F066.RHO+FULLM.F166.RHO)/2;
+FULLM.DELTAV = FULLM.F066.VT-FULLM.F166.VT;
+FULLM.VTAVG = (FULLM.F066.VT+FULLM.F166.VT)/2;
+//--------------------------------BLOCK END - STATION 166 Fully Mixed (Bypass Station) ---------------------------
+
+
+//--------------------------------BLOCK START - STATION 070 Fully mixed (Core Station) ---------------------------
+FULLM.DWTRULEAK = (FULLM.F060.W+FULLM.F160.W)*GLOBAL.WQTRULEAK;
+IF (PARTM.F060.FAR>0)
+   FULLM.F070.FARMIX = (FULLM.F066.W*PARTM.F060.FAR+FULLM.F166.W*PARTM.F160.FAR)/(FULLM.F066.W+FULLM.F166.W);
+ELSE
+   FULLM.F070.FARMIX = 0;
+ENDIF
+FULLM.F070.WGRMIX = (FULLM.F066.W*PARTM.F060.WGR+FULLM.F166.W*PARTM.F160.WGR)/(FULLM.F066.W+FULLM.F166.W);
+FULLM.F070.RGASMIX = GLOBAL.RUNIV*(FULLM.F070.WGRMIX+0.6219811)/((FULLM.F070.WGRMIX+1)*18.01534);
+IF (GLOBAL.MASSFMMEAN.EQ.1)
+   FULLM.F070.FAR = FULLM.F070.FARMIX;
+   FULLM.F070.WGR = FULLM.F070.WGRMIX;
+   FULLM.F070.RGAS = FULLM.F070.RGASMIX;
+ELSE
+   FULLM.F070.FAR = PARTM.F060.FAR;
+   FULLM.F070.WGR = PARTM.F060.WGR;
+   FULLM.F070.RGAS = PARTM.F060.RGAS;
+ENDIF
+CALL(FULLM.F070.CPT) = pCPOFT(FULLM.F070.TT, FULLM.F070.WGR, FULLM.F070.FAR);
+FULLM.F070.GAMMAT = FULLM.F070.CPT/(FULLM.F070.CPT-FULLM.F070.RGAS);
+CALL(FULLM.F070.CPS) = pCPOFT(FULLM.F070.TS, FULLM.F070.WGR, FULLM.F070.FAR);
+FULLM.F070.GAMMAS = FULLM.F070.CPS/(FULLM.F070.CPS-FULLM.F070.RGAS);
+IF (GLOBAL.STATICSWITCH.EQ.0)
+  FULLM.F070.CP = FULLM.F070.CPT;
+  FULLM.F070.GAMMA = FULLM.F070.GAMMAT;
+ELSE
+  FULLM.F070.CP = FULLM.F070.CPS;
+  FULLM.F070.GAMMA = FULLM.F070.GAMMAS;
+ENDIF
+FULLM.F070.W = FULLM.F066.W;
+FULLM.F070.TT = (FULLM.F066.W*FULLM.F066.CP*FULLM.F066.TT-FULLM.HTMAX)/(FULLM.F070.W*FULLM.F070.CP);
+
+FULLM.F070.PT = FULLM.F070.W*SQRT(FULLM.F070.TT)/(SQRT(FULLM.F070.GAMMA/FULLM.F070.RGAS)*FULLM.F070.MN*(1+(FULLM.F070.GAMMA-1)/2*FULLM.F070.MN^2)^(-(FULLM.F070.GAMMA+1)/(2*(FULLM.F070.GAMMA-1)))*FULLM.F070.AG);
+FULLM.F070.PS = (FULLM.F066.AG*FULLM.F066.PS*(FULLM.F066.MN^2*FULLM.F066.GAMMA+1)+FULLM.F166.AG*FULLM.F166.PS*(FULLM.F166.MN^2*FULLM.F166.GAMMA+1)-FULLM.F170.AG*FULLM.F170.PS*(FULLM.F170.MN^2*FULLM.F170.GAMMA+1))/(FULLM.F070.AG*(FULLM.F070.MN^2*FULLM.F070.GAMMA+1));
+IF (FULLM.F070.PT>FULLM.F070.PS)
+   FULLM.F070.MN = SQRT(((FULLM.F070.PT/FULLM.F070.PS)^((FULLM.F070.GAMMA-1)/FULLM.F070.GAMMA)-1)*2/(FULLM.F070.GAMMA-1));
+ELSE
+   FULLM.F070.MN = FULLM.F066.MN;
+ENDIF
+FULLM.F070.AG = (FULLM.F066.AG+FULLM.F166.AG)-FULLM.F170.AG;
+FULLM.F070.TS = FULLM.F070.TT/(1+(FULLM.F070.GAMMA-1)/2*FULLM.F070.MN^2);
+FULLM.F070.RHO = FULLM.F070.PT/(FULLM.F070.RGAS*FULLM.F070.TT)*(FULLM.F070.PS/FULLM.F070.PT)^(1/FULLM.F070.GAMMA);
+FULLM.F070.VT = FULLM.F070.MN*SQRT(FULLM.F070.GAMMA*FULLM.F070.RGAS*FULLM.F070.TS);
+//--------------------------------BLOCK END - STATION 070 Fully Mixed (Core Station) ---------------------------
+
+
+//--------------------------------BLOCK START - STATION 170 Fully mixed (Bypass Station) ---------------------------
+IF (GLOBAL.MASSFMMEAN.EQ.1)
+   FULLM.F170.FAR = FULLM.F070.FARMIX;
+   FULLM.F170.WGR = FULLM.F070.WGRMIX;
+   FULLM.F170.RGAS = FULLM.F070.RGASMIX;
+ELSE
+   FULLM.F170.FAR = PARTM.F160.FAR;
+   FULLM.F170.WGR = PARTM.F160.WGR;
+   FULLM.F170.RGAS = PARTM.F160.RGAS;
+ENDIF
+CALL(FULLM.F170.CPT) = pCPOFT(FULLM.F170.TT, FULLM.F170.WGR, FULLM.F170.FAR);
+FULLM.F170.GAMMAT = FULLM.F170.CPT/(FULLM.F170.CPT-FULLM.F170.RGAS);
+CALL(FULLM.F170.CPS) = pCPOFT(FULLM.F170.TS, FULLM.F170.WGR, FULLM.F170.FAR);
+FULLM.F170.GAMMAS = FULLM.F170.CPS/(FULLM.F170.CPS-FULLM.F170.RGAS);
+IF (GLOBAL.STATICSWITCH.EQ.0)
+  FULLM.F170.CP = FULLM.F170.CPT;
+  FULLM.F170.GAMMA = FULLM.F170.GAMMAT;
+ELSE
+  FULLM.F170.CP = FULLM.F170.CPS;
+  FULLM.F170.GAMMA = FULLM.F170.GAMMAS;
+ENDIF
+FULLM.F170.W = FULLM.F171.W;
+FULLM.F170.TT = FULLM.F070.TT;
+FULLM.F170.PT = FULLM.F070.PT;
+FULLM.F170.PS = FULLM.F070.PS;
+FULLM.F170.MN = FULLM.F070.MN;
+
+FULLM.F170.AG = FULLM.F170.W*SQRT(FULLM.F170.TT)/(FULLM.F170.PT*SQRT(FULLM.F170.GAMMA/FULLM.F170.RGAS)*FULLM.F170.MN*(1+(FULLM.F170.GAMMA-1)/2*FULLM.F170.MN^2)^(-(FULLM.F170.GAMMA+1)/(2*(FULLM.F170.GAMMA-1))));
+
+FULLM.F170.TS = FULLM.F170.TT/(1+(FULLM.F170.GAMMA-1)/2*FULLM.F170.MN^2);
+FULLM.F170.RHO = FULLM.F170.PT/(FULLM.F170.RGAS*FULLM.F170.TT)*(FULLM.F170.PS/FULLM.F170.PT)^(1/FULLM.F170.GAMMA);
+FULLM.F170.VT = FULLM.F170.MN*SQRT(FULLM.F170.GAMMA*FULLM.F170.RGAS*FULLM.F170.TS);
+
+FULLM.HTMAX = (FULLM.F170.W*FULLM.F170.CP*FULLM.F170.TT)-(FULLM.F166.W*FULLM.F166.CP*FULLM.F166.TT);
+//--------------------------------BLOCK END - STATION 170 Fully Mixed (Bypass Station) ---------------------------
+
+
+//--------------------------------BLOCK START - STATION 071 Fully Mixed (Core Station) ---------------------------
+FULLM.LOSS.RNOZZLE1 = (GEOM.RJETPIPE+SQRT(PARTM.GEOM.ATHROAT/GLOBAL.PIVALUE))*0.5;
+FULLM.LOSS.RNOZZLE2 = (SQRT(PARTM.GEOM.ATHROAT/GLOBAL.PIVALUE)+SQRT((FULLM.CONDI.F090.AG+FULLM.CONDI.F190.AG)/GLOBAL.PIVALUE))*0.5;
+
+FULLM.LOSS.PJETPIPE = 2*GLOBAL.PIVALUE*GEOM.RJETPIPE;
+FULLM.LOSS.PNOZZLE1 = 2*GLOBAL.PIVALUE*FULLM.LOSS.RNOZZLE1;
+FULLM.LOSS.PNOZZLE2 = 2*GLOBAL.PIVALUE*FULLM.LOSS.RNOZZLE2;
+
+IF (FULLM.F171.RE>0)
+   FULLM.LOSS.CFJETPIPE = 2*(GEOM.KR/LN(FULLM.F171.RE)*GEOM.GVALUE)^2;
+   FULLM.LOSS.CFNOZZLE1 = 2*(GEOM.KR/LN(FULLM.F171.RE)*GEOM.GVALUE)^2;
+   FULLM.LOSS.CFNOZZLE2 = 2*(GEOM.KR/LN(FULLM.F171.RE)*GEOM.GVALUE)^2;
+ELSE
+   FULLM.LOSS.CFJETPIPE = 0;
+   FULLM.LOSS.CFNOZZLE1 = 0;
+   FULLM.LOSS.CFNOZZLE2 = 0;
+ENDIF
+
+IF (GLOBAL.FFSWITCH2.EQ.0)
+   FULLM.LOSS.FFJETPIPE = 0;
+   FULLM.LOSS.FFNOZ1 = 0;
+   FULLM.LOSS.FFNOZ2 = 0;
+ELSE
+   FULLM.LOSS.FFJETPIPE = FULLM.LOSS.CFJETPIPE*FULLM.F166.RHO/2*(FULLM.F170.VT+1/3*(FULLM.F171.VT-FULLM.F170.VT))^2*FULLM.LOSS.PJETPIPE*GEOM.LJETPIPE;
+   FULLM.LOSS.FFNOZ1 = FULLM.LOSS.CFNOZZLE1*FULLM.F166.RHO/2*(FULLM.F171.VT+1/3*(FULLM.F180.VT-FULLM.F171.VT))^2*FULLM.LOSS.PNOZZLE1*GEOM.NOZL1;
+   FULLM.LOSS.FFNOZ2 = FULLM.LOSS.CFNOZZLE2*FULLM.F166.RHO/2*(FULLM.F180.VT+1/3*(FULLM.F190.VT-FULLM.F180.VT))^2*FULLM.LOSS.PNOZZLE2*GEOM.NOZL2;
+ENDIF
+
+IF (GLOBAL.SWSHEAR.EQ.0)
+   FULLM.LOSS.FFSHEAR = 0;
+   FULLM.LOSS.FFTOTAL = FULLM.LOSS.FFJETPIPE+FULLM.LOSS.FFNOZ1+FULLM.LOSS.FFNOZ2;
+ELSE
+   FULLM.LOSS.FFSHEAR = FULLM.RHOAVG*(GEOM.CJ^2)*1/4*FULLM.DELTAV^2*GEOM.MIXERP*(GEOM.LJETPIPE+GEOM.NOZL1+GEOM.NOZL2);
+   FULLM.LOSS.FFTOTAL = FULLM.LOSS.FFJETPIPE+FULLM.LOSS.FFNOZ1+FULLM.LOSS.FFNOZ2+FULLM.LOSS.FFSHEAR;
+ENDIF
+
+FULLM.F071.FAR = FULLM.F070.FAR;
+FULLM.F071.WGR = FULLM.F070.WGR;
+FULLM.F071.RGAS = FULLM.F070.RGAS;
+FULLM.F071.W = FULLM.F070.W;
+FULLM.F071.TT = FULLM.F070.TT;
+IF (GLOBAL.FFSWITCH2.EQ.0)
+   FULLM.F071.PT = FULLM.F070.PT;
+   FULLM.F071.PS = FULLM.F070.PS;
+   FULLM.F071.TS = FULLM.F070.TS;
+   FULLM.F071.VT = FULLM.F070.VT;
+   FULLM.F071.RHO = FULLM.F070.RHO;
+ELSE
+   FULLM.F071.PT = FULLM.F071.W*SQRT(FULLM.F071.TT)/(SQRT(FULLM.F071.GAMMA/FULLM.F071.RGAS)*FULLM.F071.MN*(1+(FULLM.F071.GAMMA-1)/2*FULLM.F071.MN^2)^(-(FULLM.F071.GAMMA+1)/(2*(FULLM.F071.GAMMA-1))))/FULLM.F071.AG; 
+   FULLM.F071.PS = ((1+FULLM.F170.GAMMA*FULLM.F170.MN^2)*FULLM.F170.AG*FULLM.F170.PS+(1+FULLM.F070.GAMMA*FULLM.F070.MN^2)*FULLM.F070.AG*FULLM.F070.PS-FULLM.LOSS.FFTOTAL-(1+FULLM.F171.GAMMA*FULLM.F171.MN^2)*FULLM.F171.AG*FULLM.F171.PS)/((1+FULLM.F071.GAMMA*FULLM.F071.MN^2)*FULLM.F071.AG);
+   FULLM.F071.TS = FULLM.F071.TT/(1+(FULLM.F071.GAMMA-1)/2*FULLM.F071.MN^2);
+   FULLM.F071.VT = FULLM.F071.MN*SQRT(FULLM.F071.GAMMA*FULLM.F071.RGAS*FULLM.F071.TS);
+   FULLM.F071.RHO = FULLM.F071.PT/(FULLM.F071.RGAS*FULLM.F071.TT)*(FULLM.F071.PS/FULLM.F071.PT)^(1/FULLM.F071.GAMMA);
+ENDIF
+IF (FULLM.F071.PT>FULLM.F071.PS)
+   FULLM.F071.MN = SQRT(((FULLM.F071.PT/FULLM.F071.PS)^((FULLM.F071.GAMMA-1)/FULLM.F071.GAMMA)-1)*2/(FULLM.F071.GAMMA-1));
+ELSE
+   FULLM.F071.MN = FULLM.F070.MN;
+ENDIF
+FULLM.F071.AG = FULLM.F070.AG;
+CALL(FULLM.F071.CPT) = pCPOFT(FULLM.F071.TT, FULLM.F071.WGR, FULLM.F071.FAR);
+FULLM.F071.GAMMAT = FULLM.F071.CPT/(FULLM.F071.CPT-FULLM.F071.RGAS);
+CALL(FULLM.F071.CPS) = pCPOFT(FULLM.F071.TS, FULLM.F071.WGR, FULLM.F071.FAR);
+FULLM.F071.GAMMAS = FULLM.F071.CPS/(FULLM.F071.CPS-FULLM.F071.RGAS);
+IF (GLOBAL.STATICSWITCH.EQ.0)
+  FULLM.F071.CP = FULLM.F071.CPT;
+  FULLM.F071.GAMMA = FULLM.F071.GAMMAT;
+ELSE
+  FULLM.F071.CP = FULLM.F071.CPS;
+  FULLM.F071.GAMMA = FULLM.F071.GAMMAS;
+ENDIF
+//--------------------------------BLOCK END - STATION 071 Fully Mixed (Core Station) ---------------------------
+
+
+//--------------------------------BLOCK START - STATION 171 Fully Mixed (Bypass Station) ---------------------------
+FULLM.F171.FAR = FULLM.F170.FAR;
+FULLM.F171.WGR = FULLM.F170.WGR;
+FULLM.F171.RGAS = FULLM.F170.RGAS;
+FULLM.F171.W = FULLM.F180.W+FULLM.DWTRULEAK;
+FULLM.F171.TT = FULLM.F170.TT;
+FULLM.F171.PS = FULLM.F071.PS;
+IF (GLOBAL.FFSWITCH2.EQ.0)
+   FULLM.F171.PT = FULLM.F170.PT;   
+   FULLM.F171.TS = FULLM.F170.TS;
+   FULLM.F171.VT = FULLM.F170.VT;
+   FULLM.F171.RHO = FULLM.F170.RHO;
+ELSE
+   FULLM.F171.PT = FULLM.F171.W*SQRT(FULLM.F171.TT)/(SQRT(FULLM.F171.GAMMA/FULLM.F171.RGAS)*FULLM.F171.MN*(1+(FULLM.F171.GAMMA-1)/2*FULLM.F171.MN^2)^(-(FULLM.F171.GAMMA+1)/(2*(FULLM.F171.GAMMA-1))))/FULLM.F171.AG;
+   FULLM.F171.TS = FULLM.F171.TT/(1+(FULLM.F171.GAMMA-1)/2*FULLM.F171.MN^2);
+   FULLM.F171.VT = FULLM.F171.MN*SQRT(FULLM.F171.GAMMA*FULLM.F171.RGAS*FULLM.F171.TS);
+   FULLM.F171.RHO = FULLM.F171.PT/(FULLM.F171.RGAS*FULLM.F171.TT)*(FULLM.F171.PS/FULLM.F171.PT)^(1/FULLM.F171.GAMMA);
+ENDIF
+IF (FULLM.F171.PT>FULLM.F171.PS)
+   FULLM.F171.MN = SQRT(((FULLM.F171.PT/FULLM.F171.PS)^((FULLM.F171.GAMMA-1)/FULLM.F171.GAMMA)-1)*2/(FULLM.F171.GAMMA-1));
+ELSE
+   FULLM.F171.MN = FULLM.F170.MN;
+ENDIF
+FULLM.F171.AG = FULLM.F170.AG;
+CALL(FULLM.F171.CPT) = pCPOFT(FULLM.F171.TT, FULLM.F171.WGR, FULLM.F171.FAR);
+FULLM.F171.GAMMAT = FULLM.F171.CPT/(FULLM.F171.CPT-FULLM.F171.RGAS);
+CALL(FULLM.F171.CPS) = pCPOFT(FULLM.F171.TS, FULLM.F171.WGR, FULLM.F171.FAR);
+FULLM.F171.GAMMAS = FULLM.F171.CPS/(FULLM.F171.CPS-FULLM.F171.RGAS);
+IF (GLOBAL.STATICSWITCH.EQ.0)
+  FULLM.F171.CP = FULLM.F171.CPT;
+  FULLM.F171.GAMMA = FULLM.F171.GAMMAT;
+ELSE
+  FULLM.F171.CP = FULLM.F171.CPS;
+  FULLM.F171.GAMMA = FULLM.F171.GAMMAS;
+ENDIF
+FULLM.F171.MU = GLOBAL.REFMU*(FULLM.F171.TS/GLOBAL.TTREF)^(3/2)*(GLOBAL.TTREF+GLOBAL.SC)/(FULLM.F171.TS+GLOBAL.SC);
+FULLM.F171.RE = FULLM.F171.RHO*FULLM.F171.VT*GLOBAL.LL/FULLM.F171.MU;
+//--------------------------------BLOCK END - STATION 171 Fully Mixed (Bypass Station) ---------------------------
+
+
+//--------------------------------BLOCK START - STATION 080 Fully Mixed (Core Station) ---------------------------
+FULLM.F080.FAR = FULLM.F071.FAR;
+FULLM.F080.WGR = FULLM.F071.WGR;
+FULLM.F080.RGAS = FULLM.F071.RGAS;
+FULLM.F080.TT = FULLM.F071.TT;
+FULLM.F080.PT = FULLM.F071.PT;
+CALL(FULLM.F080.CPT) = pCPOFT(FULLM.F080.TT, FULLM.F080.WGR, FULLM.F080.FAR);
+FULLM.F080.GAMMAT = FULLM.F080.CPT/(FULLM.F080.CPT-FULLM.F080.RGAS);
+CALL(FULLM.F080.CPS) = pCPOFT(FULLM.F080.TS, FULLM.F080.WGR, FULLM.F080.FAR);
+FULLM.F080.GAMMAS = FULLM.F080.CPS/(FULLM.F080.CPS-FULLM.F080.RGAS);
+IF (GLOBAL.STATICSWITCH.EQ.0)
+  FULLM.F080.CP = FULLM.F080.CPT;
+  FULLM.F080.GAMMA = FULLM.F080.GAMMAT;
+ELSE
+  FULLM.F080.CP = FULLM.F080.CPS;
+  FULLM.F080.GAMMA = FULLM.F080.GAMMAS;
+ENDIF
+FULLM.F080.TS = FULLM.F080.TT/(1+(FULLM.F080.GAMMA-1)/2*FULLM.F080.MN^2);
+FULLM.F080.PCRIT = FULLM.F080.PT/((1+(FULLM.F080.GAMMA-1)/2)^(FULLM.F080.GAMMA/(FULLM.F080.GAMMA-1)));
+FULLM.F080.PTQPCRIT = FULLM.F080.PT/FULLM.F080.PCRIT;
+FULLM.F080.PTQPAMB = FULLM.F080.PT/AMB.PS;
+IF (FULLM.F080.PT>FULLM.F080.PS)
+   FULLM.F080.TMPMN = SQRT(((FULLM.F080.PT/FULLM.F080.PS)^((FULLM.F080.GAMMA-1)/FULLM.F080.GAMMA)-1)*2/(FULLM.F080.GAMMA-1));
+ELSE
+   FULLM.F080.TMPMN = 1;
+ENDIF
+IF (FULLM.F080.PTQPAMB>=FULLM.F080.PTQPCRIT)
+   FULLM.F080.MN = 1;
+   FULLM.F080.PS = FULLM.F080.PT*(FULLM.F080.TS/FULLM.F080.TT)^(FULLM.F080.GAMMA/(FULLM.F080.GAMMA-1));
+ELSE
+   FULLM.F080.MN = FULLM.F080.TMPMN;
+   FULLM.F080.PS = AMB.PS;
+ENDIF
+FULLM.F080.VT = FULLM.F080.MN*SQRT(FULLM.F080.GAMMA*FULLM.F080.RGAS*FULLM.F080.TS);
+FULLM.F080.RHO = FULLM.F080.PT/(FULLM.F080.RGAS*FULLM.F080.TT)*(FULLM.F080.PS/FULLM.F080.PT)^(1/FULLM.F080.GAMMA);
+FULLM.F080.AG = FULLM.F080.W*SQRT(FULLM.F080.TT)/(FULLM.F080.PT*SQRT(FULLM.F080.GAMMA/FULLM.F080.RGAS)*FULLM.F080.MN*(1+(FULLM.F080.GAMMA-1)/2*FULLM.F080.MN^2)^(-(FULLM.F080.GAMMA+1)/(2*(FULLM.F080.GAMMA-1))));
+IF (FULLM.F080.PS<FULLM.F080.PT)
+   FULLM.F080.Q = (FULLM.F080.PS/FULLM.F060.PT)^(1/FULLM.F080.GAMMA)*SQRT(2*FULLM.F080.GAMMA/(FULLM.F080.RGAS*(FULLM.F080.GAMMA-1))*(1-(FULLM.F080.PS/FULLM.F060.PT)^((FULLM.F080.GAMMA-1)/FULLM.F080.GAMMA)));
+   FULLM.F080.AE = FULLM.F080.W*SQRT(FULLM.F080.TT)/(FULLM.F080.PT*FULLM.F080.Q);
+ELSE
+   FULLM.F080.Q = 0.1;
+   FULLM.F080.AE = FULLM.F080.AG;
+ENDIF
+FULLM.F080.W = FULLM.F071.W;
+//--------------------------------BLOCK END - STATION 080 Fully Mixed (Core Station) ---------------------------
+
+
+//--------------------------------BLOCK START - STATION 180 Fully Mixed (Bypass Station) ---------------------------
+FULLM.F180.FAR = FULLM.F171.FAR;
+FULLM.F180.WGR = FULLM.F171.WGR;
+FULLM.F180.RGAS = FULLM.F171.RGAS;
+FULLM.F180.TT = FULLM.F171.TT;
+FULLM.F180.PT = FULLM.F171.PT;
+CALL(FULLM.F180.CPT) = pCPOFT(FULLM.F180.TT, FULLM.F180.WGR, FULLM.F180.FAR);
+FULLM.F180.GAMMAT = FULLM.F180.CPT/(FULLM.F180.CPT-FULLM.F180.RGAS);
+CALL(FULLM.F180.CPS) = pCPOFT(FULLM.F180.TS, FULLM.F180.WGR, FULLM.F180.FAR);
+FULLM.F180.GAMMAS = FULLM.F180.CPS/(FULLM.F180.CPS-FULLM.F180.RGAS);
+IF (GLOBAL.STATICSWITCH.EQ.0)
+  FULLM.F180.CP = FULLM.F180.CPT;
+  FULLM.F180.GAMMA = FULLM.F180.GAMMAT;
+ELSE
+  FULLM.F180.CP = FULLM.F180.CPS;
+  FULLM.F180.GAMMA = FULLM.F180.GAMMAS;
+ENDIF
+FULLM.F180.TS = FULLM.F180.TT/(1+(FULLM.F180.GAMMA-1)/2*FULLM.F180.MN^2);
+
+FULLM.F180.PCRIT = FULLM.F180.PT/((1+(FULLM.F180.GAMMA-1)/2)^(FULLM.F180.GAMMA/(FULLM.F180.GAMMA-1)));
+FULLM.F180.PTQPCRIT = FULLM.F180.PT/FULLM.F180.PCRIT;
+FULLM.F180.PTQPAMB = FULLM.F180.PT/AMB.PS;
+IF (FULLM.F180.PT>FULLM.F180.PS)
+   FULLM.F180.TMPMN = SQRT(((FULLM.F180.PT/FULLM.F180.PS)^((FULLM.F180.GAMMA-1)/FULLM.F180.GAMMA)-1)*2/(FULLM.F180.GAMMA-1));
+ELSE
+   FULLM.F180.TMPMN = 1;
+ENDIF
+IF (FULLM.F180.PTQPAMB>=FULLM.F180.PTQPCRIT)
+   FULLM.F180.MN = 1;
+   FULLM.F180.PS = FULLM.F180.PT*(FULLM.F180.TS/FULLM.F180.TT)^(FULLM.F180.GAMMA/(FULLM.F180.GAMMA-1));
+ELSE
+   FULLM.F180.MN = FULLM.F180.TMPMN;
+   FULLM.F180.PS = AMB.PS;
+ENDIF
+FULLM.F180.VT = FULLM.F180.MN*SQRT(FULLM.F180.GAMMA*FULLM.F180.RGAS*FULLM.F180.TS);
+FULLM.F180.RHO = FULLM.F180.PT/(FULLM.F180.RGAS*FULLM.F180.TT)*(FULLM.F180.PS/FULLM.F180.PT)^(1/FULLM.F180.GAMMA);
+FULLM.F180.AG = PARTM.GEOM.ATHROAT-FULLM.F080.AG;
+IF (PARTM.F180.PS<PARTM.F180.PT)
+   FULLM.F180.Q = (FULLM.F180.PS/FULLM.F160.PT)^(1/FULLM.F180.GAMMA)*SQRT(2*FULLM.F180.GAMMA/(FULLM.F180.RGAS*(FULLM.F180.GAMMA-1))*(1-(FULLM.F180.PS/FULLM.F160.PT)^((FULLM.F180.GAMMA-1)/FULLM.F180.GAMMA)));
+   FULLM.F180.AE = FULLM.F180.W*SQRT(FULLM.F180.TT)/(FULLM.F180.PT*FULLM.F180.Q);
+ELSE
+   FULLM.F180.Q = 0.1;
+   FULLM.F180.AE = FULLM.F180.AG;
+ENDIF
+FULLM.F180.WX = FULLM.F180.AG*FULLM.F180.PT*SQRT(FULLM.F180.GAMMA/FULLM.F180.RGAS)*FULLM.F180.MN*(1+(FULLM.F180.GAMMA-1)/2*FULLM.F180.MN^2)^(-(FULLM.F180.GAMMA+1)/(2*(FULLM.F180.GAMMA-1)))/SQRT(FULLM.F180.TT);
+IF (FULLM.F180.MN<1)
+   FULLM.F180.W = FULLM.F180.WX*GEOM.CONDIRATIO;
+ELSE
+   FULLM.F180.W = FULLM.F180.WX;
+ENDIF
+FULLM.GEOM.AFRAC = FULLM.F180.AE/(FULLM.F180.AE+FULLM.F080.AE);
+//--------------------------------BLOCK END - STATION 180 Fully Mixed (Bypass Station) ---------------------------

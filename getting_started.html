@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CMDSolver Docs — Getting Started</title>
+<link rel="stylesheet" href="docs.css">
+<style>
+  .step-grid {
+    display: grid; grid-template-columns: 36px 1fr;
+    gap: 0 1rem; margin-bottom: 2rem;
+  }
+  .step-num {
+    width: 36px; height: 36px; border-radius: 50%;
+    background: rgba(74,158,255,.15); border: 1.5px solid var(--accent);
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--mono); font-size: 13px; color: var(--accent);
+    font-weight: 600; flex-shrink: 0; margin-top: 2px;
+  }
+  .step-body { padding-bottom: 1.8rem; border-bottom: 1px solid var(--border); margin-bottom: .2rem; }
+  .step-body:last-of-type { border-bottom: none; }
+  .step-title { font-size: 15px; font-weight: 600; color: #e8ecf4; margin-bottom: .6rem; }
+  .step-body p { max-width: none; }
+
+  .track {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: 8px; padding: 1.2rem 1.4rem; margin-bottom: 1.2rem;
+  }
+  .track-title {
+    font-family: var(--mono); font-size: 11px; color: var(--accent);
+    letter-spacing: .1em; text-transform: uppercase; margin-bottom: .8rem;
+  }
+</style>
+</head>
+<body>
+
+<div class="doc-header">
+  <div class="breadcrumb">
+    <a href="index.html">CMDSolver Docs</a>
+    <span>›</span><span>Getting Started</span>
+  </div>
+  <span class="doc-badge overview">Einstieg</span>
+</div>
+
+<div class="hero">
+  <div class="hero-sub">Kapitel 0 — Einstieg</div>
+  <h1>Getting Started</h1>
+  <p class="tagline">
+    Von Null zum ersten Ergebnis in 10 Minuten — CLI-Aufruf, SolverAPI-Einbettung
+    und Ergebnis auslesen. Zwei Einstiegspfade je nach Anwendungsfall.
+  </p>
+</div>
+
+<nav>
+  <a href="#voraussetzungen">Voraussetzungen</a>
+  <a href="#cli">CLI-Einstieg</a>
+  <a href="#api">API-Einstieg</a>
+  <a href="#ergebnis">Ergebnis lesen</a>
+  <a href="#naechste">Nächste Schritte</a>
+</nav>
+
+<main>
+
+<section id="voraussetzungen">
+  <h2>Voraussetzungen</h2>
+
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>Komponente</th><th>Version</th><th>Beschaffung</th></tr></thead>
+    <tbody>
+      <tr>
+        <td>Java JDK</td><td>11+</td>
+        <td>GraalVM 25 oder OpenJDK 17/21 empfohlen</td>
+      </tr>
+      <tr>
+        <td>CASprzak.jar</td><td>0.3.0</td>
+        <td>Im Repository unter <code>libs/CASprzak.jar</code></td>
+      </tr>
+      <tr>
+        <td>CMDSolver JAR oder Quellen</td><td>v2.5</td>
+        <td>Repository <code>CMDSolver_repo</code>, Branch <code>main</code>, Tag <code>v2.5</code></td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Classpath</h3>
+  <pre>java -cp "CMDSolver.jar;libs/CASprzak.jar" cmd.CASSolver -I:model.cas</pre>
+  <p>In Eclipse: <em>Properties → Java Build Path → Libraries</em> → <code>CASprzak.jar</code> hinzufügen.</p>
+</section>
+
+<!-- ── CLI ── -->
+<section id="cli">
+  <h2>Einstiegspfad 1 — CLI (Command Line)</h2>
+
+  <div class="note blue">
+    <strong>Wähle diesen Pfad wenn:</strong> Du CMDSolver direkt von der Kommandozeile
+    oder aus einem Skript aufrufen willst — ohne Java-Code zu schreiben.
+  </div>
+
+  <div class="step-grid">
+    <div class="step-num">1</div>
+    <div class="step-body">
+      <div class="step-title">CAS-Modell bereitstellen</div>
+      <p>Lege eine <code>.cas</code>-Datei mit Variablen und Gleichungen an.
+      Das einfachste Beispiel — ein lineares System mit 2 Unbekannten:</p>
+      <pre><span class="cmt">// simple.cas — 2 Gleichungen, 2 Unbekannte</span>
+X <span class="kw">AS REAL</span> (Description: <span class="str">"Unbekannte X"</span>, Lower: -100, Value: 1, Upper: 100, Spec: Free, Unit: <span class="str">"-"</span>);
+Y <span class="kw">AS REAL</span> (Description: <span class="str">"Unbekannte Y"</span>, Lower: -100, Value: 1, Upper: 100, Spec: Free, Unit: <span class="str">"-"</span>);
+
+<span class="cmt">// Gleichung 1: X + Y = 10</span>
+X + Y = 10;
+
+<span class="cmt">// Gleichung 2: X - Y = 4  →  Lösung: X=7, Y=3</span>
+X - Y = 4;</pre>
+    </div>
+
+    <div class="step-num">2</div>
+    <div class="step-body">
+      <div class="step-title">Solver aufrufen</div>
+      <pre>java -cp "CMDSolver.jar;libs/CASprzak.jar" cmd.CASSolver -I:simple.cas</pre>
+      <p>Mit expliziter Solver-Wahl und Diagnose-Modus:</p>
+      <pre>java -cp "CMDSolver.jar;libs/CASprzak.jar" cmd.CASSolver \
+    -I:simple.cas \
+    -S:NEWTON_SPARSE_ARMIJO \
+    -DI</pre>
+    </div>
+
+    <div class="step-num">3</div>
+    <div class="step-body">
+      <div class="step-title">Ausgabe lesen</div>
+      <p>CMDSolver schreibt <code>result.out</code> ins Arbeitsverzeichnis und gibt
+      die Konvergenztabelle auf der Konsole aus:</p>
+      <pre><span class="cmt">// Konsole:</span>
+INFO: Starting Newton-Raphson + Armijo line search [n=2, tol=1.00e-07]
+INFO: Converged at iter 2: fsum=1.234e-14 &lt; tol=1.00e-07
+
+<span class="cmt">// result.out:</span>
+# NAME; VALUE; LOWER; UPPER; UNIT; STATUS; DESCRIPTION
+X; 7.000000e+00; -100.0; 100.0; -; FREE; Unbekannte X
+Y; 3.000000e+00; -100.0; 100.0; -; FREE; Unbekannte Y</pre>
+    </div>
+
+    <div class="step-num">4</div>
+    <div class="step-body">
+      <div class="step-title">Startwerte anpassen (optional)</div>
+      <p>Erstelle eine <code>-U:</code>-Datei um Startwerte oder Bounds zur Laufzeit
+      zu überschreiben — ohne die CAS-Datei zu ändern:</p>
+      <pre><span class="cmt">// overrides.txt</span>
+Name:X; Value:5.0; Status:Free; Lower:-200.0; Upper:200.0; Unit:-; Descr:Override</pre>
+      <pre>java -cp ... cmd.CASSolver -I:simple.cas -U:overrides.txt</pre>
+    </div>
+  </div>
+
+  <h3>Alle Solver vergleichen</h3>
+  <pre>java -cp "CMDSolver.jar;libs/CASprzak.jar" cmd.CASSolver -I:simple.cas -TEST</pre>
+</section>
+
+<!-- ── API ── -->
+<section id="api">
+  <h2>Einstiegspfad 2 — SolverAPI (Einbettung)</h2>
+
+  <div class="note blue">
+    <strong>Wähle diesen Pfad wenn:</strong> Du CMDSolver in ein bestehendes Java-Framework
+    einbetten willst — ohne CLI, ohne argv, programmatisch steuerbar.
+  </div>
+
+  <div class="step-grid">
+    <div class="step-num">1</div>
+    <div class="step-body">
+      <div class="step-title">Einfachster Aufruf — Modell laden und lösen</div>
+      <pre><span class="kw">import</span> cmd.SolverAPI;
+<span class="kw">import</span> cmd.SolverResult;
+
+<span class="cmt">// Minimal — 3 Zeilen</span>
+SolverAPI api = <span class="kw">new</span> SolverAPI();
+api.loadModel(<span class="str">"model.cas"</span>);
+SolverResult result = api.solve();
+
+<span class="kw">if</span> (result.isConverged()) {
+    <span class="kw">double</span> pt = result.getValue(<span class="str">"PARTM.F060.PT"</span>);
+    System.out.println(<span class="str">"PT = "</span> + pt + <span class="str">" Pa"</span>);
+}</pre>
+    </div>
+
+    <div class="step-num">2</div>
+    <div class="step-body">
+      <div class="step-title">Method-Chaining — vollständige Konfiguration</div>
+      <pre>SolverResult result = <span class="kw">new</span> SolverAPI()
+    .loadModel(<span class="str">"nozzle.cas"</span>)
+    .setSolverType(SolverType.NEWTON_SPARSE_ARMIJO)
+    .setTolerance(<span class="num">1e-8</span>)
+    .setMaxIterations(<span class="num">150</span>)
+    .setVariableFixed(<span class="str">"AMB.PS"</span>, <span class="num">98136.5</span>)   <span class="cmt">// Randbedingung setzen</span>
+    .setVariableValue(<span class="str">"PARTM.F060.TT"</span>, <span class="num">800.0</span>) <span class="cmt">// Startwert</span>
+    .setDiagnoseMode(<span class="kw">true</span>)                    <span class="cmt">// Startwertoptimierung</span>
+    .solve();</pre>
+    </div>
+
+    <div class="step-num">3</div>
+    <div class="step-body">
+      <div class="step-title">Fehlerbehandlung — ParseErrors und Konvergenzfehler</div>
+      <pre>SolverResult result = api.solve();
+
+<span class="cmt">// Parse-Fehler prüfen (CAS-Datei korrekt?)</span>
+<span class="kw">if</span> (result.hasParseErrors()) {
+    <span class="kw">for</span> (ParseError e : result.getParseErrors()) {
+        System.err.println(<span class="str">"["</span> + e.getSeverity() + <span class="str">"] Line "</span>
+            + e.getLineNumber() + <span class="str">": "</span> + e.getMessage());
+    }
+    <span class="kw">return</span>;
+}
+
+<span class="cmt">// Konvergenz prüfen</span>
+<span class="kw">if</span> (!result.isConverged()) {
+    System.err.println(<span class="str">"Nicht konvergiert: "</span> + result.getErrorMessage());
+    System.err.println(<span class="str">"Letzte fsum: "</span> + result.getFinalResidual());
+    <span class="kw">return</span>;
+}
+
+<span class="cmt">// Ergebnis auslesen</span>
+Map&lt;String, Double&gt; values = result.getAllValues();
+values.forEach((name, val) ->
+    System.out.printf(<span class="str">"%-30s = %.6g%n"</span>, name, val));</pre>
+    </div>
+
+    <div class="step-num">4</div>
+    <div class="step-body">
+      <div class="step-title">Parameterstudie — mehrere Betriebspunkte</div>
+      <pre><span class="kw">double</span>[] altitudes = {0, 5000, 10000, 15000}; <span class="cmt">// m</span>
+
+<span class="kw">for</span> (<span class="kw">double</span> alt : altitudes) {
+    SolverResult r = <span class="kw">new</span> SolverAPI()
+        .loadModel(<span class="str">"nozzle.cas"</span>)
+        .setSolverType(SolverType.BROYDEN_SPARSE)  <span class="cmt">// schnellster für Serien</span>
+        .setVariableFixed(<span class="str">"AMB.ALTITUDE"</span>, alt)
+        .solve();
+
+    <span class="kw">if</span> (r.isConverged()) {
+        System.out.printf(<span class="str">"h=%.0fm: Thrust=%.1f N%n"</span>,
+            alt, r.getValue(<span class="str">"FULLM.THRUST"</span>));
+    }
+}</pre>
+    </div>
+  </div>
+</section>
+
+<!-- ── Ergebnis ── -->
+<section id="ergebnis">
+  <h2>Ergebnis ausgeben</h2>
+
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>Methode</th><th>Verwendung</th><th>Beschreibung</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><code>getValue("NAME")</code></td>
+        <td>Einzelne Variable</td>
+        <td>Gibt Double.NaN wenn nicht vorhanden</td>
+      </tr>
+      <tr>
+        <td><code>hasValue("NAME")</code></td>
+        <td>Existenzprüfung</td>
+        <td>Vor getValue() aufrufen wenn unsicher</td>
+      </tr>
+      <tr>
+        <td><code>getAllValues()</code></td>
+        <td>Alle Variablen</td>
+        <td>Gibt unmodifizierbare Map&lt;String, Double&gt; zurück</td>
+      </tr>
+      <tr>
+        <td><code>formatAsString()</code></td>
+        <td>Vollständige Ausgabe</td>
+        <td>Alle Variablen als formatierter String</td>
+      </tr>
+      <tr>
+        <td><code>writeToFile("result.out")</code></td>
+        <td>Datei schreiben</td>
+        <td>Semikolon-getrenntes Format</td>
+      </tr>
+      <tr>
+        <td><code>writeToWriter(writer)</code></td>
+        <td>GUI / Stream</td>
+        <td>Für JTextArea, StringWriter, etc.</td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>GUI-Integration — SolverLogger in JTextArea</h3>
+  <pre><span class="cmt">// Log-Output in JTextArea umleiten</span>
+JTextArea logArea = <span class="kw">new</span> JTextArea();
+Logger root = Logger.getLogger(<span class="str">"apps.eqnParser"</span>);
+root.addHandler(<span class="kw">new</span> Handler() {
+    <span class="kw">public void</span> publish(LogRecord r) {
+        SwingUtilities.invokeLater(() ->
+            logArea.append(r.getMessage() + <span class="str">"\n"</span>));
+    }
+    <span class="kw">public void</span> flush() {}
+    <span class="kw">public void</span> close() {}
+});
+
+<span class="cmt">// Ergebnis in JTextArea</span>
+SolverResult result = api.solve();
+StringWriter sw = <span class="kw">new</span> StringWriter();
+result.writeToWriter(sw);
+resultArea.setText(sw.toString());</pre>
+</section>
+
+<!-- ── Nächste Schritte ── -->
+<section id="naechste">
+  <h2>Nächste Schritte</h2>
+
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>Ziel</th><th>Kapitel</th></tr></thead>
+    <tbody>
+      <tr><td>CAS-Datei schreiben</td><td><a href="parser_syntax.html">Kapitel 4 — Parser Syntax</a></td></tr>
+      <tr><td>Richtigen Solver wählen</td><td><a href="solver_comparison.html">Kapitel 2 — Solver Vergleich</a></td></tr>
+      <tr><td>Alle CLI-Optionen</td><td><a href="solver_options.html">Kapitel 3 — Solver Optionen</a></td></tr>
+      <tr><td>Solver konvergiert nicht</td><td><a href="troubleshooting.html">Troubleshooting</a></td></tr>
+      <tr><td>Alle API-Methoden</td><td><a href="api_reference.html">API-Referenz</a></td></tr>
+      <tr><td>Vollständiges Beispielmodell</td><td><a href="examples.html">Beispiele</a></td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <span>CMDSolver Docs · Getting Started · v2.5</span>
+  <span>
+    <a href="index.html">← Übersicht</a> &nbsp;|&nbsp;
+    <a href="math_overview.html">Mathematischer Überblick →</a>
+  </span>
+</footer>
+</body>
+</html>

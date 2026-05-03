@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CMDSolver Dokumentation</title>
+<link rel="stylesheet" href="docs.css">
+<style>
+  .index-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+  }
+
+  .index-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.4rem;
+    text-decoration: none;
+    display: block;
+    transition: border-color .2s, background .2s;
+  }
+  .index-card:hover {
+    border-color: var(--accent);
+    background: var(--bg3);
+  }
+  .index-card.featured {
+    border-color: rgba(62,207,142,.3);
+  }
+  .index-card.featured:hover {
+    border-color: var(--ok);
+  }
+
+  .card-num {
+    font-family: var(--mono); font-size: 10px; color: var(--text3);
+    letter-spacing: .1em; text-transform: uppercase; margin-bottom: .4rem;
+  }
+  .card-title {
+    font-size: 15px; font-weight: 500; color: #e8ecf4;
+    margin-bottom: .4rem; line-height: 1.3;
+  }
+  .card-desc {
+    font-size: 12px; color: var(--text2); line-height: 1.6;
+    margin-bottom: .8rem;
+  }
+  .card-meta {
+    display: flex; gap: .5rem; align-items: center; flex-wrap: wrap;
+  }
+  .card-type {
+    font-family: var(--mono); font-size: 10px; color: var(--text3);
+    padding: 2px 7px; border-radius: 3px;
+    background: rgba(255,255,255,.04); border: 1px solid var(--border2);
+  }
+  .card-type.solver { color: var(--accent); border-color: rgba(74,158,255,.2); }
+  .card-type.math   { color: var(--purple); border-color: rgba(167,139,250,.2); }
+  .card-type.comp   { color: var(--ok);    border-color: rgba(62,207,142,.2); }
+
+  .perf-chip {
+    font-family: var(--mono); font-size: 10px;
+    color: var(--ok); margin-left: auto;
+  }
+
+  .version-box {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: 8px; padding: 1rem 1.4rem;
+    margin-bottom: 2rem; display: flex;
+    align-items: center; gap: 2rem; flex-wrap: wrap;
+  }
+  .version-box .v { font-family: var(--mono); font-size: 22px;
+                    font-weight: 500; color: var(--ok); }
+  .version-box .vl { font-size: 11px; color: var(--text3); }
+</style>
+</head>
+<body>
+
+<div class="doc-header">
+  <div class="breadcrumb">
+    <span>CMDSolver Dokumentation</span>
+  </div>
+  <span class="doc-badge overview">v2.5</span>
+</div>
+
+<div class="hero">
+  <div class="hero-sub">Dokumentation</div>
+  <h1>CMDSolver</h1>
+  <p class="tagline">
+    Modularer algebraischer Gleichungssystem-Solver für thermodynamische Modelle.
+    7 Solver-Algorithmen · CAS-Dateiformat · Programmatische API.
+  </p>
+  <div class="hero-stats">
+    <div class="stat"><span class="stat-val">7</span><span class="stat-lbl">Solver</span></div>
+    <div class="stat"><span class="stat-val">303+</span><span class="stat-lbl">Gleichungen</span></div>
+    <div class="stat"><span class="stat-val">v2.5</span><span class="stat-lbl">Version</span></div>
+    <div class="stat"><span class="stat-val">Java 11+</span><span class="stat-lbl">Plattform</span></div>
+  </div>
+</div>
+
+<main>
+
+<!-- Einstieg -->
+<section>
+  <h2>Einstieg</h2>
+  <div class="index-grid">
+
+    <a href="getting_started.html" class="index-card featured">
+      <div class="card-num">Kapitel 0 — Start hier</div>
+      <div class="card-title">Getting Started</div>
+      <div class="card-desc">
+        Von Null zum ersten Ergebnis in 10 Minuten — CLI-Aufruf und SolverAPI-Einbettung.
+        Zwei Einstiegspfade, Fehlerbehandlung, GUI-Integration. Voraussetzungen und Classpath.
+      </div>
+      <div class="card-meta"><span class="card-type comp">Start</span></div>
+    </a>
+
+    <a href="troubleshooting.html" class="index-card">
+      <div class="card-num">Hilfe</div>
+      <div class="card-title">Troubleshooting &amp; FAQ</div>
+      <div class="card-desc">
+        Häufige Probleme mit Symptom, Diagnose und Lösung — NOT_CONVERGED,
+        κ-Warnungen, NaN, ParseErrors, Versionsmischung.
+        Schnellreferenz: Symptom → Lösung auf einen Blick.
+      </div>
+      <div class="card-meta"><span class="card-type comp">Hilfe</span></div>
+    </a>
+
+    <a href="examples.html" class="index-card">
+      <div class="card-num">Beispiele</div>
+      <div class="card-title">Beispielmodelle</div>
+      <div class="card-desc">
+        SimpleSystem (12 Gl.) und NozzleSystem (303 Gl.) mit vollständiger Erklärung.
+        Warum konvergiert welcher Solver? Starter-Template für eigene Modelle.
+      </div>
+      <div class="card-meta"><span class="card-type comp">Praxis</span></div>
+    </a>
+
+    <a href="api_reference.html" class="index-card">
+      <div class="card-num">API</div>
+      <div class="card-title">API-Referenz</div>
+      <div class="card-desc">
+        Alle public Methoden von SolverAPI, SolverResult, SolverConfig.Builder,
+        ParseError und SolverType — für Einbettung in eigene Anwendungen.
+      </div>
+      <div class="card-meta"><span class="card-type comp">Referenz</span></div>
+    </a>
+
+  </div>
+</section>
+
+<!-- Grundlagen -->
+<section>
+  <h2>Grundlagen</h2>
+  <div class="index-grid">
+    <a href="math_overview.html" class="index-card">
+      <div class="card-num">Kapitel 1</div>
+      <div class="card-title">Mathematischer Überblick</div>
+      <div class="card-desc">
+        Nichtlineare Gleichungssysteme — implementierte und nicht implementierte
+        Lösungsverfahren. Klassifikation, Eigenschaften thermodynamischer Systeme,
+        Verfahrenswahl-Leitfaden.
+      </div>
+      <div class="card-meta">
+        <span class="card-type math">Grundlagen</span>
+      </div>
+    </a>
+
+    <a href="solver_comparison.html" class="index-card">
+      <div class="card-num">Kapitel 2</div>
+      <div class="card-title">Solver Vergleichsmatrix</div>
+      <div class="card-desc">
+        Alle 7 Solver im direkten Vergleich — Konvergenzrate, Rechenaufwand,
+        Robustheit, Empfehlungen. Testergebnisse SimpleSystem.cas. Entscheidungsbaum.
+      </div>
+      <div class="card-meta">
+        <span class="card-type comp">Vergleich</span>
+      </div>
+    </a>
+  </div>
+</section>
+
+<!-- Solver -->
+<section>
+  <h2>Solver — Detaildokumentation</h2>
+  <div class="index-grid">
+
+    <a href="solver_newton_armijo.html" class="index-card">
+      <div class="card-num">Solver 1 · NEWTON_ARMIJO</div>
+      <div class="card-title">Newton-Raphson + Armijo</div>
+      <div class="card-desc">
+        Standard-Solver. Dichte LU, Armijo-Backtracking.
+        Quadratische Konvergenz. Für kleine bis mittlere Systeme.
+      </div>
+      <div class="card-meta">
+        <span class="card-type solver">SolverType.NEWTON_ARMIJO</span>
+        <span class="perf-chip">3 Iter · 3.16e-11</span>
+      </div>
+    </a>
+
+    <a href="solver_newton_sparse.html" class="index-card">
+      <div class="card-num">Solver 2 · NEWTON_SPARSE</div>
+      <div class="card-title">Newton-GSPAR Sparse LU</div>
+      <div class="card-desc">
+        GSPAR Sparse-LU statt dichter LU. Bis 10× schneller bei großen Systemen.
+        Kein Backtracking — für gute Startvektoren.
+      </div>
+      <div class="card-meta">
+        <span class="card-type solver">SolverType.NEWTON_SPARSE</span>
+        <span class="perf-chip">3 Iter · ~28ms</span>
+      </div>
+    </a>
+
+    <a href="solver_newton_sparse_armijo.html" class="index-card featured">
+      <div class="card-num">Solver 3 · NEWTON_SPARSE_ARMIJO ★ Empfohlen</div>
+      <div class="card-title">Newton-Sparse + Armijo</div>
+      <div class="card-desc">
+        Beste Kombination: GSPAR Sparse-LU + Armijo-Backtracking.
+        Schnell und robust. Empfohlener Standard-Solver für die meisten Systeme.
+      </div>
+      <div class="card-meta">
+        <span class="card-type solver">SolverType.NEWTON_SPARSE_ARMIJO</span>
+        <span class="perf-chip">3 Iter · ~30ms</span>
+      </div>
+    </a>
+
+    <a href="solver_lm.html" class="index-card">
+      <div class="card-num">Solver 4 · LEVENBERG_MARQUARDT</div>
+      <div class="card-title">Levenberg-Marquardt</div>
+      <div class="card-desc">
+        Robustester Solver für schlecht konditionierte Systeme (κ &gt; 10¹²).
+        Adaptiver Dämpfungsparameter μ kombiniert Newton mit Gradientenabstieg.
+      </div>
+      <div class="card-meta">
+        <span class="card-type solver">SolverType.LEVENBERG_MARQUARDT</span>
+        <span class="perf-chip">36 Iter · κ bis 10²⁵</span>
+      </div>
+    </a>
+
+    <a href="solver_broyden.html" class="index-card">
+      <div class="card-num">Solver 5 · BROYDEN</div>
+      <div class="card-title">Broyden Quasi-Newton</div>
+      <div class="card-desc">
+        Rang-1-Update der Jacobi statt vollständigem Neuaufbau.
+        Günstiger pro Iteration — vorteilhaft bei Parameterstudien.
+      </div>
+      <div class="card-meta">
+        <span class="card-type solver">SolverType.BROYDEN</span>
+        <span class="perf-chip">25 Iter · O(n²) Update</span>
+      </div>
+    </a>
+
+    <a href="solver_broyden_sparse.html" class="index-card">
+      <div class="card-num">Solver 6 · BROYDEN_SPARSE</div>
+      <div class="card-title">Broyden-GSPAR Sparse</div>
+      <div class="card-desc">
+        Broyden-Update mit GSPAR Sparse-LU. Schnellster Solver im Testbetrieb (~9ms).
+        Ideal für Parameterstudien mit großen Systemen.
+      </div>
+      <div class="card-meta">
+        <span class="card-type solver">SolverType.BROYDEN_SPARSE</span>
+        <span class="perf-chip">3 Iter · ~9ms</span>
+      </div>
+    </a>
+
+    <a href="solver_homotopy.html" class="index-card">
+      <div class="card-num">Solver 7 · HOMOTOPY</div>
+      <div class="card-title">Homotopie Arc-Length</div>
+      <div class="card-desc">
+        Globale Methode: Pfadverfolgung von einfachem Startproblem zum Zielproblem.
+        Konvergiert auch bei sehr schlechten Startvektoren. Langsamer aber robust.
+      </div>
+      <div class="card-meta">
+        <span class="card-type solver">SolverType.HOMOTOPY</span>
+        <span class="perf-chip">Pfad t∈[0,1]</span>
+      </div>
+    </a>
+
+  </div>
+</section>
+
+<!-- Referenz -->
+<section>
+  <h2>Referenz</h2>
+  <div class="index-grid">
+
+    <a href="solver_options.html" class="index-card">
+      <div class="card-num">Kapitel 3</div>
+      <div class="card-title">Solver Optionen — CLI Referenz</div>
+      <div class="card-desc">
+        Alle Kommandozeilenargumente: allgemeine Optionen für alle Solver,
+        solver-exklusive Parameter (-SH: Homotopie, -SB: Broyden),
+        Diagnose-Optionen und Batch-Modus.
+      </div>
+      <div class="card-meta"><span class="card-type math">Referenz</span></div>
+    </a>
+
+    <a href="parser_syntax.html" class="index-card">
+      <div class="card-num">Kapitel 4</div>
+      <div class="card-title">CAS-Dateiformat — Parser Syntax</div>
+      <div class="card-desc">
+        Vollständige Parser-Referenz: Sektionen, Variablendeklaration (Langform + AS REAL),
+        INITIALIZE-Block, PROCEDURE/CALL, Gleichungen, IF/ELSEIF/ENDIF/FOR,
+        Operatoren und mathematische Funktionen.
+      </div>
+      <div class="card-meta"><span class="card-type math">Referenz</span></div>
+    </a>
+
+    <a href="bifunctions_reference.html" class="index-card">
+      <div class="card-num">Kapitel 5</div>
+      <div class="card-title">BIfunctions — Thermodynamische Funktionen</div>
+      <div class="card-desc">
+        Alle Built-in Funktionen mit physikalischem Hintergrund: JANAF-Polynome,
+        ISA-Atmosphärenmodell (9 Schichten), Schallgeschwindigkeit, Enthalpie, cp,
+        MofCondiRatio. Numerische Ableitungen via 5-Punkte-Formel O(h⁴).
+      </div>
+      <div class="card-meta"><span class="card-type math">Referenz</span></div>
+    </a>
+
+
+  </div>
+</section>
+
+<!-- Weitere Kapitel -->
+<section>
+  <h2>Engineering-Wissen</h2>
+  <div class="index-grid">
+
+    <a href="lessons_learned.html" class="index-card">
+      <div class="card-num">Kapitel 7</div>
+      <div class="card-title">Lessons Learned</div>
+      <div class="card-desc">
+        18 Engineering-Erkenntnisse aus allen Entwicklungsphasen — Architektur,
+        Algorithmen, Refactoring, Debugging, Werkzeuge. 8 klassische + 10 neue
+        Erkenntnisse seit v2.3. Das wichtigste Kapitel für langfristige Wartbarkeit.
+      </div>
+      <div class="card-meta"><span class="card-type math">Wissen</span></div>
+    </a>
+
+    <a href="dev_history.html" class="index-card">
+      <div class="card-num">Kapitel 8</div>
+      <div class="card-title">Entwicklungsgeschichte &amp; Bug Fix Log</div>
+      <div class="card-desc">
+        9 Entwicklungsphasen von der monolithischen Ursprungsversion bis v2.5.
+        Vollständiger Bug Fix Log (27+ Bugs, BF-01–BF-12 + B27–B28 + Refactoring-Bugs
+        + GSPAR Fortran-Port). Offene Punkte mit Status.
+      </div>
+      <div class="card-meta"><span class="card-type math">Geschichte</span></div>
+    </a>
+
+    <a href="maintenance.html" class="index-card">
+      <div class="card-num">Kapitel 6</div>
+      <div class="card-title">Wartung &amp; Entwicklung</div>
+      <div class="card-desc">
+        Zwei Einstiegspunkte: Schnelleinstieg (Architektur, Rezepte, Checkliste)
+        und vollständige Einführung (Datenfluss, Klassen, Erweiterungspunkte,
+        Fallstricke, Build-Umgebung). Toggle-Button schaltet zwischen Modi.
+      </div>
+      <div class="card-meta"><span class="card-type math">Wartung</span></div>
+    </a>
+
+
+    <a href="roadmap.html" class="index-card">
+      <div class="card-num">Kapitel 9</div>
+      <div class="card-title">Roadmap &amp; Offene Punkte</div>
+      <div class="card-desc">
+        18 priorisierte Entwicklungspunkte mit Zeithorizont, Aufwandsschätzung und
+        Wechselwirkungsanalyse. Solver-Erweiterungen (GMRES, Trust-Region, Anderson),
+        CAS-Erweiterungen (MIN/MAX, SQR, SECTION), Performance, Architektur, GUI-Vorbereitung.
+      </div>
+      <div class="card-meta"><span class="card-type math">Planung</span></div>
+    </a>
+
+  </div>
+</section>
+
+<!-- Versionshistorie -->
+<section>
+  <h2>Versionshistorie</h2>
+
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>Version</th><th>Inhalt</th><th>Status</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><code>v2.1</code></td>
+        <td>Baseline — Newton-Armijo, LM, Broyden</td>
+        <td><span class="badge b-na">Archiv</span></td>
+      </tr>
+      <tr>
+        <td><code>v2.2</code></td>
+        <td>GSPAR Sparse-LU, paralleler Jacobi-Aufbau</td>
+        <td><span class="badge b-na">Archiv</span></td>
+      </tr>
+      <tr>
+        <td><code>v2.3</code></td>
+        <td>SolverAPI, Logging-Bereinigung, Javadoc, ELSEIF-Expansion, B27/B28 Bugfixes</td>
+        <td><span class="badge b-ok">✅ Stabil</span></td>
+      </tr>
+      <tr>
+        <td><code>v2.4</code></td>
+        <td>ParseError-Infrastruktur — strukturierte Fehlerbehandlung mit Zeilennummern</td>
+        <td><span class="badge b-ok">✅ Stabil</span></td>
+      </tr>
+      <tr>
+        <td><code>v2.5</code></td>
+        <td>LinkedHashMap Refactoring (EqnData) + Output-Writer (SolverResult)</td>
+        <td><span class="badge b-ok">✅ Aktuell</span></td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <span>CMDSolver Dokumentation · v2.5 · Mai 2026</span>
+  <span>Alle Solver getestet auf SimpleSystem.cas · Java 21</span>
+</footer>
+
+</body>
+</html>

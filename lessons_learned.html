@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CMDSolver Docs — Lessons Learned</title>
+<link rel="stylesheet" href="docs.css">
+<style>
+  .lesson {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: 8px; padding: 1.3rem 1.5rem; margin-bottom: 1.2rem;
+  }
+  .lesson-num {
+    font-family: var(--mono); font-size: 10px; color: var(--text3);
+    letter-spacing: .12em; text-transform: uppercase; margin-bottom: .3rem;
+  }
+  .lesson-title {
+    font-size: 15px; font-weight: 600; color: #e8ecf4;
+    margin-bottom: .6rem; line-height: 1.3;
+  }
+  .lesson-body { font-size: 13px; color: var(--text2); line-height: 1.75; }
+  .lesson-body p { margin-bottom: .6rem; max-width: none; }
+  .lesson-key {
+    margin-top: .8rem; padding: .7rem 1rem;
+    background: rgba(62,207,142,.06); border-left: 3px solid var(--ok);
+    border-radius: 4px; font-size: 12.5px; color: var(--ok);
+    font-weight: 500;
+  }
+  .lesson.cat-arch  { border-left: 3px solid var(--accent); }
+  .lesson.cat-debug { border-left: 3px solid var(--warn); }
+  .lesson.cat-refac { border-left: 3px solid var(--purple); }
+  .lesson.cat-tool  { border-left: 3px solid var(--teal); }
+  .lesson.cat-algo  { border-left: 3px solid var(--err); }
+
+  .cat-badge {
+    display: inline-block; font-family: var(--mono); font-size: 10px;
+    padding: 2px 8px; border-radius: 3px; margin-bottom: .5rem;
+  }
+  .cat-arch  { background: rgba(74,158,255,.1);  color: var(--accent); }
+  .cat-debug { background: rgba(240,160,48,.1);  color: var(--warn); }
+  .cat-refac { background: rgba(167,139,250,.1); color: var(--purple); }
+  .cat-tool  { background: rgba(45,212,191,.1);  color: var(--teal); }
+  .cat-algo  { background: rgba(255,92,92,.1);   color: var(--err); }
+
+  .era-badge {
+    float: right; font-family: var(--mono); font-size: 10px;
+    color: var(--text3); padding: 2px 7px;
+    border: 1px solid var(--border2); border-radius: 3px;
+  }
+</style>
+</head>
+<body>
+
+<div class="doc-header">
+  <div class="breadcrumb">
+    <a href="index.html">CMDSolver Docs</a>
+    <span>›</span><span>Lessons Learned</span>
+  </div>
+  <span class="doc-badge overview">Kapitel 7</span>
+</div>
+
+<div class="hero">
+  <div class="hero-sub">Kapitel 7</div>
+  <h1>Lessons Learned</h1>
+  <p class="tagline">
+    Engineering-Erkenntnisse aus der Entwicklung von CMDSolver — gesammelt über
+    alle Versionen von der monolithischen Ursprungsversion bis v2.5.
+    Kategorisiert nach Architektur, Algorithmen, Refactoring, Debugging und Werkzeuge.
+  </p>
+  <div class="hero-stats">
+    <div class="stat"><span class="stat-val">18</span><span class="stat-lbl">Erkenntnisse</span></div>
+    <div class="stat"><span class="stat-val">v1→v2.5</span><span class="stat-lbl">Zeitraum</span></div>
+    <div class="stat"><span class="stat-val">8+10</span><span class="stat-lbl">Alt + Neu</span></div>
+  </div>
+</div>
+
+<nav>
+  <a href="#architektur">Architektur</a>
+  <a href="#algorithmen">Algorithmen</a>
+  <a href="#refactoring">Refactoring</a>
+  <a href="#debugging">Debugging</a>
+  <a href="#werkzeuge">Werkzeuge</a>
+</nav>
+
+<main>
+
+<div class="note blue">
+  <strong>Legende:</strong>
+  <span class="cat-badge cat-arch">Architektur</span>
+  <span class="cat-badge cat-algo">Algorithmus</span>
+  <span class="cat-badge cat-refac">Refactoring</span>
+  <span class="cat-badge cat-debug">Debugging</span>
+  <span class="cat-badge cat-tool">Werkzeuge</span>
+  &nbsp;&nbsp;
+  Einträge mit <span style="font-family:var(--mono);font-size:11px;color:var(--text3);border:1px solid var(--border2);padding:1px 5px;border-radius:3px">v2.3+</span> sind seit der letzten Dokumentation neu hinzugekommen.
+</div>
+
+<!-- ── Architektur ── -->
+<section id="architektur">
+  <h2>Architektur</h2>
+
+  <div class="lesson cat-arch">
+    <div class="lesson-num">
+      <span class="cat-badge cat-arch">Architektur</span>
+      <span class="era-badge">Phase 2–3</span>
+      LL-01
+    </div>
+    <div class="lesson-title">Skalierung muss von Anfang an eindesignt werden</div>
+    <div class="lesson-body">
+      <p>Der teuerste Fehler war der Versuch, Variable Scaling als optionale Schicht
+      über eine bestehende Architektur zu legen. Skalierung ist ein globales Anliegen:
+      die <code>values</code>-Map, die Jacobi-Matrix, die Liniensuche und die
+      thermodynamischen Funktionen müssen alle übereinstimmen ob sie im physikalischen
+      oder skalierten Raum arbeiten. Das Retrofitting erforderte mehrere Iterationen
+      und das Feature musste letztendlich deaktiviert werden.</p>
+    </div>
+    <div class="lesson-key">Skalierung von Anfang an in die Architektur einbauen — oder als vollständige Neuschreibung behandeln.</div>
+  </div>
+
+  <div class="lesson cat-arch">
+    <div class="lesson-num">
+      <span class="cat-badge cat-arch">Architektur</span>
+      <span class="era-badge">Phase 1</span>
+      LL-02
+    </div>
+    <div class="lesson-title">GUI-Imports blockieren Framework-Einbettung</div>
+    <div class="lesson-body">
+      <p>Die ursprüngliche Codebasis importierte Swing-Klassen direkt in Backend-Klassen
+      (<code>ComponentHelper</code>, <code>HTMLDocument</code>, <code>JTextPane</code>).
+      Das verhinderte die Einbettung des Solvers in Frameworks ohne Swing-Dependency.
+      Beim Herauslösen aus der GUI wurden diese Imports übersehen — sie lagen verstreut
+      in <code>EqnSysReader</code>, <code>EqnData</code> und <code>Condition</code>.</p>
+      <p>Der Fix war mechanisch einfach (<code>isNumeric()</code> inline) aber das
+      Auffinden war aufwendig. 128 <code>System.out</code>-Aufrufe wurden erst durch
+      systematisches Grep sichtbar.</p>
+    </div>
+    <div class="lesson-key">Backend-Pakete (apps/) dürfen nie GUI-Klassen importieren. Regelmäßig prüfen: grep -rn "import javax.swing\|import gui\." apps/</div>
+  </div>
+
+  <div class="lesson cat-arch">
+    <div class="lesson-num">
+      <span class="cat-badge cat-arch">Architektur</span>
+      <span class="era-badge">v2.3+ NEU</span>
+      LL-03
+    </div>
+    <div class="lesson-title">SolverAPI-Fassade: main() mit Logik ist nicht einbettbar</div>
+    <div class="lesson-body">
+      <p><code>CASSolver.main()</code> enthielt ursprünglich 400+ Zeilen kombinierter
+      Logik: Argument-Parsing, Datei-Laden, Variable-Update, Solver-Konfiguration,
+      Ausführung, Ergebnis-Ausgabe — alles in einer Methode. Das machte
+      programmatische Einbettung ohne CLI unmöglich.</p>
+      <p>Die Extraktion einer <code>SolverAPI</code>-Fassade mit Method-Chaining
+      (<code>loadModel().setSolverType().solve()</code>) löste das Problem sauber.
+      <code>main()</code> wurde zum dünnen Wrapper der nur noch Argumente parst.</p>
+    </div>
+    <div class="lesson-key">Jede Software die eingebettet werden soll braucht eine programmatische API von Anfang an. main() und API-Logik strikt trennen.</div>
+  </div>
+
+  <div class="lesson cat-arch">
+    <div class="lesson-num">
+      <span class="cat-badge cat-arch">Architektur</span>
+      <span class="era-badge">v2.4+ NEU</span>
+      LL-04
+    </div>
+    <div class="lesson-title">Boolean hasError() reicht nicht — Zeilennummern sind essentiell</div>
+    <div class="lesson-body">
+      <p>Die ursprüngliche Fehlerbehandlung im Parser bestand aus einem einzigen
+      Boolean <code>hasError()</code>. Wenn eine CAS-Datei einen Syntaxfehler enthielt,
+      war die einzige Information: "es gibt einen Fehler". Welche Zeile, welche Variable,
+      welcher Kontext — alles unbekannt.</p>
+      <p>Die <code>ParseError</code>-Infrastruktur (v2.4) mit Severity, Zeilennummer
+      und Kontext-String reduzierte die Debugging-Zeit für Parser-Fehler drastisch.
+      Die 28 <code>setError(true)</code>-Stellen wurden alle zu <code>addError(lCount, message, line)</code>.</p>
+    </div>
+    <div class="lesson-key">Strukturierte Fehler mit Kontext von Anfang an — nicht als Nachgedanke. Ein Boolean sagt nur "broken", nicht "where and why".</div>
+  </div>
+
+  <div class="lesson cat-arch">
+    <div class="lesson-num">
+      <span class="cat-badge cat-arch">Architektur</span>
+      <span class="era-badge">Phase 3</span>
+      LL-05
+    </div>
+    <div class="lesson-title">Der equation-orientierte Ansatz skaliert — Sequential-Modular nicht</div>
+    <div class="lesson-body">
+      <p>Der SpeedUp/Aspen-Ansatz, alle Gleichungen simultan zu lösen, ist die richtige
+      Architektur für komplex gekoppelte Systeme. Sequenziell-modulare Simulation
+      (Komponente für Komponente) scheitert bei Systemen mit starken Rückflussströmen
+      und Feedback-Schleifen. CMDSolvers gleichungsorientiertes Design behandelt diese
+      natürlich.</p>
+    </div>
+    <div class="lesson-key">Für eng gekoppelte aerothermodynamische Systeme: in die gleichungsorientierte Infrastruktur investieren — sie zahlt sich sofort in Generalität und Robustheit aus.</div>
+  </div>
+</section>
+
+<!-- ── Algorithmen ── -->
+<section id="algorithmen">
+  <h2>Algorithmen</h2>
+
+  <div class="lesson cat-algo">
+    <div class="lesson-num">
+      <span class="cat-badge cat-algo">Algorithmus</span>
+      <span class="era-badge">Phase 3–4</span>
+      LL-06
+    </div>
+    <div class="lesson-title">Broyden ohne GMRES ist bei schlecht konditionierten Systemen nicht stabil</div>
+    <div class="lesson-body">
+      <p>Das ursprüngliche <code>NewtonBroydenGMRES</code> funktionierte weil GMRES
+      inhärent nahezu-singuläre Matrizen behandelt. Es durch Gauß-Jordan auf der
+      materialisierten Broyden-Jacobi J_k zu ersetzen schlägt fehl weil: (1) explizite
+      Invertierung Konditionszahlfehler verstärkt, und (2) nach Rang-1-Updates ist J_k
+      nicht mehr die echte Jacobi — das Invertieren einer schlechten Approximation
+      mit einem schlecht konditionierten Algorithmus kumuliert Fehler schnell.</p>
+      <p>Der adaptive Reset/Checkpoint-Mechanismus mildert das Problem: bei κ > 10¹⁰
+      wird die Jacobi vollständig neu aufgebaut.</p>
+    </div>
+    <div class="lesson-key">Den linearen Solver immer passend zur Konditionierung des Problems wählen — nicht zur Implementierungsbequemlichkeit.</div>
+  </div>
+
+  <div class="lesson cat-algo">
+    <div class="lesson-num">
+      <span class="cat-badge cat-algo">Algorithmus</span>
+      <span class="era-badge">Phase 4</span>
+      LL-07
+    </div>
+    <div class="lesson-title">Fortran-Port: Sentinel-Werte und Index-Konventionen</div>
+    <div class="lesson-body">
+      <p>Fortran verwendet 1-basierte Array-Indizierung und oft 0 als Sentinel
+      ("Ende der Kette"). Java verwendet 0-basierte Indizierung. Die GSPAR-Portierung
+      erforderte das systematische Verschieben aller Array-Zugriffe um -1 und das
+      Ersetzen des Sentinels 0 durch -1. Das Übersehen auch nur eines einzigen
+      Zugriffs verursacht stillen Out-of-Bounds (Fortran-Arrays sind nicht geprüft).</p>
+      <p>6 Bugs aus dem originalen Fortran wurden beim Portieren gefunden und gefixt —
+      davon 4 die bereits von Borchardt (1996–1998) dokumentiert waren.</p>
+    </div>
+    <div class="lesson-key">Vor einem Fortran-Port eine Konvertierungskonvention definieren und mechanisch durchsetzen — ein einzelner globaler Search-and-Replace reicht für komplexe verkettete Strukturen nicht.</div>
+  </div>
+
+  <div class="lesson cat-algo">
+    <div class="lesson-num">
+      <span class="cat-badge cat-algo">Algorithmus</span>
+      <span class="era-badge">Phase 3</span>
+      LL-08
+    </div>
+    <div class="lesson-title">CASprzak: exakt aber unflexibel für Built-in Funktionen</div>
+    <div class="lesson-body">
+      <p>CASprzak liefert exakte symbolische Ableitungen und eliminiert Finite-Differenz-Fehler
+      vollständig. Die Bibliothek kann aber nicht Built-in Prozeduraufrufe differenzieren
+      (<code>cpOfT</code>, <code>htofTTref</code> etc.) — diese benötigen analytische
+      Ableitungsimplementierungen in <code>BIfunctions</code>.</p>
+      <p>Der numerische Fallback (adaptive h = max(10⁻⁵·|x|, 10⁻⁸)) mit der
+      5-Punkte-Formel (O(h⁴)) wurde für alle 18 Built-in Funktionen implementiert
+      und liefert ausreichende Genauigkeit für Newton-Konvergenz bis fsum ~ 10⁻⁹.</p>
+    </div>
+    <div class="lesson-key">CAS-basierte Differentiation ist exzellent für algebraische Gleichungen. Für komplexe Built-in Funktionen sorgfältig implementierte numerische Ableitungen ergänzen.</div>
+  </div>
+</section>
+
+<!-- ── Refactoring ── -->
+<section id="refactoring">
+  <h2>Refactoring</h2>
+
+  <div class="lesson cat-refac">
+    <div class="lesson-num">
+      <span class="cat-badge cat-refac">Refactoring</span>
+      <span class="era-badge">v2.3+ NEU</span>
+      LL-09
+    </div>
+    <div class="lesson-title">Javadoc-Position ist syntaxkritisch — falsch platziert erzeugt doppelte Klasse</div>
+    <div class="lesson-body">
+      <p>Beim Einfügen von Klassen-Javadoc in <code>EqnData.java</code> wurde der
+      Kommentar versehentlich <em>nach</em> der öffnenden Klammern <code>public class EqnData {</code>
+      eingefügt statt davor. Eclipse interpretierte den nachfolgenden <code>public class EqnData</code>
+      als verschachtelte Klasse innerhalb der äußeren <code>EqnData</code> — was zu
+      hunderten von Folgefehlern führte ("The nested type EqnData cannot hide an enclosing type").</p>
+      <p>Das Problem war schwer zu diagnostizieren weil die Fehlermeldung nicht auf die
+      eigentliche Ursache zeigte.</p>
+    </div>
+    <div class="lesson-key">Javadoc muss VOR public class stehen. Prüfbefehl: grep -c "^public class EqnData" EqnData.java → muss 1 ergeben.</div>
+  </div>
+
+  <div class="lesson cat-refac">
+    <div class="lesson-num">
+      <span class="cat-badge cat-refac">Refactoring</span>
+      <span class="era-badge">v2.3+ NEU</span>
+      LL-10
+    </div>
+    <div class="lesson-title">Inlining erzeugt leicht doppelte try-finally Blöcke</div>
+    <div class="lesson-body">
+      <p>Beim Refactoring von <code>parseEquationSystemFile()</code> — Extraktion der
+      Schleife aus einem ursprünglichen <code>try-finally</code> Block — blieb ein
+      verwaister zweiter <code>finally</code>-Block außerhalb des neuen Scopes.
+      Die Variable <code>stream</code> war im zweiten Block nicht mehr sichtbar.</p>
+      <p>Symptom: "stream cannot be resolved" und "Syntax error on token 'finally'"
+      an scheinbar falschen Stellen.</p>
+    </div>
+    <div class="lesson-key">Nach jedem try-finally Refactoring prüfen: grep -c "finally" EqnSysReader.java → muss 1 ergeben.</div>
+  </div>
+
+  <div class="lesson cat-refac">
+    <div class="lesson-num">
+      <span class="cat-badge cat-refac">Refactoring</span>
+      <span class="era-badge">v2.5+ NEU</span>
+      LL-11
+    </div>
+    <div class="lesson-title">Methoden verschwinden beim Einfügen an Einfügestellen</div>
+    <div class="lesson-body">
+      <p>Beim Einfügen der statischen <code>FUNC_MAP</code> in <code>EqnData.java</code>
+      stand die Einfügestelle genau an der Stelle wo <code>isCallEqn()</code> deklariert war.
+      Die Methode wurde beim str_replace versehentlich mitgelöscht — was zu
+      "isCallEqn() is undefined" in 15 Solver-Klassen führte.</p>
+      <p>Das Problem tritt auf wenn Einfügestellen nicht präzise genug gewählt werden
+      und mehr Text enthalten als beabsichtigt.</p>
+    </div>
+    <div class="lesson-key">Nach jedem Refactoring alle public Methoden der geänderten Klasse verifizieren. Bei großen Änderungen: vollständige Methodenliste vorher und nachher vergleichen.</div>
+  </div>
+
+  <div class="lesson cat-refac">
+    <div class="lesson-num">
+      <span class="cat-badge cat-refac">Refactoring</span>
+      <span class="era-badge">v2.5+ NEU</span>
+      LL-12
+    </div>
+    <div class="lesson-title">LinkedHashMap statt if-Kette: Reihenfolge garantiert, Erweiterung trivial</div>
+    <div class="lesson-body">
+      <p>Die Übersetzung von CAS-Funktionsnamen nach CASprzak war eine 50-zeilige
+      <code>if (eq.contains("ASINH")) eq = eq.replaceAll("ASINH", "asinh");</code>
+      Kette. Das Problem: Reihenfolge war kritisch (längere Matches vor kürzeren),
+      aber nicht explizit erzwungen. Neue Funktionen mussten an der richtigen Stelle
+      eingefügt werden.</p>
+      <p>Die Umstellung auf eine statische <code>LinkedHashMap</code> macht Reihenfolge
+      explizit, reduziert den Code auf 10 Zeilen, und macht das Hinzufügen einer
+      neuen Funktion zu einer einzigen Zeile. <code>FUNC_SPLIT_REGEX</code> wird
+      automatisch aus der Map generiert.</p>
+    </div>
+    <div class="lesson-key">Geordnete Übersetzungstabellen gehören in LinkedHashMap — nicht in if-Ketten. Die Reihenfolge ist dann dokumentiert, nicht implizit.</div>
+  </div>
+</section>
+
+<!-- ── Debugging ── -->
+<section id="debugging">
+  <h2>Debugging</h2>
+
+  <div class="lesson cat-debug">
+    <div class="lesson-num">
+      <span class="cat-badge cat-debug">Debugging</span>
+      <span class="era-badge">Phase 3</span>
+      LL-13
+    </div>
+    <div class="lesson-title">HashMap.replace() schlägt bei fehlendem Key still fehl</div>
+    <div class="lesson-body">
+      <p><code>HashMap.replace(key, value)</code> gibt <code>null</code> zurück und tut
+      nichts wenn der Key nicht existiert — keine Exception, keine Warnung. Das verursachte
+      den InitGuessApplier-Bug (BF-01) wo alle Initialwerte lautlos verworfen wurden.
+      Das System schien korrekt zu laufen verwendete aber Default-Variablenwerte.</p>
+    </div>
+    <div class="lesson-key">replace() gegenüber put() bevorzugen nur wenn "Key fehlt → nichts tun" explizit gewünscht ist. Sonst put() verwenden und bei replace()-Rückgabe null warnen.</div>
+  </div>
+
+  <div class="lesson cat-debug">
+    <div class="lesson-num">
+      <span class="cat-badge cat-debug">Debugging</span>
+      <span class="era-badge">Phase 3</span>
+      LL-14
+    </div>
+    <div class="lesson-title">Thread-Safety muss vor Parallelisierung verifiziert werden</div>
+    <div class="lesson-body">
+      <p>Das Aktivieren paralleler Jacobi-Konstruktion ohne Verifikation der Thread-Safety
+      von <code>MatrixSimple.setValueAt()</code> verursachte stille Datenverfälschung (BF-03).
+      Die Verfälschung war nicht-deterministisch — manchmal konvergierte der Solver,
+      manchmal divergierte er — was die Diagnose extrem schwer machte.</p>
+      <p>Aktuelle Lösung: <code>PARALLEL_JACOBI_THRESHOLD = 99999</code> (deaktiviert).
+      Re-Aktivierung erfordert entweder thread-safe <code>MatrixSimple</code> oder
+      thread-lokale Arrays pro Zeile.</p>
+    </div>
+    <div class="lesson-key">Nie Parallelismus zu shared mutable state hinzufügen ohne explizite Synchronisationsanalyse. Non-deterministische Fehler sind die schwierigsten zu diagnostizieren.</div>
+  </div>
+
+  <div class="lesson cat-debug">
+    <div class="lesson-num">
+      <span class="cat-badge cat-debug">Debugging</span>
+      <span class="era-badge">Phase 3</span>
+      LL-15
+    </div>
+    <div class="lesson-title">Debug-Logging ist unverzichtbar für Konvergenzdiagnose</div>
+    <div class="lesson-body">
+      <p>Das Muster <code>LOG.fine("Iter %d: fsum=%.3e ||dx||=%.3e")</code> enthüllte
+      sofort zwei separate Bugs: den eingefrorenen fsum (BF-02, evaluateF-Timing) und
+      den Broyden-Vorzeichenfehler. Ohne dieses Logging wären beide als
+      "Solver konvergiert nicht" ohne handlungsfähige Diagnose abgetan worden.</p>
+    </div>
+    <div class="lesson-key">Konvergenzschleifen von Anfang an mit detailliertem per-Iteration Logging instrumentieren — nicht als Nachgedanke.</div>
+  </div>
+
+  <div class="lesson cat-debug">
+    <div class="lesson-num">
+      <span class="cat-badge cat-debug">Debugging</span>
+      <span class="era-badge">v2.3+ NEU</span>
+      LL-16
+    </div>
+    <div class="lesson-title">128 System.out-Aufrufe blockieren Einbettung — erst Grep macht sie sichtbar</div>
+    <div class="lesson-body">
+      <p>Beim Herauslösen des Solvers aus der GUI-Anwendung wurden
+      <code>System.out.println()</code>-Aufrufe übersehen — sie verteilen sich unsichtbar
+      über 1300-zeilige Klassen. Erst <code>grep -rn "System\.out\." apps/</code>
+      machte das volle Ausmaß sichtbar: 128 Stellen in <code>EqnData</code> und
+      <code>EqnSysReader</code> allein.</p>
+      <p>Für ein Framework das stdout nicht kontrolliert (z.B. ein Webserver oder
+      ein Simulationsframework) wäre das fatal gewesen.</p>
+    </div>
+    <div class="lesson-key">Vor jeder Framework-Einbettung: grep -rn "System\.out\.\|System\.err\." im Backend ausführen. Null-Treffer ist die Anforderung.</div>
+  </div>
+</section>
+
+<!-- ── Werkzeuge ── -->
+<section id="werkzeuge">
+  <h2>Werkzeuge & Prozesse</h2>
+
+  <div class="lesson cat-tool">
+    <div class="lesson-num">
+      <span class="cat-badge cat-tool">Werkzeuge</span>
+      <span class="era-badge">v2.3+ NEU</span>
+      LL-17
+    </div>
+    <div class="lesson-title">Git-Tags in Eclipse: nicht über Tags-View sondern über History</div>
+    <div class="lesson-body">
+      <p>In Eclipse EGit ist die "Existing Targets" Liste im
+      <em>Git Repositories → Tags → Create Tag</em> Dialog leer — man kann keinen
+      Commit als Target auswählen. Tags müssen über
+      <em>Team → Show in History → Commit rechtsklicken → Create Tag</em> erstellt werden.</p>
+      <p>Zusätzlich pusht weder Eclipse noch GitDesktop Tags automatisch mit.
+      Explizit: <em>Git Repositories → Tags → Rechtsklick → Push Tag</em>
+      oder <code>git push origin --tags</code> in der Kommandozeile.</p>
+      <p>Bei "rejected — not fast forward": Den Tag zuerst im GitHub Browser löschen
+      (Repository → Tags → Papierkorb), dann lokal neu erstellen und pushen.</p>
+    </div>
+    <div class="lesson-key">Eclipse EGit Tag-Workflow: History View → Create Tag → Push Tag. Nie über Git Repositories → Tags → Create Tag (Targets leer).</div>
+  </div>
+
+  <div class="lesson cat-tool">
+    <div class="lesson-num">
+      <span class="cat-badge cat-tool">Werkzeuge</span>
+      <span class="era-badge">v2.3+ NEU</span>
+      LL-18
+    </div>
+    <div class="lesson-title">Versionsmischung erzeugt hunderte Fehler — konsistenter Stand ist Pflicht</div>
+    <div class="lesson-body">
+      <p>Das Mischen von v2.3 und v2.4 Dateien im gleichen Eclipse-Projekt
+      erzeugte über 150 Kompilierfehler: v2.4's <code>EqnSysReader</code> ruft
+      <code>ParseError</code>-Methoden auf die in v2.3's <code>SystemData</code>
+      nicht existieren. Alle Fehler zeigten auf scheinbar unbeteiligte Klassen
+      (AbstractSolver, HomotopySolver) — nicht auf den eigentlichen Verursacher.</p>
+      <p>Die Diagnose dauerte unverhältnismäßig lang weil die Fehlerursache
+      (inkonsistente Versionen) nicht unmittelbar aus den Fehlermeldungen erkennbar war.</p>
+    </div>
+    <div class="lesson-key">Immer alle Dateien einer Version gleichzeitig einspielen. Nie einzelne Dateien aus verschiedenen Versionen mischen. Beim kleinsten Zweifel: vollständiges src/-Verzeichnis aus dem ZIP kopieren.</div>
+  </div>
+
+  <div class="lesson cat-algo">
+    <div class="lesson-num">
+      <span class="lesson-badge new">NEU</span>
+      LL-19
+    </div>
+    <div class="lesson-title">Jacobi-Skalierung erfordert Raum-Konsistenz durch den gesamten Solve-Loop</div>
+    <div class="lesson-body">
+      <p>In v2.11 wurde der <strong>JacobiEquilibrator</strong> (Sinkhorn-Knopp) implementiert
+      der κ von 4.64e+11 auf <strong>4.0</strong> reduziert — mathematisch optimal.
+      Trotzdem konvergiert der Solver nicht weil der Algorithmus in <strong>4 verschiedenen Räumen</strong>
+      arbeitet die nicht konsistent skaliert sind:</p>
+      <ol style="color:var(--text2);font-size:13px;line-height:2;padding-left:1.2rem">
+        <li>Originalraum x (Pa, K, kg/s) — für values-Map, BIfunctions, PhysicalProjector</li>
+        <li>Jacobi-Raum J — gemischte Einheiten vor Equilibrierung</li>
+        <li>Equilibrierter Raum J̃ = R·J·C — für lineares System</li>
+        <li>Schrittvektor-Raum dx̃ — nach GSPAR-Lösung</li>
+      </ol>
+      <p>Das Problem: <strong>Armijo-Backtracking</strong> prüft Konvergenz mit
+      dem originalen f im Originalraum, aber der Schritt dx wurde im equilibrierten
+      Raum berechnet. Die Größenordnungen passen nicht — Armijo reduziert alpha
+      auf 6e-05 oder der Schritt macht kaum Fortschritt.</p>
+      <p>Für eine korrekte Implementierung müssen <strong>alle</strong> Komponenten
+      im selben Raum arbeiten: Armijo braucht F̃(x̃), evaluateF braucht ein
+      Transformer-Pattern das BIfunctions transparent mit Originalwerten versorgt.</p>
+    </div>
+    <div class="lesson-key">Skalierung in iterativen Lösern ist nicht nur eine Jacobi-Transformation.
+    Sie betrifft den gesamten Loop: Residuenauswertung, Liniensuche, Konvergenzkritierum und
+    Schritt-Rücktransformation müssen alle konsistent im selben skalierten Raum arbeiten.
+    JacobiEquilibrator ist korrekt implementiert — die Integration in AbstractSolver erfordert
+    ein vollständiges Redesign des Solve-Loops.</div>
+  </div>
+
+</section>
+
+</main>
+
+<footer>
+  <span>CMDSolver Docs · Lessons Learned · v2.11 · 19 Erkenntnisse</span>
+  <span>
+    <a href="maintenance.html">← Wartung</a> &nbsp;|&nbsp;
+    <a href="dev_history.html">Entwicklungsgeschichte →</a>
+  </span>
+</footer>
+</body>
+</html>

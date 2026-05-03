@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CMDSolver Docs — BIfunctions Referenz</title>
+<link rel="stylesheet" href="docs.css">
+<style>
+  .func-card {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: 8px; padding: 1.2rem 1.4rem;
+    margin-bottom: 1rem;
+  }
+  .func-sig {
+    font-family: var(--mono); font-size: 12.5px; color: var(--teal);
+    font-weight: 500; margin-bottom: .5rem; line-height: 1.6;
+  }
+  .func-desc { font-size: 13px; color: var(--text2);
+               margin-bottom: .6rem; line-height: 1.6; }
+  .func-args { margin-top: .6rem; }
+  .func-args dt { font-family: var(--mono); font-size: 11px;
+                  color: var(--accent); display: inline; }
+  .func-args dd { display: inline; font-size: 12px; color: var(--text2);
+                  margin: 0 0 0 .4rem; }
+  .func-args div { margin-bottom: .25rem; }
+
+  .deriv-box {
+    background: var(--bg3); border: 1px solid var(--border);
+    border-left: 3px solid var(--purple);
+    border-radius: 6px; padding: 1rem 1.2rem;
+    margin: 1rem 0; font-family: var(--mono); font-size: 12px;
+    line-height: 2; white-space: pre;
+  }
+</style>
+</head>
+<body>
+
+<div class="doc-header">
+  <div class="breadcrumb">
+    <a href="index.html">CMDSolver Docs</a>
+    <span>›</span><span>BIfunctions</span>
+  </div>
+  <span class="doc-badge overview">Referenz</span>
+</div>
+
+<div class="hero">
+  <div class="hero-sub">Kapitel 5</div>
+  <h1>BIfunctions<br>Thermodynamische Built-in Funktionen</h1>
+  <p class="tagline">
+    Überblick über die thermodynamischen Berechnungsfunktionen in CMDSolver —
+    physikalischer Hintergrund, Gleichungen, Ableitungsmethodik und CAS-Verwendung.
+  </p>
+  <div class="hero-stats">
+    <div class="stat"><span class="stat-val">18</span><span class="stat-lbl">Funktionen</span></div>
+    <div class="stat"><span class="stat-val">O(h⁴)</span><span class="stat-lbl">Ableitungsgenauigkeit</span></div>
+    <div class="stat"><span class="stat-val">JANAF</span><span class="stat-lbl">Thermodynamik-Basis</span></div>
+    <div class="stat"><span class="stat-val">ISA</span><span class="stat-lbl">Atmosphärenmodell</span></div>
+  </div>
+</div>
+
+<nav>
+  <a href="#architektur">Architektur</a>
+  <a href="#ableitung">Ableitungsmethodik</a>
+  <a href="#schall">Schallgeschwindigkeit</a>
+  <a href="#enthalpie">Enthalpie & cp</a>
+  <a href="#atmosphaere">Atmosphäre</a>
+  <a href="#stroemung">Strömung</a>
+  <a href="#verwendung">CAS-Verwendung</a>
+</nav>
+
+<main>
+
+<!-- Architektur -->
+<section id="architektur">
+  <h2>Architektur der Built-in Funktionen</h2>
+
+  <p>
+    Jede thermodynamische Funktion <code>func(args)</code> in BIfunctions hat
+    <strong>drei Signaturen</strong> die zusammen das Interface für den Solver bilden:
+  </p>
+
+  <div class="math-block">
+    <div class="eq"><span class="hi">Signatur 1 — Residuum:</span></div>
+    <div class="eq">  <span class="fn">dFunc</span>(output, inputs...) = output − func(inputs)</div>
+    <div class="eq"><span class="cmt">  // Gibt 0 wenn output korrekt berechnet wurde</span></div>
+    <div class="eq"><span class="cmt">  // Wird als Gleichungsresiduum F(x) = 0 verwendet</span></div>
+    <div class="eq"></div>
+    <div class="eq"><span class="hi">Signatur 2 — List-Form:</span></div>
+    <div class="eq">  <span class="fn">dFunc</span>(List&lt;Double&gt; values)</div>
+    <div class="eq"><span class="cmt">  // Wrapper für EqnData-Aufruf via Reflection</span></div>
+    <div class="eq"></div>
+    <div class="eq"><span class="hi">Signatur 3 — Partielle Ableitung:</span></div>
+    <div class="eq">  <span class="fn">funcDeriv</span>(variables, values, partial)</div>
+    <div class="eq"><span class="cmt">  // Numerische Ableitung ∂(dFunc)/∂x_partial</span></div>
+    <div class="eq"><span class="cmt">  // Verwendet 5-Punkte-Formel, O(h⁴) Genauigkeit</span></div>
+  </div>
+
+  <div class="note blue">
+    <strong>Warum diese Struktur?</strong> Der Solver braucht für jede Gleichung
+    zwei Dinge: das Residuum F(x) und die Ableitungen ∂F/∂xᵢ für die Jacobi-Matrix.
+    Für Built-in Funktionen kann CASprzak nicht symbolisch differenzieren —
+    daher numerische Ableitungen via <code>funcDeriv</code>.
+  </div>
+
+  <h3>Beispiel — cpOfTNOZ</h3>
+  <pre><span class="cmt">// Residuum: cp - cpOfTNOZ(T, WGR, FAR) = 0</span>
+<span class="kw">public static double</span> <span class="fn">dCpOfTNOZ</span>(<span class="kw">double</span> cp, <span class="kw">double</span> temp, <span class="kw">double</span> wgr, <span class="kw">double</span> far) {
+    <span class="kw">return</span> cp - cpOfTNOZ(temp, wgr, far);
+}
+
+<span class="cmt">// In der CAS-Datei:</span>
+<span class="str">CALL(NOZ.CP) = pCPOFTNOZ(NOZ.TT, NOZ.WGR, NOZ.FAR);</span></pre>
+</section>
+
+<!-- Ableitungsmethodik -->
+<section id="ableitung">
+  <h2>Ableitungsmethodik — 5-Punkte-Formel</h2>
+
+  <p>
+    Alle partiellen Ableitungen der Built-in Funktionen werden <strong>numerisch</strong>
+    berechnet — nicht symbolisch wie bei normalen CAS-Gleichungen. Dies ist nötig
+    weil die thermodynamischen Polynome zu komplex für automatische Differentiation sind.
+  </p>
+
+  <div class="math-block">
+    <div class="eq"><span class="hi">5-Punkte-Formel (O(h⁴) Genauigkeit):</span></div>
+    <div class="eq">  df/dx ≈ [f(x−2h) − 8·f(x−h) + 8·f(x+h) − f(x+2h)] / (12h)</div>
+    <div class="eq"></div>
+    <div class="eq"><span class="hi">Adaptive Schrittweite:</span></div>
+    <div class="eq">  h = adaptiveH(x) = max(|x| · 1e-5, 1e-8)</div>
+    <div class="eq"><span class="cmt">  // Relativ zur Variablengröße — vermeidet Auslöschung</span></div>
+    <div class="eq"><span class="cmt">  // Bei x = 200000 Pa: h ≈ 2 Pa  (sinnvolle Schrittweite)</span></div>
+    <div class="eq"><span class="cmt">  // Bei x = 0.001:    h ≈ 1e-8   (absolute Untergrenze)</span></div>
+  </div>
+
+  <div class="note green">
+    <strong>Genauigkeit:</strong> Die 5-Punkte-Formel hat einen Fehler von O(h⁴) —
+    bei h=1e-5·x ist der Ableitungsfehler typisch unter 1e-10 relativ.
+    Das ist ausreichend für Newton-Konvergenz bis fsum ~ 1e-9.
+  </div>
+
+  <h3>Vergleich: symbolisch vs. numerisch</h3>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>Aspekt</th><th>Symbolisch (CASprzak)</th><th>Numerisch (BIfunctions)</th></tr></thead>
+    <tbody>
+      <tr><td>Genauigkeit</td><td>Exakt (Maschinengenauigkeit)</td><td>O(h⁴) ≈ 1e-15 relativ</td></tr>
+      <tr><td>Geschwindigkeit</td><td>Schnell (direkte Auswertung)</td><td>4 Funktionsauswertungen pro Ableitung</td></tr>
+      <tr><td>Anwendbar auf</td><td>Algebraische Ausdrücke</td><td>Beliebige stetige Funktionen</td></tr>
+      <tr><td>Verwendung in CMDSolver</td><td>Alle normalen Gleichungen</td><td>Nur CALL-Gleichungen (BIfunctions)</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<!-- Schallgeschwindigkeit -->
+<section id="schall">
+  <h2>Schallgeschwindigkeits-Funktionen</h2>
+
+  <p>
+    Die Schallgeschwindigkeit in Luft/Abgas hängt von Temperatur, Druck und
+    Gaszusammensetzung ab. CMDSolver verwendet JANAF-Polynome für die
+    thermodynamischen Eigenschaften als Basis.
+  </p>
+
+  <div class="math-block">
+    <div class="eq"><span class="hi">Schallgeschwindigkeit (allgemein):</span></div>
+    <div class="eq">  a = √(κ · R · T)</div>
+    <div class="eq"><span class="cmt">  // κ = cp/cv = Isentropenexponent</span></div>
+    <div class="eq"><span class="cmt">  // R = spezifische Gaskonstante [J/kgK]</span></div>
+    <div class="eq"><span class="cmt">  // T = Temperatur [K]</span></div>
+    <div class="eq"></div>
+    <div class="eq"><span class="hi">JANAF-basierte Berechnung:</span></div>
+    <div class="eq">  cp(T) = Σ aᵢ · Tⁱ   (Polynom in T)</div>
+    <div class="eq">  κ(T) = cp(T) / (cp(T) − R)</div>
+    <div class="eq">  a(T, p, Zusammensetzung) = √(κ · R · T)</div>
+  </div>
+
+  <div class="func-card">
+    <div class="func-sig">softdryJANAF(soft, temp, pt, fN2, fO2, fAr, fCO2, fNe, fHe, fCH4, fKr, fH2, fN2O, fXe)</div>
+    <div class="func-desc">
+      Schallgeschwindigkeit <strong>trockener Luft</strong> basierend auf JANAF-Thermodynamik.
+      Berücksichtigt die vollständige Gaszusammensetzung (N₂, O₂, Ar, CO₂, Ne, He, CH₄, Kr, H₂, N₂O, Xe).
+    </div>
+    <div class="func-args">
+      <div><dt>soft</dt><dd>Ausgabevariable: Schallgeschwindigkeit [m/s]</dd></div>
+      <div><dt>temp</dt><dd>Temperatur [K]</dd></div>
+      <div><dt>pt</dt><dd>Totaldruck [Pa]</dd></div>
+      <div><dt>fN2..fXe</dt><dd>Molenbrüche der Gaskomponenten [−]</dd></div>
+    </div>
+  </div>
+
+  <div class="func-card">
+    <div class="func-sig">softwetJANAF(..., fH2O)</div>
+    <div class="func-desc">
+      Schallgeschwindigkeit <strong>feuchter Luft</strong> — wie softdryJANAF
+      plus Wasseranteil fH2O. Relevant für Einlaufbedingungen mit Luftfeuchtigkeit.
+    </div>
+  </div>
+
+  <div class="func-card">
+    <div class="func-sig">softhotJANAF(..., fH2O)</div>
+    <div class="func-desc">
+      Schallgeschwindigkeit <strong>heißer Abgase</strong> (nach Verbrennung).
+      Verwendet separate JANAF-Koeffizienten für den Hochtemperaturbereich (T > 1000K).
+    </div>
+  </div>
+</section>
+
+<!-- Enthalpie und cp -->
+<section id="enthalpie">
+  <h2>Enthalpie- und cp-Funktionen</h2>
+
+  <h3>JANAF-Polynome</h3>
+  <p>
+    JANAF (Joint Army-Navy-Air Force) Thermochemische Tabellen liefern
+    Polynomkoeffizienten für thermodynamische Eigenschaften von Gasen in
+    Abhängigkeit von der Temperatur. CMDSolver verwendet diese für cp(T) und h(T).
+  </p>
+
+  <div class="math-block">
+    <div class="eq"><span class="hi">JANAF cp-Polynom:</span></div>
+    <div class="eq">  cp(T) = R · (a₁ + a₂·T + a₃·T² + a₄·T³ + a₅·T⁴)</div>
+    <div class="eq"></div>
+    <div class="eq"><span class="hi">JANAF Enthalpie:</span></div>
+    <div class="eq">  h(T) = R · (a₁·T + a₂·T²/2 + a₃·T³/3 + a₄·T⁴/4 + a₅·T⁵/5 + a₆)</div>
+    <div class="eq"><span class="cmt">  // a₆ = Integrationskonstante (Bildungsenthalpie)</span></div>
+    <div class="eq"></div>
+    <div class="eq"><span class="hi">Gemischung (mehrere Gaskomponenten):</span></div>
+    <div class="eq">  cp_mix(T) = Σᵢ fᵢ · cpᵢ(T)   (massengewichtetes Mittel)</div>
+  </div>
+
+  <div class="func-card">
+    <div class="func-sig">cpofTJANAF(cpoft, temp, fN2, fO2, fAr, fCO2, fNe, fHe, fCH4, fKr, fH2, fN2O, fXe, fH2O)</div>
+    <div class="func-desc">
+      Spezifische Wärmekapazität cp bei gegebener Temperatur und Gaszusammensetzung
+      (einschließlich Wasser). JANAF-Polynome, gültig für T = 200K bis 6000K.
+    </div>
+    <div class="func-args">
+      <div><dt>cpoft</dt><dd>Ausgabe: cp [J/kgK]</dd></div>
+      <div><dt>temp</dt><dd>Temperatur [K]</dd></div>
+      <div><dt>fN2..fH2O</dt><dd>Molenbrüche [−]</dd></div>
+    </div>
+  </div>
+
+  <div class="func-card">
+    <div class="func-sig">CpOfT(temp, wgr, far)</div>
+    <div class="func-desc">
+      cp für Triebwerksanwendungen — vereinfachtes Polynom mit Wassergehalt (wgr)
+      und Kraftstoff-Luft-Verhältnis (far). Schneller als vollständiges JANAF,
+      optimiert für den Temperaturbereich 200K–1500K.
+    </div>
+    <div class="func-args">
+      <div><dt>temp</dt><dd>Temperatur [K]</dd></div>
+      <div><dt>wgr</dt><dd>Water-Gas-Ratio [−]</dd></div>
+      <div><dt>far</dt><dd>Fuel-Air-Ratio [−]</dd></div>
+    </div>
+  </div>
+
+  <div class="func-card">
+    <div class="func-sig">CpOfTNOZ(temp, wgr, far)</div>
+    <div class="func-desc">
+      cp für Düsenanwendungen — separates Polynom optimiert für die Bedingungen
+      in Schubdüsen (hohe Temperaturen, Verbrennungsprodukte). Unterschiedliche
+      Polynomkoeffizienten oberhalb und unterhalb 1000K.
+    </div>
+  </div>
+
+  <div class="func-card">
+    <div class="func-sig">htofTJANAF(htoft, temp, fN2, fO2, ...)</div>
+    <div class="func-desc">
+      Spezifische Enthalpie h(T) für feuchte Luft/Abgasgemisch via JANAF-Integration.
+      Referenztemperatur: 0K (absolute Enthalpie).
+    </div>
+  </div>
+
+  <div class="func-card">
+    <div class="func-sig">htwetofT(htevap, temp, fH2O)</div>
+    <div class="func-desc">
+      Enthalpie feuchter Luft einschließlich Verdampfungsenthalpie des Wassers.
+      Berücksichtigt den Phasenübergang Wasser ↔ Wasserdampf.
+    </div>
+  </div>
+
+  <div class="func-card">
+    <div class="func-sig">htFuelofTJANAF(htoft, temp, tref, fC, fH)</div>
+    <div class="func-desc">
+      Kraftstoff-Enthalpie als Funktion von Temperatur, Referenztemperatur
+      und Kraftstoffzusammensetzung (Kohlenstoff- fC und Wasserstoffanteil fH).
+      Basiert auf JANAF-Daten für Kohlenwasserstoffe.
+    </div>
+  </div>
+
+  <div class="func-card">
+    <div class="func-sig">sevapofT(sevap, temp, fH2O)</div>
+    <div class="func-desc">
+      Sättigungsdampfdruck als Funktion von Temperatur und Wasseranteil.
+      Verwendet die Antoine-Gleichung für H₂O:
+    </div>
+    <div class="math-block" style="margin-top:.6rem">
+      <div class="eq">p_sat(T) = exp(A − B/(C + T))   [Antoine-Gleichung]</div>
+      <div class="eq"><span class="cmt">// Koeffizienten A, B, C aus NIST-Datenbank</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- Atmosphäre -->
+<section id="atmosphaere">
+  <h2>Atmosphärenmodell — ISA</h2>
+
+  <p>
+    Das International Standard Atmosphere (ISA) Modell beschreibt Temperatur
+    und Druck als Funktion der Höhe. CMDSolver implementiert das vollständige
+    ISA-Modell bis 80km Höhe mit 9 Schichten.
+  </p>
+
+  <div class="math-block">
+    <div class="eq"><span class="hi">ISA Temperaturprofil (schichtenweise):</span></div>
+    <div class="eq">  T(h) = Tⱼ + βⱼ · (h − hⱼ)   [K]</div>
+    <div class="eq"></div>
+    <div class="eq"><span class="hi">ISA Druckprofil:</span></div>
+    <div class="eq">  In Gradientschichten (βⱼ ≠ 0):</div>
+    <div class="eq">    p(h) = pⱼ · (T(h)/Tⱼ)^(−g/(R·βⱼ))</div>
+    <div class="eq">  In Isothermschichten (βⱼ = 0):</div>
+    <div class="eq">    p(h) = pⱼ · exp(−g·(h−hⱼ)/(R·Tⱼ))</div>
+    <div class="eq"></div>
+    <div class="eq"><span class="hi">ISA + ΔTISA (Temperaturabweichung vom Standard):</span></div>
+    <div class="eq">  T_eff(h) = T_ISA(h) + ΔTISA</div>
+  </div>
+
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>Schicht</th><th>Höhe [km]</th><th>β [K/km]</th><th>Bezeichnung</th></tr></thead>
+    <tbody>
+      <tr><td>0</td><td>0 – 11</td><td>−6.5</td><td>Troposphäre</td></tr>
+      <tr><td>1</td><td>11 – 20</td><td>0.0</td><td>Untere Stratosphäre (isotherm)</td></tr>
+      <tr><td>2</td><td>20 – 32</td><td>+1.0</td><td>Mittlere Stratosphäre</td></tr>
+      <tr><td>3</td><td>32 – 47</td><td>+2.8</td><td>Obere Stratosphäre</td></tr>
+      <tr><td>4</td><td>47 – 51</td><td>0.0</td><td>Stratopause (isotherm)</td></tr>
+      <tr><td>5</td><td>51 – 71</td><td>−2.8</td><td>Untere Mesosphäre</td></tr>
+      <tr><td>6</td><td>71 – 80</td><td>−2.0</td><td>Obere Mesosphäre</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="func-card">
+    <div class="func-sig">TsofAlt(tsofalt, altitude, dTISA)</div>
+    <div class="func-desc">
+      ISA-Temperatur als Funktion der Höhe. Berücksichtigt alle 9 ISA-Schichten.
+    </div>
+    <div class="func-args">
+      <div><dt>tsofalt</dt><dd>Ausgabe: Temperatur [K]</dd></div>
+      <div><dt>altitude</dt><dd>Flughöhe [m]</dd></div>
+      <div><dt>dTISA</dt><dd>Temperaturabweichung vom ISA-Standard [K] (0 = ISA-Standard)</dd></div>
+    </div>
+  </div>
+
+  <div class="func-card">
+    <div class="func-sig">psofAlt(psofalt, altitude, dTISA, rgas)</div>
+    <div class="func-desc">
+      ISA-Druck als Funktion der Höhe und Temperaturabweichung.
+      Verwendet die barometrische Höhenformel schichtenweise.
+    </div>
+    <div class="func-args">
+      <div><dt>psofalt</dt><dd>Ausgabe: Druck [Pa]</dd></div>
+      <div><dt>altitude</dt><dd>Flughöhe [m]</dd></div>
+      <div><dt>dTISA</dt><dd>Temperaturabweichung [K]</dd></div>
+      <div><dt>rgas</dt><dd>Spezifische Gaskonstante [J/kgK] (Luft: 287.058)</dd></div>
+    </div>
+  </div>
+
+  <div class="func-card">
+    <div class="func-sig">relHum(rh, altitude, dTISA)</div>
+    <div class="func-desc">
+      Relative Luftfeuchtigkeit als Funktion der Höhe — standardmäßiges
+      Atmosphärenprofil für Feuchtemodelle.
+    </div>
+  </div>
+</section>
+
+<!-- Strömung -->
+<section id="stroemung">
+  <h2>Strömungsmechanische Funktionen</h2>
+
+  <div class="func-card">
+    <div class="func-sig">MofCondiRatio(m, arat, kappa)</div>
+    <div class="func-desc">
+      Machzahl aus dem Flächenverhältnis A/A* (Kanaldivergenz-Verhältnis).
+      Löst die isentrope Durchflussgleichung numerisch.
+    </div>
+    <div class="math-block" style="margin-top:.6rem">
+      <div class="eq"><span class="hi">Isentrope Durchflussgleichung:</span></div>
+      <div class="eq">  A/A* = (1/Ma) · [(2/(κ+1)) · (1 + (κ−1)/2 · Ma²)]^((κ+1)/(2(κ−1)))</div>
+      <div class="eq"><span class="cmt">  // Wird nach Ma aufgelöst (numerisch, da transzendent)</span></div>
+    </div>
+    <div class="func-args">
+      <div><dt>m</dt><dd>Ausgabe: Machzahl [−]</dd></div>
+      <div><dt>arat</dt><dd>Flächenverhältnis A/A* [−]</dd></div>
+      <div><dt>kappa</dt><dd>Isentropenexponent κ = cp/cv [−]</dd></div>
+    </div>
+  </div>
+
+  <div class="note blue">
+    <strong>Bedeutung für Düsenmodelle:</strong> MofCondiRatio ist zentral für
+    alle konvergent-divergenten Düsenberechnungen (Laval-Düse). Das Flächenverhältnis
+    bestimmt eindeutig die Machzahl — bis auf die Zweideutigkeit subsonic/supersonic
+    die durch die Randbedingungen aufgelöst wird.
+  </div>
+</section>
+
+<!-- CAS-Verwendung -->
+<section id="verwendung">
+  <h2>CAS-Verwendung — PROCEDURE und CALL</h2>
+
+  <p>
+    Built-in Funktionen werden über das PROCEDURE/CALL-System eingebunden.
+    Jede Funktion braucht eine Prozedurendeklaration die den BIfunction-Namen
+    mit einer CAS-Prozedur verknüpft.
+  </p>
+
+  <div class="tbl-wrap">
+  <table>
+    <thead>
+      <tr><th>BIfunction</th><th>CALL: Name</th><th>Eingaben</th><th>Ausgabe</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>softdryJANAF</code></td><td><code>SOFTDRYJANAF</code></td>
+        <td>temp, pt, fN2, fO2, fAr, fCO2, fNe, fHe, fCH4, fKr, fH2, fN2O, fXe</td>
+        <td>Schallgeschwindigkeit [m/s]</td>
+      </tr>
+      <tr>
+        <td><code>softwetJANAF</code></td><td><code>SOFTWETJANAF</code></td>
+        <td>wie softdryJANAF + fH2O</td>
+        <td>Schallgeschwindigkeit [m/s]</td>
+      </tr>
+      <tr>
+        <td><code>cpofTJANAF</code></td><td><code>CPOFTJANAF</code></td>
+        <td>temp, fN2, fO2, fAr, fCO2, fNe, fHe, fCH4, fKr, fH2, fN2O, fXe, fH2O</td>
+        <td>cp [J/kgK]</td>
+      </tr>
+      <tr>
+        <td><code>CpOfT</code></td><td><code>CPOFT</code></td>
+        <td>temp, wgr, far</td>
+        <td>cp [J/kgK]</td>
+      </tr>
+      <tr>
+        <td><code>CpOfTNOZ</code></td><td><code>CPOFTNOZ</code></td>
+        <td>temp, wgr, far</td>
+        <td>cp Düse [J/kgK]</td>
+      </tr>
+      <tr>
+        <td><code>htofTJANAF</code></td><td><code>HTOFTJANAF</code></td>
+        <td>temp, fN2, fO2, fAr, fCO2, fNe, fHe, fCH4, fKr, fH2, fN2O, fXe, fH2O</td>
+        <td>h [J/kg]</td>
+      </tr>
+      <tr>
+        <td><code>htwetofT</code></td><td><code>HTWETOFT</code></td>
+        <td>temp, fH2O</td>
+        <td>h feucht [J/kg]</td>
+      </tr>
+      <tr>
+        <td><code>htFuelofTJANAF</code></td><td><code>HTFUELOFTJANAF</code></td>
+        <td>temp, tref, fC, fH</td>
+        <td>h Kraftstoff [J/kg]</td>
+      </tr>
+      <tr>
+        <td><code>MofCondiRatio</code></td><td><code>MOFCONDIRATIO</code></td>
+        <td>arat, kappa</td>
+        <td>Machzahl [−]</td>
+      </tr>
+      <tr>
+        <td><code>TsofAlt</code></td><td><code>TSOFALT</code></td>
+        <td>altitude, dTISA</td>
+        <td>T [K]</td>
+      </tr>
+      <tr>
+        <td><code>psofAlt</code></td><td><code>PSOFALT</code></td>
+        <td>altitude, dTISA, rgas</td>
+        <td>p [Pa]</td>
+      </tr>
+      <tr>
+        <td><code>sevapofT</code></td><td><code>SEVAPOFT</code></td>
+        <td>temp, fH2O</td>
+        <td>p_sat [Pa]</td>
+      </tr>
+      <tr>
+        <td><code>relHum</code></td><td><code>RELHUMFAR25</code></td>
+        <td>altitude, dTISA</td>
+        <td>rel. Feuchte [−]</td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Vollständiges Prozedurenbeispiel</h3>
+  <pre><span class="cmt">// Prozedurendeklaration am Dateianfang</span>
+<span class="kw">PROCEDURE</span> pSOFTWETJANAF
+<span class="kw">CALL:</span>    SOFTWETJANAF;
+<span class="kw">INPUTS:</span>  REAL, REAL, REAL, REAL, REAL, REAL, REAL, REAL, REAL, REAL, REAL, REAL, REAL, REAL, REAL;
+<span class="kw">OUTPUTS:</span> REAL;
+<span class="kw">END</span>
+
+<span class="cmt">// Verwendung in Gleichung</span>
+<span class="kw">CALL</span>(PARTM.F060.SOFT) = pSOFTWETJANAF(
+    PARTM.F060.TT, PARTM.F060.PT,
+    AMB.FN2, AMB.FO2, AMB.FAR, AMB.FCO2,
+    AMB.FNE, AMB.FHE, AMB.FCH4, AMB.FKR,
+    AMB.FH2, AMB.FN2O, AMB.FXE,
+    AMB.FH2O, AMB.FH2O
+);</pre>
+
+  <div class="note amber">
+    <strong>Hinweis zur Ableitungsqualität:</strong> Da Built-in Funktionen
+    numerisch differenziert werden, können an Unstetigkeitsstellen (z.B.
+    ISA-Schichtgrenzen, Phasenübergänge) Ableitungsfehler auftreten.
+    Der Newton-Solver kann dort Konvergenzprobleme zeigen — in diesem Fall
+    Levenberg-Marquardt oder Homotopie verwenden.
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <span>CMDSolver Docs · BIfunctions Referenz · v2.5</span>
+  <span>
+    <a href="parser_syntax.html">← Parser Syntax</a> &nbsp;|&nbsp;
+    <a href="index.html">← Übersicht</a>
+  </span>
+</footer>
+</body>
+</html>
