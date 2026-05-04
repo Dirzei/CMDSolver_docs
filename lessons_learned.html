@@ -4,9 +4,262 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>CMDSolver Docs — Lessons Learned</title>
-<link rel="stylesheet" href="docs.css">
 <style>
-  .lesson {
+/* CMDSolver Documentation — Shared Stylesheet */
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;1,400&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap');
+
+:root {
+  --bg:      #0d0f12;
+  --bg2:     #13161b;
+  --bg3:     #1a1e25;
+  --bg4:     #20252f;
+  --border:  #252a33;
+  --border2: #2e3540;
+  --text:    #c8cdd6;
+  --text2:   #7a8496;
+  --text3:   #4a5568;
+  --accent:  #4a9eff;
+  --ok:      #3ecf8e;
+  --warn:    #f0a030;
+  --err:     #ff5c5c;
+  --purple:  #a78bfa;
+  --teal:    #2dd4bf;
+  --mono:    'IBM Plex Mono', monospace;
+  --sans:    'IBM Plex Sans', sans-serif;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: var(--sans);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 13.5px;
+  line-height: 1.75;
+}
+
+/* ── Header ── */
+.doc-header {
+  border-bottom: 1px solid var(--border);
+  padding: 1.2rem 3rem;
+  display: flex; align-items: center;
+  justify-content: space-between; flex-wrap: wrap; gap: 1rem;
+}
+
+.breadcrumb {
+  font-family: var(--mono); font-size: 11px; color: var(--text3);
+  letter-spacing: .08em; text-transform: uppercase;
+  display: flex; align-items: center; gap: .5rem;
+}
+.breadcrumb a { color: var(--accent); text-decoration: none; }
+.breadcrumb span { color: var(--text3); }
+
+.doc-badge {
+  font-family: var(--mono); font-size: 11px;
+  padding: 3px 10px; border-radius: 4px;
+}
+.doc-badge.solver {
+  background: rgba(74,158,255,.1); border: 1px solid rgba(74,158,255,.25);
+  color: var(--accent);
+}
+.doc-badge.overview {
+  background: rgba(167,139,250,.1); border: 1px solid rgba(167,139,250,.25);
+  color: var(--purple);
+}
+.doc-badge.comparison {
+  background: rgba(62,207,142,.1); border: 1px solid rgba(62,207,142,.25);
+  color: var(--ok);
+}
+
+/* ── Hero ── */
+.hero {
+  padding: 2.5rem 3rem 2rem;
+  border-bottom: 1px solid var(--border);
+  background: linear-gradient(135deg, var(--bg) 0%, #0f1520 100%);
+}
+.hero-sub {
+  font-family: var(--mono); font-size: 11px; color: var(--text3);
+  letter-spacing: .15em; text-transform: uppercase; margin-bottom: .5rem;
+}
+h1 {
+  font-size: 28px; font-weight: 600; color: #e8ecf4;
+  letter-spacing: -.03em; margin-bottom: .5rem; line-height: 1.2;
+}
+.tagline {
+  font-size: 14px; color: var(--text2); margin-bottom: 1.5rem;
+  max-width: 680px;
+}
+.hero-stats { display: flex; gap: 2rem; flex-wrap: wrap; }
+.stat { display: flex; flex-direction: column; gap: .2rem; }
+.stat-val {
+  font-family: var(--mono); font-size: 18px; font-weight: 500; color: var(--ok);
+}
+.stat-lbl {
+  font-size: 11px; color: var(--text3);
+  text-transform: uppercase; letter-spacing: .08em;
+}
+
+/* ── Nav ── */
+nav {
+  position: sticky; top: 0; z-index: 10;
+  background: rgba(13,15,18,.95); backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--border);
+  padding: .6rem 3rem;
+  display: flex; gap: 1.5rem; flex-wrap: wrap;
+}
+nav a {
+  font-family: var(--mono); font-size: 11px; color: var(--text3);
+  text-decoration: none; letter-spacing: .08em;
+  text-transform: uppercase; transition: color .15s;
+}
+nav a:hover { color: var(--accent); }
+
+/* ── Main ── */
+main { padding: 2rem 3rem 4rem; max-width: 1040px; }
+
+section { margin-bottom: 3.5rem; scroll-margin-top: 3rem; }
+
+section > h2 {
+  font-size: 12px; font-family: var(--mono);
+  letter-spacing: .12em; text-transform: uppercase;
+  color: var(--text3); margin-bottom: 1.4rem;
+  padding-bottom: .5rem; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: .6rem;
+}
+section > h2::before {
+  content: ''; display: inline-block;
+  width: 8px; height: 8px; border-radius: 50%; background: var(--accent);
+}
+
+h3 { font-size: 14px; font-weight: 500; color: #e8ecf4; margin: 1.6rem 0 .6rem; }
+h4 { font-size: 13px; font-weight: 500; color: var(--text2); margin: 1.2rem 0 .4rem; }
+
+p { color: var(--text); margin-bottom: .9rem; max-width: 780px; }
+
+/* ── Math ── */
+.math-block {
+  background: var(--bg3); border: 1px solid var(--border);
+  border-left: 3px solid var(--purple);
+  border-radius: 6px; padding: 1.2rem 1.5rem;
+  margin: 1rem 0 1.2rem; font-family: var(--mono);
+  font-size: 13px; line-height: 2.1; white-space: pre;
+}
+.math-block .eq  { color: #e8ecf4; }
+.math-block .cmt { color: var(--text3); font-style: italic; }
+.math-block .hi  { color: var(--teal); }
+.math-block .hi2 { color: var(--warn); }
+
+/* ── Notes ── */
+.note {
+  border-radius: 6px; padding: .85rem 1.1rem;
+  font-size: 13px; line-height: 1.7; margin-bottom: 1.2rem;
+}
+.note.blue   { background: rgba(74,158,255,.06);  border-left: 3px solid var(--accent); }
+.note.green  { background: rgba(62,207,142,.06);  border-left: 3px solid var(--ok); }
+.note.amber  { background: rgba(240,160,48,.06);  border-left: 3px solid var(--warn); }
+.note.red    { background: rgba(255,92,92,.06);   border-left: 3px solid var(--err); }
+.note.purple { background: rgba(167,139,250,.06); border-left: 3px solid var(--purple); }
+.note strong { color: #e8ecf4; }
+
+/* ── Code ── */
+code {
+  font-family: var(--mono); font-size: 11.5px;
+  background: rgba(255,255,255,.05); padding: 1px 5px;
+  border-radius: 3px; color: #a8c8f0;
+}
+pre {
+  font-family: var(--mono); font-size: 12px;
+  background: var(--bg3); border: 1px solid var(--border);
+  border-radius: 8px; padding: 1rem 1.2rem;
+  overflow-x: auto; line-height: 1.7; margin-bottom: 1rem; color: #c8cdd6;
+}
+.kw  { color: var(--purple); }
+.cmt { color: var(--text3); font-style: italic; }
+.fn  { color: var(--teal); }
+.num { color: var(--warn); }
+.str { color: var(--ok); }
+
+/* ── Tables ── */
+.tbl-wrap {
+  overflow-x: auto; border-radius: 8px;
+  border: 1px solid var(--border); margin-bottom: 1.5rem;
+}
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+thead th {
+  background: var(--bg3); padding: 9px 14px; text-align: left;
+  font-weight: 500; font-size: 11px; letter-spacing: .06em;
+  text-transform: uppercase; color: var(--text2);
+  border-bottom: 1px solid var(--border2); white-space: nowrap;
+}
+tbody tr { border-bottom: 1px solid var(--border); transition: background .1s; }
+tbody tr:last-child { border-bottom: none; }
+tbody tr:hover { background: var(--bg3); }
+td { padding: 9px 14px; vertical-align: top; line-height: 1.6; }
+td.center { text-align: center; }
+
+/* ── Badges ── */
+.badge {
+  display: inline-block; font-size: 11px; padding: 2px 9px;
+  border-radius: 12px; font-family: var(--mono); white-space: nowrap;
+}
+.b-ok   { background: rgba(62,207,142,.1);  color: var(--ok);     border: 1px solid rgba(62,207,142,.25); }
+.b-warn { background: rgba(240,160,48,.1);  color: var(--warn);   border: 1px solid rgba(240,160,48,.25); }
+.b-err  { background: rgba(255,92,92,.1);   color: var(--err);    border: 1px solid rgba(255,92,92,.25); }
+.b-info { background: rgba(74,158,255,.1);  color: var(--accent); border: 1px solid rgba(74,158,255,.25); }
+.b-na   { background: rgba(74,84,96,.1);    color: var(--text3);  border: 1px solid var(--border2); }
+
+/* ── Star rating ── */
+.stars { color: var(--warn); letter-spacing: -.05em; }
+.stars.dim { color: var(--border2); }
+
+/* ── File list ── */
+.file-list { list-style: none; }
+.file-list li {
+  display: flex; gap: 1rem; align-items: flex-start;
+  padding: .7rem 1rem; background: var(--bg2);
+  border: 1px solid var(--border); border-radius: 4px; margin-bottom: .4rem;
+}
+.file-icon {
+  font-family: var(--mono); font-size: 11px; color: var(--accent);
+  white-space: nowrap; margin-top: 2px; min-width: 50px;
+}
+.file-desc { font-size: 13px; color: var(--text2); }
+.file-desc strong { color: var(--text); display: block; margin-bottom: .2rem; }
+
+/* ── Flowchart ── */
+.flowchart {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 10px; padding: 1.5rem; margin: 1rem 0 1.5rem;
+  overflow-x: auto;
+}
+
+/* ── Footer ── */
+footer {
+  border-top: 1px solid var(--border); padding: 1.5rem 3rem;
+  font-family: var(--mono); font-size: 11px; color: var(--text3);
+  display: flex; justify-content: space-between; flex-wrap: wrap; gap: .5rem;
+}
+footer a { color: var(--accent); text-decoration: none; }
+
+/* ── Footnotes ── */
+.footnotes {
+  margin-top: 2rem; padding-top: 1.5rem;
+  border-top: 1px solid var(--border);
+  font-size: 12px; color: var(--text2);
+}
+.footnotes p { max-width: none; margin-bottom: .5rem; }
+sup { font-size: 10px; color: var(--accent); }
+
+/* Default: alle Sprachelemente sichtbar (kein JS-Flash) */
+/* Mit lang-Klasse auf body: nur die aktive Sprache sichtbar */
+
+/* Nur wenn body eine Sprachklasse hat, werden Elemente ausgeblendet */
+/* Sprach-Sichtbarkeit via class auf body */
+
+
+/* ── Seitenspezifische Klassen ────────────────────────
+   (aus alter lessons_learned.html wiederhergestellt) */
+.lesson {
     background: var(--bg2); border: 1px solid var(--border);
     border-radius: 8px; padding: 1.3rem 1.5rem; margin-bottom: 1.2rem;
   }
@@ -47,26 +300,75 @@
     color: var(--text3); padding: 2px 7px;
     border: 1px solid var(--border2); border-radius: 3px;
   }
+
+/* ── Lesson-Badge (kleiner Indikator, z.B. NEU) ── */
+.lesson-badge {
+  display: inline-block; font-family: var(--mono); font-size: 10px;
+  padding: 1px 7px; border-radius: 10px; letter-spacing: .05em;
+  text-transform: uppercase; vertical-align: middle; margin-left: .4rem;
+}
+.lesson-badge.new {
+  background: rgba(62,207,142,.15); color: var(--ok);
+  border: 1px solid rgba(62,207,142,.3);
+}
 </style>
+<link rel="stylesheet" href="i18n.css">
 </head>
 <body>
+<script>
+(function(){
+  var stored = '';
+  try { stored = localStorage.getItem('cmdlang') || ''; } catch(e){}
+  var lang = stored || 'de';
 
+  function apply(l) {
+    lang = l;
+    try { localStorage.setItem('cmdlang', l); } catch(e){}
+    document.documentElement.lang = l;
+    var body = document.body;
+    body.classList.remove('lang-de','lang-en');
+    body.classList.add('lang-' + l);
+    document.querySelectorAll('.lang-btn').forEach(function(b){
+      b.classList.toggle('active', b.dataset.lang === l);
+    });
+  }
+
+  // Body-Klasse sofort setzen, damit data-lang-Elemente direkt korrekt
+  // sichtbar sind (kein Flash mit unsichtbarem Header-Inhalt).
+  apply(lang);
+  document.addEventListener('DOMContentLoaded', function(){
+    apply(lang); // erneut, damit jetzt auch die Buttons gestyled werden
+    document.querySelectorAll('.lang-btn').forEach(function(b){
+      b.addEventListener('click', function(){ apply(b.dataset.lang); });
+    });
+    // Sticky-Header Schatten via IntersectionObserver
+    var sentinel = document.querySelector('.header-sentinel');
+    var header   = document.querySelector('.doc-header');
+    if (sentinel && header && 'IntersectionObserver' in window) {
+      new IntersectionObserver(function(entries){
+        header.classList.toggle('scrolled', !entries[0].isIntersecting);
+      }).observe(sentinel);
+    }
+  });
+})();
+</script>
+
+
+
+
+<div class="header-sentinel"></div>
 <div class="doc-header">
   <div class="breadcrumb">
     <a href="index.html">CMDSolver Docs</a>
-    <span>›</span><span>Lessons Learned</span>
+    ›
   </div>
-  <span class="doc-badge overview">Kapitel 7</span>
-</div>
+  <div class="doc-header-right"><div class="lang-switch"><button class="lang-btn" data-lang="de">DE</button><button class="lang-btn" data-lang="en">EN</button></div><span class="doc-badge overview">Kapitel 7</span></div></div>
 
 <div class="hero">
-  <div class="hero-sub">Kapitel 7</div>
-  <h1>Lessons Learned</h1>
-  <p class="tagline">
-    Engineering-Erkenntnisse aus der Entwicklung von CMDSolver — gesammelt über
-    alle Versionen von der monolithischen Ursprungsversion bis v2.5.
-    Kategorisiert nach Architektur, Algorithmen, Refactoring, Debugging und Werkzeuge.
-  </p>
+  <div class="hero-sub"><span data-lang="de">Lektionen</span><span data-lang="en">Lessons</span></div>
+  <h1 data-lang="de">Lessons Learned</h1><h1 data-lang="en">Lessons Learned</h1>
+  <p class="tagline" data-lang="de">Engineering-Erkenntnisse aus der Entwicklung von CMDSolver — gesammelt über alle Versionen von der monolithischen Ursprungsversion bis v2.5. Kategorisiert nach Architektur, Algorithmen, Refactoring, Debugging und Werkzeuge.</p>
+  <p class="tagline" data-lang="en">Engineering insights from developing CMDSolver — gathered across all versions from the monolithic original through v2.5. Categorized by architecture, algorithms, refactoring, debugging, and tooling.</p>
   <div class="hero-stats">
     <div class="stat"><span class="stat-val">18</span><span class="stat-lbl">Erkenntnisse</span></div>
     <div class="stat"><span class="stat-val">v1→v2.5</span><span class="stat-lbl">Zeitraum</span></div>
@@ -253,6 +555,144 @@
       und liefert ausreichende Genauigkeit für Newton-Konvergenz bis fsum ~ 10⁻⁹.</p>
     </div>
     <div class="lesson-key">CAS-basierte Differentiation ist exzellent für algebraische Gleichungen. Für komplexe Built-in Funktionen sorgfältig implementierte numerische Ableitungen ergänzen.</div>
+  </div>
+
+  <div class="lesson cat-algo">
+    <div class="lesson-num">
+      <span class="cat-badge cat-algo">Algorithmus</span>
+      <span class="era-badge">v2.12</span>
+      LL-21
+    </div>
+    <div class="lesson-title">LM Normalengleichung quadriert kappa — Newton-Direkt-Hybrid ist die Lösung</div>
+    <div class="lesson-body">
+      <p>Klassische LM-Implementierungen lösen <code>(JᵀJ + μ·D)·dx = -Jᵀ·f</code>
+      via Matrix-Inversion. Mathematisch äquivalent zu <code>dx = -J⁻¹·f</code> bei
+      μ=0, aber numerisch deutlich schlechter: <code>kappa(JᵀJ) = kappa(J)²</code>.
+      Auf NozzleSystem (kappa(J̃)=4 mit Equilibrator) ist das harmlos im
+      mathematischen Sinn, aber bei n=303 Variablen + double-Rundung produzieren
+      die zwei Pfade signifikant unterschiedliche dx.</p>
+      <p>Konkret beobachtet: Newton ||dx||₁ = 1.21e+08, LM (Normalengleichung)
+      ||dx||₁ = 7.00e+08 — Faktor 6 trotz fast identischer ersten Komponenten.
+      Lösung in v2.12 (LM v3b): bei kleinem μ (Levenberg-Form mit Equilibrator:
+      μ &lt; 10⁻⁴; Marquardt-Form: μ &lt; 10⁻⁶) wird direkt
+      <code>dx = -J⁻¹·f</code> wie Newton gelöst. Erst bei größerem μ greift
+      die klassische Normalengleichung mit Regularisierung (dort hilft die
+      μ-Regularisierung bei der Konditionierung).</p>
+      <p>Resultat: NozzleSystem konvergiert mit
+      <code>-S:LEVENBERG_MARQUARDT -SC:EQUILIBRATE</code> in 5 Iter, identisch
+      zu Newton-Armijo.</p>
+    </div>
+    <div class="lesson-key">Bei dichten Systemen mit moderater bis schlechter Konditionierung ist direkte J⁻¹-Inversion numerisch deutlich stabiler als Normalengleichung. LM nutzt sie nur dort wo sie wirklich gebraucht wird (μ groß).</div>
+  </div>
+
+  <div class="lesson cat-algo">
+    <div class="lesson-num">
+      <span class="cat-badge cat-algo">Algorithmus</span>
+      <span class="era-badge">v2.12</span>
+      LL-22
+    </div>
+    <div class="lesson-title">LM strukturell wie Newton-Armijo — computeStep nur LGS, armijoStep für Liniensuche</div>
+    <div class="lesson-body">
+      <p>Frühe LM-Iterationen versuchten alles in <code>computeStep</code>
+      zu erledigen: LGS-Lösung + Probepunkt-Auswertung + ρ-Akzeptanz +
+      μ-Adaption. Folge: gemischte Räume (skaliert vs. physikalisch),
+      unklare Norm-Konsistenz, kein Backstop bei pathologischen Schritten.</p>
+      <p>v2.12-Architektur folgt dem Newton-Armijo-Muster strikt:</p>
+      <ul>
+        <li><code>computeStep</code> macht NUR das LGS — gibt
+          <code>dx_skaliert</code> zurück</li>
+        <li>AbstractSolver transformiert <code>dxOrig = unscaleStep(dx)</code></li>
+        <li><code>armijoStep</code> macht Liniensuche im physischen Raum
+          mit <code>weightedNormSq</code>-Akzeptanz (= ‖R·F‖² bei equil)</li>
+        <li>μ-Adaption gekoppelt an Armijo-α: α=αInit → μ /= νDown,
+          α &lt; αMin → μ *= νUp²</li>
+      </ul>
+      <p>Diese Trennung verhindert Räume-Bugs und nutzt die bewährte
+      Akzeptanz-Logik die Newton-Armijo schon richtig hat.</p>
+    </div>
+    <div class="lesson-key">Bei mathematischer Konvergenz-Pathologie immer von Newton-Armijo ausgehen — die Räume-Behandlung ist dort schon korrekt. computeStep/armijoStep-Trennung ist die Architektur-Lösung.</div>
+  </div>
+
+  <div class="lesson cat-algo">
+    <div class="lesson-num">
+      <span class="cat-badge cat-algo">Algorithmus</span>
+      <span class="era-badge">v2.12</span>
+      LL-23
+    </div>
+    <div class="lesson-title">Continuation auf engen Bounds + schlechter Kondition divergiert — auch mit Newton als Korrektor</div>
+    <div class="lesson-body">
+      <p>ADAPTIVE_LAMBDA Phase 2 (λ-Continuation) divergiert auf NozzleSystem
+      auch wenn der innere Newton-Solver auf dem reinen F-System konvergieren
+      würde. Diagnose: das Sub-System
+      <code>F_λ(x) = (1-λ)·J₀·(x-x₀) + λ·F(x) = 0</code> hat eine
+      konzeptionelle Schwäche: der lineare Anteil <code>J₀·(x-x₀)</code> wächst
+      <em>linear</em> mit |x-x₀|. Bei großen Newton-Schritten dominiert er
+      F(x) und treibt Variablen weit aus den zulässigen Bounds.</p>
+      <p>Konkret beobachtet: bei λ=0.5 startet der innere Solver mit
+      ||F||=9·10⁷ (größer als das Original-||F(x₀)||=1.35·10⁷!) — schon
+      durch den linearen Term. Bounds-Verletzungen wie
+      <code>FULLM.F080.PS = -2.02e+06</code> (Lower=1000) zeigen dass
+      Newton's Schritt physikalisch unmöglich groß ist. Bounds-Projection
+      "rettet" die Werte, aber dadurch ist xCurrent an Bounds geclamped
+      und Newton verliert die Konvergenz-Information.</p>
+      <p>Lösung wäre eine skalen-bewusste H_λ-Definition oder Bounds-Vorhersage
+      vor dem inneren Solver-Aufruf. Beides nicht implementiert weil kein
+      pathologisches Modell zur Validierung verfügbar ist.</p>
+    </div>
+    <div class="lesson-key">Continuation hilft nicht automatisch wenn das Sub-Problem schlechter konditioniert ist als das Original. Ein guter äußerer Algorithmus über einem schlechten Sub-Problem konvergiert nicht.</div>
+  </div>
+
+  <div class="lesson cat-algo">
+    <div class="lesson-num">
+      <span class="cat-badge cat-algo">Algorithmus</span>
+      <span class="era-badge">v2.12</span>
+      LL-24
+    </div>
+    <div class="lesson-title">Bogen-Längen-Continuation: Initial-Tangente bei schlechter J₀ unbrauchbar</div>
+    <div class="lesson-body">
+      <p>ARC_LENGTH-Solver implementiert mathematisch saubere Bogen-Längen-
+      Verfolgung im erweiterten Zustand y=(x,t). Initial-Tangente am
+      Startpunkt ist <code>ẋ = -J₀⁻¹·F(x₀)</code> mit ṫ=1. Bei NozzleSystem
+      mit kappa(J₀)=5×10¹¹ und ‖F(x₀)‖=1.35×10⁷ hat <code>J₀⁻¹·F</code>
+      extrem große Komponenten.</p>
+      <p>Nach Normierung <code>‖w∘ẏ‖=1</code> dominiert ẋ den gesamten
+      Tangenten-Vektor: ‖ẋ‖_max=5.33×10⁴, ṫ=2.67×10⁻⁷. Predictor
+      <code>y + ds·tangent</code> mit ds=0.1 bewegt sich daher fast
+      ausschließlich in x-Richtung — t bleibt bei 0. Bounds-Projection
+      clampt viele x-Komponenten an ihre Grenzen, danach ist die
+      Bogen-Constraint <code>‖w∘(y-y_prev)‖² = ds²</code> nicht mehr
+      erfüllbar.</p>
+      <p>Bogen-Längen-Verfolgung funktioniert mathematisch korrekt,
+      aber benötigt entweder eine bessere Tangenten-Skalierung (mit
+      erzwungenem ṫ-Mindestbetrag) oder ein gut konditioniertes
+      Initial-System. Auf NozzleSystem ohne weitere Anpassungen nicht
+      produktiv.</p>
+    </div>
+    <div class="lesson-key">Mathematische Korrektheit allein garantiert keine numerische Konvergenz. Bei Continuation-Methoden sind die Skalen am Startpunkt entscheidend.</div>
+  </div>
+
+  <div class="lesson cat-algo">
+    <div class="lesson-num">
+      <span class="cat-badge cat-algo">Algorithmus</span>
+      <span class="era-badge">v2.12</span>
+      LL-25
+    </div>
+    <div class="lesson-title">Modell-Bounds entscheiden über Solver-Konvergenz — "GAMMA &gt; 1.0" ist ein Modell-Problem</div>
+    <div class="lesson-body">
+      <p>Newton-Armijo direkt auf NozzleSystem ohne Skalierung scheiterte
+      lange Zeit reproduzierbar bei Iter 39 mit NaN. Diagnose:
+      <code>PARTM.F066.GAMMA</code> wurde durch Newton-Schritt auf 0.869
+      getrieben, von PhysicalProjector auf Lower=1.0 geclamped. Nachfolgende
+      Auswertung von <code>1/(GAMMA-1)</code> divergiert.</p>
+      <p>Lösung: Lower-Bound von γ auf 1.05 setzen (physikalisch realistisch
+      — kein Gas hat γ &lt; 1.05). Sofortiger Effekt: Newton-Armijo
+      konvergiert auch ohne Equilibrator in 6 Iter. Alle Solver
+      (Newton, LM, Broyden) funktionieren plötzlich auf dem Modell.</p>
+      <p>Erkenntnis: viele "Solver konvergiert nicht"-Probleme sind in
+      Wirklichkeit Modell-Probleme. Bevor man am Solver feilt: Bounds prüfen,
+      Singularitäten im Modell suchen.</p>
+    </div>
+    <div class="lesson-key">Solver-Bugs und Modell-Bugs sehen oft gleich aus. Bei NaN-Konvergenzfehler immer zuerst die Modell-Bounds prüfen — eine Variable die an einer Bound mathematisch singulär wird, kostet Wochen Solver-Tuning.</div>
   </div>
 </section>
 
@@ -461,31 +901,74 @@
       <span class="lesson-badge new">NEU</span>
       LL-19
     </div>
-    <div class="lesson-title">Jacobi-Skalierung erfordert Raum-Konsistenz durch den gesamten Solve-Loop</div>
+    <div class="lesson-title">Bei Jacobi-Skalierung sind Konvergenz-Kriterium und Schritt-Berechnung gekoppelt</div>
     <div class="lesson-body">
-      <p>In v2.11 wurde der <strong>JacobiEquilibrator</strong> (Sinkhorn-Knopp) implementiert
-      der κ von 4.64e+11 auf <strong>4.0</strong> reduziert — mathematisch optimal.
-      Trotzdem konvergiert der Solver nicht weil der Algorithmus in <strong>4 verschiedenen Räumen</strong>
-      arbeitet die nicht konsistent skaliert sind:</p>
-      <ol style="color:var(--text2);font-size:13px;line-height:2;padding-left:1.2rem">
-        <li>Originalraum x (Pa, K, kg/s) — für values-Map, BIfunctions, PhysicalProjector</li>
-        <li>Jacobi-Raum J — gemischte Einheiten vor Equilibrierung</li>
-        <li>Equilibrierter Raum J̃ = R·J·C — für lineares System</li>
-        <li>Schrittvektor-Raum dx̃ — nach GSPAR-Lösung</li>
-      </ol>
-      <p>Das Problem: <strong>Armijo-Backtracking</strong> prüft Konvergenz mit
-      dem originalen f im Originalraum, aber der Schritt dx wurde im equilibrierten
-      Raum berechnet. Die Größenordnungen passen nicht — Armijo reduziert alpha
-      auf 6e-05 oder der Schritt macht kaum Fortschritt.</p>
-      <p>Für eine korrekte Implementierung müssen <strong>alle</strong> Komponenten
-      im selben Raum arbeiten: Armijo braucht F̃(x̃), evaluateF braucht ein
-      Transformer-Pattern das BIfunctions transparent mit Originalwerten versorgt.</p>
+      <p>Im Vorfeld von v2.12 wurde der <strong>JacobiEquilibrator</strong> (Sinkhorn-Knopp)
+      implementiert, der κ von 4.64e+11 auf ~4 reduzieren kann — mathematisch optimal.
+      Erste Integrationsversuche scheiterten und die Diagnose ergab den scheinbaren
+      "Raum-Konflikt": der Algorithmus arbeitet nominal in vier Räumen
+      (Originalraum, Jacobi-Raum, equilibrierter Raum R·J·C, Schrittvektor-Raum dx̃).
+      Die intuitive Hypothese war, dass alle Komponenten — auch <code>evaluateF</code>
+      — in den skalierten Raum müssten.</p>
+
+      <p>Diese Hypothese war <em>falsch</em>. Der equilibrierte Newton-Schritt
+      <code>dx_orig = C·dx̃</code> ist algebraisch identisch mit <code>J⁻¹·f</code>;
+      die <code>values</code>-Map und BIfunctions können getrost im Originalraum
+      bleiben. Das eigentliche Problem war ein einziger gekoppelter Punkt:
+      <strong>Armijo prüft eine Merit-Funktion, der Newton-Schritt minimiert eine
+      andere</strong>. Bei mischeinheiten-bedingt skalierter Jacobi ist der Schritt
+      descent für <code>½‖R·F‖²</code>, aber nicht zwangsläufig für die
+      Pa-dominierte Norm <code>½‖F‖²</code>. Armijo reduziert α dramatisch, der
+      Solver scheint zu stagnieren.</p>
+
+      <p>Lösung in v2.12: drei kleine Helper-Methoden in AbstractSolver
+      (<code>weightedAbsSum</code>, <code>weightedNormSq</code>, <code>weightedDot</code>),
+      die bei aktivem Equilibrator die Norm gewichten — mehr nicht. Bei inaktivem
+      Equilibrator sind sie bit-exakt identisch zu den ungewichteten Pendants,
+      v2.11-Verhalten bei <code>NONE</code>-Skalierung bleibt unverändert.</p>
     </div>
-    <div class="lesson-key">Skalierung in iterativen Lösern ist nicht nur eine Jacobi-Transformation.
-    Sie betrifft den gesamten Loop: Residuenauswertung, Liniensuche, Konvergenzkritierum und
-    Schritt-Rücktransformation müssen alle konsistent im selben skalierten Raum arbeiten.
-    JacobiEquilibrator ist korrekt implementiert — die Integration in AbstractSolver erfordert
-    ein vollständiges Redesign des Solve-Loops.</div>
+    <div class="lesson-key">Bevor man eine Architektur umbauen will, prüfen ob das
+    eigentliche Problem nicht woanders liegt. "Vier inkonsistente Räume" klang
+    nach fundamentalem Strukturfehler — war aber in Wirklichkeit nur ein
+    falsch gewählter Merit-Funktion-Term in einer einzigen Methode. Diagnose
+    weiter treiben bevor man Strukturmaßnahmen ergreift.</div>
+  </div>
+
+  <div class="lesson cat-algo">
+    <div class="lesson-num">
+      <span class="lesson-badge new">NEU</span>
+      LL-20
+    </div>
+    <div class="lesson-title">Wenn ein Feature scheinbar funktioniert aber nichts bewirkt, ist es vermutlich heimlich deaktiviert</div>
+    <div class="lesson-body">
+      <p>Die Skalierungs-Optionen <code>DIAGONAL</code> und <code>UNIT_INTERVAL</code>
+      existierten in v2.5 bis v2.11, wurden aber nie produktiv eingesetzt
+      weil Tests damit nicht konvergierten. Die Vermutung war, dass die
+      Skalierung als Konzept ungeeignet sei. Bei der R-01-Aufarbeitung kam
+      heraus: die Skalierung selbst war korrekt, aber die Inline-Armijo-Routinen
+      in vier von fünf damping-fähigen Solvern haben Probe-Schritte im skalierten
+      Raum auf physikalische Werte addiert:</p>
+      <pre style="font-family:var(--mono);font-size:12px;background:var(--bg3);padding:.7rem 1rem;border-radius:6px;line-height:1.7">
+xTry[i] = values[i] + α · dx[i]
+          ↑                ↑
+   Originalraum (Pa)   skalierter Raum (Pa·1e-5)</pre>
+      <p>Bei einer Pa-Variable mit Skalenfaktor 1e+5 war der Probe-Schritt
+      fünf Größenordnungen zu klein — F(xTry) ≈ F(values), Armijo akzeptierte
+      α=1 sofort, der Solver lief faktisch ungedämpft. Bei mild-nichtlinearen
+      Systemen konvergierte das, bei harten Systemen (NozzleSystem, κ=4.6e+11)
+      divergierte es. Das hat über mehrere Versionen die Diagnose verschleiert,
+      weil "Armijo akzeptiert α=1" wie korrektes Verhalten aussah.</p>
+      <p>Mit dem Refactor in v2.12 wurde Armijo aus den vier
+      <code>computeStep</code>-Methoden in den <code>armijoStep</code>-Hook
+      verlagert; Probe-Schritte laufen seitdem konsistent mit <code>dxOrig</code>
+      im Originalraum.</p>
+    </div>
+    <div class="lesson-key">Wenn eine Option seit Jahren existiert aber nie
+    erfolgreich eingesetzt wurde, sollte das ein Warnsignal sein. Logging der
+    α-Werte hätte den Bug früher sichtbar gemacht — bei DIAGONAL+harten
+    Systemen <em>immer</em> α=1 ist verdächtig. Künftig: für jedes
+    "ist-konfigurierbar"-Feature einen Smoke-Test schreiben der prüft ob es
+    auch tatsächlich Wirkung zeigt.</div>
   </div>
 
 </section>
@@ -493,7 +976,7 @@
 </main>
 
 <footer>
-  <span>CMDSolver Docs · Lessons Learned · v2.11 · 19 Erkenntnisse</span>
+  <span>CMDSolver Docs · Lessons Learned · v2.12 · 20 Erkenntnisse</span>
   <span>
     <a href="maintenance.html">← Wartung</a> &nbsp;|&nbsp;
     <a href="dev_history.html">Entwicklungsgeschichte →</a>

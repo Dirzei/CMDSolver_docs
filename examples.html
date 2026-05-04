@@ -4,9 +4,262 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>CMDSolver Docs — Beispielmodelle</title>
-<link rel="stylesheet" href="docs.css">
 <style>
-  .model-card {
+/* CMDSolver Documentation — Shared Stylesheet */
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;1,400&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap');
+
+:root {
+  --bg:      #0d0f12;
+  --bg2:     #13161b;
+  --bg3:     #1a1e25;
+  --bg4:     #20252f;
+  --border:  #252a33;
+  --border2: #2e3540;
+  --text:    #c8cdd6;
+  --text2:   #7a8496;
+  --text3:   #4a5568;
+  --accent:  #4a9eff;
+  --ok:      #3ecf8e;
+  --warn:    #f0a030;
+  --err:     #ff5c5c;
+  --purple:  #a78bfa;
+  --teal:    #2dd4bf;
+  --mono:    'IBM Plex Mono', monospace;
+  --sans:    'IBM Plex Sans', sans-serif;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: var(--sans);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 13.5px;
+  line-height: 1.75;
+}
+
+/* ── Header ── */
+.doc-header {
+  border-bottom: 1px solid var(--border);
+  padding: 1.2rem 3rem;
+  display: flex; align-items: center;
+  justify-content: space-between; flex-wrap: wrap; gap: 1rem;
+}
+
+.breadcrumb {
+  font-family: var(--mono); font-size: 11px; color: var(--text3);
+  letter-spacing: .08em; text-transform: uppercase;
+  display: flex; align-items: center; gap: .5rem;
+}
+.breadcrumb a { color: var(--accent); text-decoration: none; }
+.breadcrumb span { color: var(--text3); }
+
+.doc-badge {
+  font-family: var(--mono); font-size: 11px;
+  padding: 3px 10px; border-radius: 4px;
+}
+.doc-badge.solver {
+  background: rgba(74,158,255,.1); border: 1px solid rgba(74,158,255,.25);
+  color: var(--accent);
+}
+.doc-badge.overview {
+  background: rgba(167,139,250,.1); border: 1px solid rgba(167,139,250,.25);
+  color: var(--purple);
+}
+.doc-badge.comparison {
+  background: rgba(62,207,142,.1); border: 1px solid rgba(62,207,142,.25);
+  color: var(--ok);
+}
+
+/* ── Hero ── */
+.hero {
+  padding: 2.5rem 3rem 2rem;
+  border-bottom: 1px solid var(--border);
+  background: linear-gradient(135deg, var(--bg) 0%, #0f1520 100%);
+}
+.hero-sub {
+  font-family: var(--mono); font-size: 11px; color: var(--text3);
+  letter-spacing: .15em; text-transform: uppercase; margin-bottom: .5rem;
+}
+h1 {
+  font-size: 28px; font-weight: 600; color: #e8ecf4;
+  letter-spacing: -.03em; margin-bottom: .5rem; line-height: 1.2;
+}
+.tagline {
+  font-size: 14px; color: var(--text2); margin-bottom: 1.5rem;
+  max-width: 680px;
+}
+.hero-stats { display: flex; gap: 2rem; flex-wrap: wrap; }
+.stat { display: flex; flex-direction: column; gap: .2rem; }
+.stat-val {
+  font-family: var(--mono); font-size: 18px; font-weight: 500; color: var(--ok);
+}
+.stat-lbl {
+  font-size: 11px; color: var(--text3);
+  text-transform: uppercase; letter-spacing: .08em;
+}
+
+/* ── Nav ── */
+nav {
+  position: sticky; top: 0; z-index: 10;
+  background: rgba(13,15,18,.95); backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--border);
+  padding: .6rem 3rem;
+  display: flex; gap: 1.5rem; flex-wrap: wrap;
+}
+nav a {
+  font-family: var(--mono); font-size: 11px; color: var(--text3);
+  text-decoration: none; letter-spacing: .08em;
+  text-transform: uppercase; transition: color .15s;
+}
+nav a:hover { color: var(--accent); }
+
+/* ── Main ── */
+main { padding: 2rem 3rem 4rem; max-width: 1040px; }
+
+section { margin-bottom: 3.5rem; scroll-margin-top: 3rem; }
+
+section > h2 {
+  font-size: 12px; font-family: var(--mono);
+  letter-spacing: .12em; text-transform: uppercase;
+  color: var(--text3); margin-bottom: 1.4rem;
+  padding-bottom: .5rem; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: .6rem;
+}
+section > h2::before {
+  content: ''; display: inline-block;
+  width: 8px; height: 8px; border-radius: 50%; background: var(--accent);
+}
+
+h3 { font-size: 14px; font-weight: 500; color: #e8ecf4; margin: 1.6rem 0 .6rem; }
+h4 { font-size: 13px; font-weight: 500; color: var(--text2); margin: 1.2rem 0 .4rem; }
+
+p { color: var(--text); margin-bottom: .9rem; max-width: 780px; }
+
+/* ── Math ── */
+.math-block {
+  background: var(--bg3); border: 1px solid var(--border);
+  border-left: 3px solid var(--purple);
+  border-radius: 6px; padding: 1.2rem 1.5rem;
+  margin: 1rem 0 1.2rem; font-family: var(--mono);
+  font-size: 13px; line-height: 2.1; white-space: pre;
+}
+.math-block .eq  { color: #e8ecf4; }
+.math-block .cmt { color: var(--text3); font-style: italic; }
+.math-block .hi  { color: var(--teal); }
+.math-block .hi2 { color: var(--warn); }
+
+/* ── Notes ── */
+.note {
+  border-radius: 6px; padding: .85rem 1.1rem;
+  font-size: 13px; line-height: 1.7; margin-bottom: 1.2rem;
+}
+.note.blue   { background: rgba(74,158,255,.06);  border-left: 3px solid var(--accent); }
+.note.green  { background: rgba(62,207,142,.06);  border-left: 3px solid var(--ok); }
+.note.amber  { background: rgba(240,160,48,.06);  border-left: 3px solid var(--warn); }
+.note.red    { background: rgba(255,92,92,.06);   border-left: 3px solid var(--err); }
+.note.purple { background: rgba(167,139,250,.06); border-left: 3px solid var(--purple); }
+.note strong { color: #e8ecf4; }
+
+/* ── Code ── */
+code {
+  font-family: var(--mono); font-size: 11.5px;
+  background: rgba(255,255,255,.05); padding: 1px 5px;
+  border-radius: 3px; color: #a8c8f0;
+}
+pre {
+  font-family: var(--mono); font-size: 12px;
+  background: var(--bg3); border: 1px solid var(--border);
+  border-radius: 8px; padding: 1rem 1.2rem;
+  overflow-x: auto; line-height: 1.7; margin-bottom: 1rem; color: #c8cdd6;
+}
+.kw  { color: var(--purple); }
+.cmt { color: var(--text3); font-style: italic; }
+.fn  { color: var(--teal); }
+.num { color: var(--warn); }
+.str { color: var(--ok); }
+
+/* ── Tables ── */
+.tbl-wrap {
+  overflow-x: auto; border-radius: 8px;
+  border: 1px solid var(--border); margin-bottom: 1.5rem;
+}
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+thead th {
+  background: var(--bg3); padding: 9px 14px; text-align: left;
+  font-weight: 500; font-size: 11px; letter-spacing: .06em;
+  text-transform: uppercase; color: var(--text2);
+  border-bottom: 1px solid var(--border2); white-space: nowrap;
+}
+tbody tr { border-bottom: 1px solid var(--border); transition: background .1s; }
+tbody tr:last-child { border-bottom: none; }
+tbody tr:hover { background: var(--bg3); }
+td { padding: 9px 14px; vertical-align: top; line-height: 1.6; }
+td.center { text-align: center; }
+
+/* ── Badges ── */
+.badge {
+  display: inline-block; font-size: 11px; padding: 2px 9px;
+  border-radius: 12px; font-family: var(--mono); white-space: nowrap;
+}
+.b-ok   { background: rgba(62,207,142,.1);  color: var(--ok);     border: 1px solid rgba(62,207,142,.25); }
+.b-warn { background: rgba(240,160,48,.1);  color: var(--warn);   border: 1px solid rgba(240,160,48,.25); }
+.b-err  { background: rgba(255,92,92,.1);   color: var(--err);    border: 1px solid rgba(255,92,92,.25); }
+.b-info { background: rgba(74,158,255,.1);  color: var(--accent); border: 1px solid rgba(74,158,255,.25); }
+.b-na   { background: rgba(74,84,96,.1);    color: var(--text3);  border: 1px solid var(--border2); }
+
+/* ── Star rating ── */
+.stars { color: var(--warn); letter-spacing: -.05em; }
+.stars.dim { color: var(--border2); }
+
+/* ── File list ── */
+.file-list { list-style: none; }
+.file-list li {
+  display: flex; gap: 1rem; align-items: flex-start;
+  padding: .7rem 1rem; background: var(--bg2);
+  border: 1px solid var(--border); border-radius: 4px; margin-bottom: .4rem;
+}
+.file-icon {
+  font-family: var(--mono); font-size: 11px; color: var(--accent);
+  white-space: nowrap; margin-top: 2px; min-width: 50px;
+}
+.file-desc { font-size: 13px; color: var(--text2); }
+.file-desc strong { color: var(--text); display: block; margin-bottom: .2rem; }
+
+/* ── Flowchart ── */
+.flowchart {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 10px; padding: 1.5rem; margin: 1rem 0 1.5rem;
+  overflow-x: auto;
+}
+
+/* ── Footer ── */
+footer {
+  border-top: 1px solid var(--border); padding: 1.5rem 3rem;
+  font-family: var(--mono); font-size: 11px; color: var(--text3);
+  display: flex; justify-content: space-between; flex-wrap: wrap; gap: .5rem;
+}
+footer a { color: var(--accent); text-decoration: none; }
+
+/* ── Footnotes ── */
+.footnotes {
+  margin-top: 2rem; padding-top: 1.5rem;
+  border-top: 1px solid var(--border);
+  font-size: 12px; color: var(--text2);
+}
+.footnotes p { max-width: none; margin-bottom: .5rem; }
+sup { font-size: 10px; color: var(--accent); }
+
+/* Default: alle Sprachelemente sichtbar (kein JS-Flash) */
+/* Mit lang-Klasse auf body: nur die aktive Sprache sichtbar */
+
+/* Nur wenn body eine Sprachklasse hat, werden Elemente ausgeblendet */
+/* Sprach-Sichtbarkeit via class auf body */
+
+
+/* ── Seitenspezifische Klassen ────────────────────────
+   (aus alter examples.html wiederhergestellt) */
+.model-card {
     background: var(--bg2); border: 1px solid var(--border);
     border-radius: 10px; overflow: hidden; margin-bottom: 2.5rem;
   }
@@ -39,159 +292,205 @@
   .eqn-body  { color: #e8ecf4; line-height: 1.8; white-space: pre; }
   .eqn-exp   { color: var(--text3); font-style: italic; }
 </style>
+<link rel="stylesheet" href="i18n.css">
 </head>
 <body>
+<script>
+(function(){
+  var stored = '';
+  try { stored = localStorage.getItem('cmdlang') || ''; } catch(e){}
+  var lang = stored || 'de';
 
+  function apply(l) {
+    lang = l;
+    try { localStorage.setItem('cmdlang', l); } catch(e){}
+    document.documentElement.lang = l;
+    var body = document.body;
+    body.classList.remove('lang-de','lang-en');
+    body.classList.add('lang-' + l);
+    document.querySelectorAll('.lang-btn').forEach(function(b){
+      b.classList.toggle('active', b.dataset.lang === l);
+    });
+  }
+
+  // Body-Klasse sofort setzen, damit data-lang-Elemente direkt korrekt
+  // sichtbar sind (kein Flash mit unsichtbarem Header-Inhalt).
+  apply(lang);
+  document.addEventListener('DOMContentLoaded', function(){
+    apply(lang); // erneut, damit jetzt auch die Buttons gestyled werden
+    document.querySelectorAll('.lang-btn').forEach(function(b){
+      b.addEventListener('click', function(){ apply(b.dataset.lang); });
+    });
+    // Sticky-Header Schatten via IntersectionObserver
+    var sentinel = document.querySelector('.header-sentinel');
+    var header   = document.querySelector('.doc-header');
+    if (sentinel && header && 'IntersectionObserver' in window) {
+      new IntersectionObserver(function(entries){
+        header.classList.toggle('scrolled', !entries[0].isIntersecting);
+      }).observe(sentinel);
+    }
+  });
+})();
+</script>
+
+
+
+
+<div class="header-sentinel"></div>
 <div class="doc-header">
   <div class="breadcrumb">
     <a href="index.html">CMDSolver Docs</a>
-    <span>›</span><span>Beispielmodelle</span>
+    ›
   </div>
-  <span class="doc-badge overview">Beispiele</span>
-</div>
+  <div class="doc-header-right"><div class="lang-switch"><button class="lang-btn" data-lang="de">DE</button><button class="lang-btn" data-lang="en">EN</button></div><span class="doc-badge overview">Beispiele</span></div></div>
 
 <div class="hero">
-  <div class="hero-sub">Beispiele</div>
-  <h1>Beispielmodelle</h1>
-  <p class="tagline">
-    Zwei Referenzmodelle mit vollständiger Erklärung — von einem einfachen
-    algebraischen System bis zum komplexen aerothermodynamischen Düsenmodell.
-    Welche Gleichungen sind interessant, warum konvergiert welcher Solver?
-  </p>
-</div>
+  <div class="hero-sub"><span data-lang="de">Beispiele</span><span data-lang="en">Examples</span></div>
+  <h1 data-lang="de">Beispiele & Tutorials</h1><h1 data-lang="en">Examples & Tutorials</h1>
+  <p class="tagline" data-lang="de">Zwei Referenzmodelle mit vollständiger Erklärung — von einem einfachen algebraischen System bis zum komplexen aerothermodynamischen Düsenmodell. Welche Gleichungen sind interessant, warum konvergiert welcher Solver?</p>
+  <p class="tagline" data-lang="en">Two reference models with full explanation — from a simple algebraic system to a complex aerothermodynamic nozzle model. Which equations are interesting, and why does each solver converge?</p>
+  </div>
 
 <nav>
-  <a href="#simplesystem">SimpleSystem</a>
-  <a href="#nozzle">NozzleSystem</a>
-  <a href="#eigenes">Eigenes Modell</a>
+  <a href="#simplesystem" data-lang="de">SimpleSystem</a><a href="#simplesystem" data-lang="en">SimpleSystem</a>
+  <a href="#nozzle" data-lang="de">NozzleSystem</a><a href="#nozzle" data-lang="en">NozzleSystem</a>
+  <a href="#eigenes" data-lang="de">Eigenes Modell</a><a href="#eigenes" data-lang="en">Your own model</a>
 </nav>
 
 <main>
 
 <!-- ── SimpleSystem ── -->
 <section id="simplesystem">
-  <h2>SimpleSystem.cas — Basis-Testsystem</h2>
+  <h2 data-lang="de">SimpleSystem.cas — Basis-Testsystem</h2><h2 data-lang="en">SimpleSystem.cas — Base Test System</h2>
 
   <div class="model-card">
     <div class="model-header">
       <span class="model-file">example/SimpleSystem.cas</span>
-      <span class="badge b-ok">12 Gleichungen · 20 Variablen · 8 fixiert</span>
+      <span class="badge b-ok" data-lang="de">12 Gleichungen · 20 Variablen · 8 fixiert</span><span class="badge b-ok" data-lang="en">12 equations · 20 variables · 8 fixed</span>
     </div>
 
     <div class="model-stats">
-      <div class="ms"><span class="ms-val">12</span><span class="ms-lbl">Gleichungen</span></div>
-      <div class="ms"><span class="ms-val">20</span><span class="ms-lbl">Variablen</span></div>
-      <div class="ms"><span class="ms-val">8</span><span class="ms-lbl">Fixiert</span></div>
-      <div class="ms"><span class="ms-val">12</span><span class="ms-lbl">Frei (Unbekannte)</span></div>
-      <div class="ms"><span class="ms-val">~10⁶</span><span class="ms-lbl">Typisches κ</span></div>
+      <div class="ms"><span class="ms-val">12</span><span class="ms-lbl" data-lang="de">Gleichungen</span><span class="ms-lbl" data-lang="en">Equations</span></div>
+      <div class="ms"><span class="ms-val">20</span><span class="ms-lbl" data-lang="de">Variablen</span><span class="ms-lbl" data-lang="en">Variables</span></div>
+      <div class="ms"><span class="ms-val">8</span><span class="ms-lbl" data-lang="de">Fixiert</span><span class="ms-lbl" data-lang="en">Fixed</span></div>
+      <div class="ms"><span class="ms-val">12</span><span class="ms-lbl" data-lang="de">Frei (Unbekannte)</span><span class="ms-lbl" data-lang="en">Free (Unknowns)</span></div>
+      <div class="ms"><span class="ms-val">~10⁶</span><span class="ms-lbl" data-lang="de">Typisches κ</span><span class="ms-lbl" data-lang="en">Typical κ</span></div>
     </div>
 
     <div class="model-body">
-      <h3>Was wird modelliert?</h3>
-      <p>Ein vereinfachtes thermodynamisches System mit algebraischen Abhängigkeiten
+      <h3 data-lang="de">Was wird modelliert?</h3><h3 data-lang="en">What is modeled?</h3>
+      <p data-lang="de">Ein vereinfachtes thermodynamisches System mit algebraischen Abhängigkeiten
       zwischen Druck, Temperatur, Massenstrom und abgeleiteten Größen. Das Modell ist
       speziell für Tests konzipiert — realistisch konditioniert aber ohne physikalisch
-      kritische Bereiche (kein Ma-Übergang, keine Phasenübergänge).</p>
+      kritische Bereiche (kein Ma-Übergang, keine Phasenübergänge).</p><p data-lang="en">A simplified thermodynamic system with algebraic dependencies between
+      pressure, temperature, mass flow, and derived quantities. The model is specifically
+      designed for testing — realistically conditioned but without physically critical regions
+      (no Mach transition, no phase transitions).</p>
 
-      <h3>Interessante Gleichungstypen</h3>
+      <h3 data-lang="de">Interessante Gleichungstypen</h3><h3 data-lang="en">Interesting equation types</h3>
 
       <div class="eqn-card">
-        <div class="eqn-title">Gleichgewichtsgleichung — direkte Zuweisung</div>
+        <div class="eqn-title" data-lang="de">Gleichgewichtsgleichung — direkte Zuweisung</div><div class="eqn-title" data-lang="en">Equilibrium equation — direct assignment</div>
         <div class="eqn-body">PARTM.F060.GAMMAT = PARTM.F060.CPT / (PARTM.F060.CPT - PARTM.F060.RGAS);
-<span class="eqn-exp">// Isentropenexponent κ = cp / (cp - R)</span></div>
+<span class="eqn-exp" data-lang="de">// Isentropenexponent κ = cp / (cp - R)</span><span class="eqn-exp" data-lang="en">// Isentropic exponent κ = cp / (cp - R)</span></div>
       </div>
 
       <div class="eqn-card">
-        <div class="eqn-title">CALL-Gleichung — thermodynamische Built-in Funktion</div>
+        <div class="eqn-title" data-lang="de">CALL-Gleichung — thermodynamische Built-in Funktion</div><div class="eqn-title" data-lang="en">CALL equation — thermodynamic built-in function</div>
         <div class="eqn-body">CALL(PARTM.F060.CPT) = pCPOFT(PARTM.F060.TT, PARTM.F060.WGR, PARTM.F060.FAR);
-<span class="eqn-exp">// cp(T, WGR, FAR) aus BIfunctions.CpOfTNOZ()</span>
-<span class="eqn-exp">// Ableitung numerisch (5-Punkte-Formel)</span></div>
+<span class="eqn-exp" data-lang="de">// cp(T, WGR, FAR) aus BIfunctions.CpOfTNOZ()</span><span class="eqn-exp" data-lang="en">// cp(T, WGR, FAR) from BIfunctions.CpOfTNOZ()</span>
+<span class="eqn-exp" data-lang="de">// Ableitung numerisch (5-Punkte-Formel)</span><span class="eqn-exp" data-lang="en">// Derivative numerical (5-point formula)</span></div>
       </div>
 
       <div class="eqn-card">
-        <div class="eqn-title">Nichtlineare Gleichung — Potenz</div>
+        <div class="eqn-title" data-lang="de">Nichtlineare Gleichung — Potenz</div><div class="eqn-title" data-lang="en">Nonlinear equation — power</div>
         <div class="eqn-body">PARTM.F060.PS = PARTM.F060.PT * (1 - EXP1 * PARTM.F060.GAMMAT)^EXP2;
-<span class="eqn-exp">// Statischer Druck aus Totaldruck via isentrope Beziehung</span>
-<span class="eqn-exp">// EXP1, EXP2 = fixierte Hilfsgrößen aus dem INITIALIZE-Block</span></div>
+<span class="eqn-exp" data-lang="de">// Statischer Druck aus Totaldruck via isentrope Beziehung</span><span class="eqn-exp" data-lang="en">// Static pressure from total pressure via isentropic relation</span>
+<span class="eqn-exp" data-lang="de">// EXP1, EXP2 = fixierte Hilfsgrößen aus dem INITIALIZE-Block</span><span class="eqn-exp" data-lang="en">// EXP1, EXP2 = fixed auxiliary quantities from the INITIALIZE block</span></div>
       </div>
 
-      <h3>Konvergenzergebnisse aller Solver</h3>
+      <h3 data-lang="de">Konvergenzergebnisse aller Solver</h3><h3 data-lang="en">Convergence results across all solvers</h3>
       <div class="tbl-wrap">
       <table>
         <thead>
-          <tr><th>Solver</th><th>Status</th><th>Iterationen</th><th>fsum</th><th>Zeit</th><th>Hinweis</th></tr>
+          <tr><th>Solver</th><th>Status</th><th data-lang="de">Iterationen</th><th data-lang="en">Iterations</th><th>fsum</th><th data-lang="de">Zeit</th><th data-lang="en">Time</th><th data-lang="de">Hinweis</th><th data-lang="en">Note</th></tr>
         </thead>
         <tbody>
           <tr>
             <td><code>NEWTON_ARMIJO</code></td>
             <td><span class="badge b-ok">CONVERGED</span></td>
             <td>3</td><td><code>3.16e-11</code></td><td>~42ms</td>
-            <td>Gut konditioniertes System → quadratische Konvergenz</td>
+            <td data-lang="de">Gut konditioniertes System → quadratische Konvergenz</td><td data-lang="en">Well-conditioned system → quadratic convergence</td>
           </tr>
           <tr>
             <td><code>NEWTON_SPARSE</code></td>
             <td><span class="badge b-ok">CONVERGED</span></td>
             <td>3</td><td><code>3.16e-11</code></td><td>~28ms</td>
-            <td>Sparse-LU schneller als dichte LU</td>
+            <td data-lang="de">Sparse-LU schneller als dichte LU</td><td data-lang="en">Sparse LU is faster than dense LU</td>
           </tr>
           <tr>
             <td><code>NEWTON_SPARSE_ARMIJO</code></td>
             <td><span class="badge b-ok">CONVERGED</span></td>
             <td>3</td><td><code>3.16e-11</code></td><td>~30ms</td>
-            <td>★ Empfohlen — beste Kombination</td>
+            <td data-lang="de">★ Empfohlen — beste Kombination</td><td data-lang="en">★ Recommended — best combination</td>
           </tr>
           <tr>
             <td><code>LEVENBERG_MARQUARDT</code></td>
             <td><span class="badge b-ok">CONVERGED</span></td>
             <td>36</td><td><code>8.30e-09</code></td><td>~61ms</td>
-            <td>Mehr Iterationen wegen μ-Anpassung — κ hier kein Problem</td>
+            <td data-lang="de">Mehr Iterationen wegen μ-Anpassung — κ hier kein Problem</td><td data-lang="en">More iterations due to μ adjustment — κ is not an issue here</td>
           </tr>
           <tr>
             <td><code>BROYDEN</code></td>
             <td><span class="badge b-ok">CONVERGED</span></td>
             <td>25</td><td><code>8.02e-08</code></td><td>~50ms</td>
-            <td>Superlinear statt quadratisch</td>
+            <td data-lang="de">Superlinear statt quadratisch</td><td data-lang="en">Superlinear rather than quadratic</td>
           </tr>
           <tr>
             <td><code>BROYDEN_SPARSE</code></td>
             <td><span class="badge b-ok">CONVERGED</span></td>
             <td>3</td><td><code>3.16e-11</code></td><td>~9ms</td>
-            <td>Schnellster Gesamtlauf — Rang-1 Update + Sparse-LU</td>
+            <td data-lang="de">Schnellster Gesamtlauf — Rang-1 Update + Sparse-LU</td><td data-lang="en">Fastest overall — rank-1 update + sparse LU</td>
           </tr>
           <tr>
             <td><code>HOMOTOPY</code></td>
             <td><span class="badge b-ok">CONVERGED</span></td>
             <td>—</td><td>NaN*</td><td>~83ms</td>
-            <td>*NaN normal — Homotopie gibt kein fsum über Standard-Kanal</td>
+            <td data-lang="de">*NaN normal — Homotopie gibt kein fsum über Standard-Kanal</td><td data-lang="en">*NaN is normal — homotopy does not emit fsum on the standard channel</td>
           </tr>
         </tbody>
       </table>
       </div>
 
-      <h3>CLI-Aufruf</h3>
+      <h3 data-lang="de">CLI-Aufruf</h3><h3 data-lang="en">CLI invocation</h3>
       <pre>java -cp "CMDSolver.jar;libs/CASprzak.jar" cmd.CASSolver \
     -I:example/SimpleSystem.cas -TEST</pre>
 
-      <h3>SolverAPI-Aufruf</h3>
+      <h3 data-lang="de">SolverAPI-Aufruf</h3><h3 data-lang="en">SolverAPI invocation</h3>
       <pre>SolverResult result = <span class="kw">new</span> SolverAPI()
     .loadModel(<span class="str">"example/SimpleSystem.cas"</span>)
     .setSolverType(SolverType.NEWTON_SPARSE_ARMIJO)
     .solve();
 
-<span class="cmt">// Ergebnis prüfen</span>
-System.out.println(<span class="str">"Konvergiert: "</span> + result.isConverged());
-System.out.println(<span class="str">"Iterationen: "</span> + result.getIterations());
+<span class="cmt" data-lang="de">// Ergebnis prüfen</span><span class="cmt" data-lang="en">// Check result</span>
+<span data-lang="de">System.out.println(<span class="str">"Konvergiert: "</span> + result.isConverged());</span><span data-lang="en">System.out.println(<span class="str">"Converged: "</span> + result.isConverged());</span>
+<span data-lang="de">System.out.println(<span class="str">"Iterationen: "</span> + result.getIterations());</span><span data-lang="en">System.out.println(<span class="str">"Iterations: "</span> + result.getIterations());</span>
 System.out.println(<span class="str">"fsum: "</span> + result.getFinalResidual());
 
-<span class="cmt">// Alle Werte ausgeben</span>
+<span class="cmt" data-lang="de">// Alle Werte ausgeben</span><span class="cmt" data-lang="en">// Print all values</span>
 result.getAllValues().forEach((k, v) ->
     System.out.printf(<span class="str">"%-35s = %.6g%n"</span>, k, v));</pre>
 
-      <div class="note green">
+      <div class="note green" data-lang="de">
         <strong>Als Regressions-Baseline:</strong> SimpleSystem.cas ist das Referenzsystem
         für alle Solver-Tests. Nach jeder Änderung am Code muss <code>-TEST</code>
         auf diesem Modell alle 7 Solver mit identischen Residuen liefern.
         Referenzwerte: Newton 3 Iter / 3.16e-11, BroydenSparse ~9ms.
+      </div><div class="note green" data-lang="en">
+        <strong>As a regression baseline:</strong> SimpleSystem.cas is the reference system
+        for all solver tests. After any code change, <code>-TEST</code> on this model
+        must produce identical residuals from all seven solvers.
+        Reference values: Newton 3 iter / 3.16e-11, BroydenSparse ~9ms.
       </div>
     </div>
   </div>
@@ -199,43 +498,47 @@ result.getAllValues().forEach((k, v) ->
 
 <!-- ── NozzleSystem ── -->
 <section id="nozzle">
-  <h2>NozzleSystem_4_fixed.cas — Aerothermodynamisches Düsenmodell</h2>
+  <h2 data-lang="de">NozzleSystem_4_fixed.cas — Aerothermodynamisches Düsenmodell</h2><h2 data-lang="en">NozzleSystem_4_fixed.cas — Aerothermodynamic Nozzle Model</h2>
 
   <div class="model-card">
     <div class="model-header">
       <span class="model-file">example/NozzleSystem_4_fixed.cas</span>
-      <span class="badge b-warn">303 Gleichungen · 400+ Variablen · κ ~ 10²³</span>
+      <span class="badge b-warn" data-lang="de">303 Gleichungen · 400+ Variablen · κ ~ 10²³</span><span class="badge b-warn" data-lang="en">303 equations · 400+ variables · κ ~ 10²³</span>
     </div>
 
     <div class="model-stats">
       <div class="ms"><span class="ms-val">303</span><span class="ms-lbl">Gleichungen</span></div>
       <div class="ms"><span class="ms-val">400+</span><span class="ms-lbl">Variablen</span></div>
       <div class="ms"><span class="ms-lbl">κ</span><span class="ms-val">~10²³</span></div>
-      <div class="ms"><span class="ms-val">JANAF</span><span class="ms-lbl">Thermodynamik</span></div>
-      <div class="ms"><span class="ms-val">ISA</span><span class="ms-lbl">Atmosphäre</span></div>
+      <div class="ms"><span class="ms-val">JANAF</span><span class="ms-lbl" data-lang="de">Thermodynamik</span><span class="ms-lbl" data-lang="en">Thermodynamics</span></div>
+      <div class="ms"><span class="ms-val">ISA</span><span class="ms-lbl" data-lang="de">Atmosphäre</span><span class="ms-lbl" data-lang="en">Atmosphere</span></div>
     </div>
 
     <div class="model-body">
       <h3>Was wird modelliert?</h3>
-      <p>Ein vollständiges aerothermodynamisches Modell einer Schubdüse (Nozzle)
+      <p data-lang="de">Ein vollständiges aerothermodynamisches Modell einer Schubdüse (Nozzle)
       mit Mischer und Jetpipe. Das Modell berechnet Strömungsgrößen in mehreren
       Stationen (F060, F080, F090, ...) vom Kerngasstrom über den Bypass bis
       zum Düsenaustritt. Kerngrößen: Totaldruck, Totaltemperatur, Massenstrom,
-      statischer Druck, Machzahl, spezifische Wärme, Isentropenexponent.</p>
+      statischer Druck, Machzahl, spezifische Wärme, Isentropenexponent.</p><p data-lang="en">A complete aerothermodynamic model of a thrust nozzle with mixer and jet pipe.
+      The model computes flow quantities at several stations (F060, F080, F090, …)
+      from the core flow through the bypass to the nozzle exit. Key quantities: total
+      pressure, total temperature, mass flow, static pressure, Mach number, specific
+      heat, isentropic exponent.</p>
 
-      <h3>Modellstruktur</h3>
+      <h3 data-lang="de">Modellstruktur</h3><h3 data-lang="en">Model structure</h3>
       <div class="tbl-wrap">
       <table>
-        <thead><tr><th>Bereich</th><th>Variablen-Prefix</th><th>Inhalt</th></tr></thead>
+        <thead><tr><th data-lang="de">Bereich</th><th data-lang="en">Area</th><th data-lang="de">Variablen-Prefix</th><th data-lang="en">Variable prefix</th><th data-lang="de">Inhalt</th><th data-lang="en">Content</th></tr></thead>
         <tbody>
-          <tr><td>Global</td><td><code>GLOBAL.*</code></td><td>Konstanten (π, R_univ, Schalter)</td></tr>
-          <tr><td>Geometrie</td><td><code>GEOM.*</code></td><td>Radien, Längen, Flächen</td></tr>
-          <tr><td>Atmosphäre</td><td><code>AMB.*</code></td><td>ISA-Bedingungen, Gaszusammensetzung</td></tr>
-          <tr><td>Kerngasstrom</td><td><code>PARTM.F060.*</code></td><td>Station 060: Eintritt Kerngasstrom</td></tr>
-          <tr><td>Bypass</td><td><code>PARTM.F080.*</code></td><td>Station 080: Bypass-Strom</td></tr>
-          <tr><td>Mischer</td><td><code>PARTM.F090.*</code></td><td>Station 090: nach Mischung</td></tr>
-          <tr><td>Düsenaustritt</td><td><code>PARTM.F100.*</code></td><td>Station 100: Düsenaustritt</td></tr>
-          <tr><td>Gesamtmodell</td><td><code>FULLM.*</code></td><td>Schub, Schallgeschwindigkeit, Durchfluss</td></tr>
+          <tr><td data-lang="de">Global</td><td data-lang="en">Global</td><td><code>GLOBAL.*</code></td><td data-lang="de">Konstanten (π, R_univ, Schalter)</td><td data-lang="en">Constants (π, R_univ, switches)</td></tr>
+          <tr><td data-lang="de">Geometrie</td><td data-lang="en">Geometry</td><td><code>GEOM.*</code></td><td data-lang="de">Radien, Längen, Flächen</td><td data-lang="en">Radii, lengths, areas</td></tr>
+          <tr><td data-lang="de">Atmosphäre</td><td data-lang="en">Atmosphere</td><td><code>AMB.*</code></td><td data-lang="de">ISA-Bedingungen, Gaszusammensetzung</td><td data-lang="en">ISA conditions, gas composition</td></tr>
+          <tr><td data-lang="de">Kerngasstrom</td><td data-lang="en">Core flow</td><td><code>PARTM.F060.*</code></td><td data-lang="de">Station 060: Eintritt Kerngasstrom</td><td data-lang="en">Station 060: core flow inlet</td></tr>
+          <tr><td data-lang="de">Bypass</td><td data-lang="en">Bypass</td><td><code>PARTM.F080.*</code></td><td data-lang="de">Station 080: Bypass-Strom</td><td data-lang="en">Station 080: bypass flow</td></tr>
+          <tr><td data-lang="de">Mischer</td><td data-lang="en">Mixer</td><td><code>PARTM.F090.*</code></td><td data-lang="de">Station 090: nach Mischung</td><td data-lang="en">Station 090: after mixing</td></tr>
+          <tr><td data-lang="de">Düsenaustritt</td><td data-lang="en">Nozzle exit</td><td><code>PARTM.F100.*</code></td><td data-lang="de">Station 100: Düsenaustritt</td><td data-lang="en">Station 100: nozzle exit</td></tr>
+          <tr><td data-lang="de">Gesamtmodell</td><td data-lang="en">Full model</td><td><code>FULLM.*</code></td><td data-lang="de">Schub, Schallgeschwindigkeit, Durchfluss</td><td data-lang="en">Thrust, speed of sound, mass flow</td></tr>
         </tbody>
       </table>
       </div>
@@ -243,85 +546,90 @@ result.getAllValues().forEach((k, v) ->
       <h3>Interessante Gleichungstypen</h3>
 
       <div class="eqn-card">
-        <div class="eqn-title">Struktureller IF — Betriebsmodus-Schalter</div>
+        <div class="eqn-title" data-lang="de">Struktureller IF — Betriebsmodus-Schalter</div><div class="eqn-title" data-lang="en">Structural IF — operating-mode switch</div>
         <div class="eqn-body">IF (GLOBAL.STATICSWITCH.SPEC == FIXED)
   PARTM.F080.PS = AMB.PS;
 ELSE
   PARTM.F080.PS = PARTM.F060.PS * GLOBAL.STATICSWITCH;
 ENDIF
-<span class="eqn-exp">// Schaltet zwischen Betriebsmodi zur Parse-Zeit — nicht zur Laufzeit</span>
-<span class="eqn-exp">// STATICSWITCH.Spec == Fixed → Umgebungsdruck direkt vorgegeben</span></div>
+<span class="eqn-exp" data-lang="de">// Schaltet zwischen Betriebsmodi zur Parse-Zeit — nicht zur Laufzeit</span><span class="eqn-exp" data-lang="en">// Switches between operating modes at parse time — not at runtime</span>
+<span class="eqn-exp" data-lang="de">// STATICSWITCH.Spec == Fixed → Umgebungsdruck direkt vorgegeben</span><span class="eqn-exp" data-lang="en">// STATICSWITCH.Spec == Fixed → ambient pressure given directly</span></div>
       </div>
 
       <div class="eqn-card">
-        <div class="eqn-title">MofCondiRatio — Machzahl aus Flächenverhältnis</div>
+        <div class="eqn-title" data-lang="de">MofCondiRatio — Machzahl aus Flächenverhältnis</div><div class="eqn-title" data-lang="en">MofCondiRatio — Mach number from area ratio</div>
         <div class="eqn-body">CALL(FULLM.HTMAX.MA) = pMOFCONDIRATIO(FULLM.HTMAX.ARAT, FULLM.HTMAX.GAMMAT);
-<span class="eqn-exp">// Löst A/A* = f(Ma, κ) numerisch nach Ma auf</span>
-<span class="eqn-exp">// Transzendente Gleichung — nur numerisch lösbar</span>
-<span class="eqn-exp">// Ableitung via 5-Punkte-Formel in BIfunctions</span></div>
+<span class="eqn-exp" data-lang="de">// Löst A/A* = f(Ma, κ) numerisch nach Ma auf</span><span class="eqn-exp" data-lang="en">// Numerically solves A/A* = f(Ma, κ) for Ma</span>
+<span class="eqn-exp" data-lang="de">// Transzendente Gleichung — nur numerisch lösbar</span><span class="eqn-exp" data-lang="en">// Transcendental equation — only numerically solvable</span>
+<span class="eqn-exp" data-lang="de">// Ableitung via 5-Punkte-Formel in BIfunctions</span><span class="eqn-exp" data-lang="en">// Derivative via 5-point formula in BIfunctions</span></div>
       </div>
 
       <div class="eqn-card">
-        <div class="eqn-title">JANAF-Enthalpieberechnung</div>
+        <div class="eqn-title" data-lang="de">JANAF-Enthalpieberechnung</div><div class="eqn-title" data-lang="en">JANAF enthalpy computation</div>
         <div class="eqn-body">CALL(PARTM.F060.HT) = pHTOFTJANAF(PARTM.F060.TT,
     AMB.FN2, AMB.FO2, AMB.FAR, AMB.FCO2, AMB.FNE,
     AMB.FHE, AMB.FCH4, AMB.FKR, AMB.FH2, AMB.FN2O,
     AMB.FXE, AMB.FH2O);
-<span class="eqn-exp">// Spezifische Enthalpie h(T) für Gasgemisch via JANAF-Polynome</span>
-<span class="eqn-exp">// 13 Eingaben — vollständige Gaszusammensetzung</span></div>
+<span class="eqn-exp" data-lang="de">// Spezifische Enthalpie h(T) für Gasgemisch via JANAF-Polynome</span><span class="eqn-exp" data-lang="en">// Specific enthalpy h(T) for the gas mixture via JANAF polynomials</span>
+<span class="eqn-exp" data-lang="de">// 13 Eingaben — vollständige Gaszusammensetzung</span><span class="eqn-exp" data-lang="en">// 13 inputs — full gas composition</span></div>
       </div>
 
-      <h3>Warum ist dieses Modell schwierig?</h3>
+      <h3 data-lang="de">Warum ist dieses Modell schwierig?</h3><h3 data-lang="en">Why is this model challenging?</h3>
       <div class="tbl-wrap">
       <table>
-        <thead><tr><th>Ursache</th><th>Auswirkung</th></tr></thead>
+        <thead><tr><th data-lang="de">Ursache</th><th data-lang="en">Cause</th><th data-lang="de">Auswirkung</th><th data-lang="en">Effect</th></tr></thead>
         <tbody>
           <tr>
-            <td>Konditionszahl κ ~ 10²³</td>
-            <td>Druck in Pa (10⁵) und dimensionslose Größen (10⁻³) nebeneinander — riesige Spanne</td>
+            <td data-lang="de">Konditionszahl κ ~ 10²³</td><td data-lang="en">Condition number κ ~ 10²³</td>
+            <td data-lang="de">Druck in Pa (10⁵) und dimensionslose Größen (10⁻³) nebeneinander — riesige Spanne</td><td data-lang="en">Pressure in Pa (10⁵) and dimensionless quantities (10⁻³) side by side — huge span</td>
           </tr>
           <tr>
-            <td>JANAF-Polynome als Built-in Funktionen</td>
-            <td>Numerische Ableitungen statt symbolischer — leicht mehr Fehler in der Jacobi</td>
+            <td data-lang="de">JANAF-Polynome als Built-in Funktionen</td><td data-lang="en">JANAF polynomials as built-in functions</td>
+            <td data-lang="de">Numerische Ableitungen statt symbolischer — leicht mehr Fehler in der Jacobi</td><td data-lang="en">Numerical derivatives instead of symbolic — slightly more error in the Jacobian</td>
           </tr>
           <tr>
-            <td>MofCondiRatio nahe Ma=1</td>
-            <td>Funktion hat vertikale Tangente bei Ma=1 — Jacobi-Singularität möglich</td>
+            <td data-lang="de">MofCondiRatio nahe Ma=1</td><td data-lang="en">MofCondiRatio near Ma=1</td>
+            <td data-lang="de">Funktion hat vertikale Tangente bei Ma=1 — Jacobi-Singularität möglich</td><td data-lang="en">Function has a vertical tangent at Ma=1 — Jacobian singularity possible</td>
           </tr>
           <tr>
-            <td>Starke Kopplung aller Stationen</td>
-            <td>Jede Gleichung hängt von vielen anderen ab — dichte Jacobi trotz Sparse-Struktur</td>
+            <td data-lang="de">Starke Kopplung aller Stationen</td><td data-lang="en">Strong coupling between all stations</td>
+            <td data-lang="de">Jede Gleichung hängt von vielen anderen ab — dichte Jacobi trotz Sparse-Struktur</td><td data-lang="en">Each equation depends on many others — dense Jacobian despite sparse structure</td>
           </tr>
         </tbody>
       </table>
       </div>
 
-      <h3>Solver-Empfehlung für dieses Modell</h3>
-      <pre><span class="cmt">// Empfohlen: Newton-Sparse-Armijo mit Diagnose-Modus</span>
+      <h3 data-lang="de">Solver-Empfehlung für dieses Modell</h3><h3 data-lang="en">Solver recommendation for this model</h3>
+      <pre><span class="cmt" data-lang="de">// Empfohlen: Newton-Sparse-Armijo mit Diagnose-Modus</span><span class="cmt" data-lang="en">// Recommended: Newton-Sparse-Armijo with diagnostic mode</span>
 java cmd.CASSolver \
     -I:example/NozzleSystem_4_fixed.cas \
     -S:NEWTON_SPARSE_ARMIJO \
     -DI
 
-<span class="cmt">// Falls Newton nicht konvergiert: Levenberg-Marquardt</span>
+<span class="cmt" data-lang="de">// Falls Newton nicht konvergiert: Levenberg-Marquardt</span><span class="cmt" data-lang="en">// If Newton does not converge: Levenberg-Marquardt</span>
 java cmd.CASSolver \
     -I:example/NozzleSystem_4_fixed.cas \
     -S:LEVENBERG_MARQUARDT \
     -DI
 
-<span class="cmt">// Bei κ-Warnungen und LM-Problemen: Homotopie kritisch</span>
+<span class="cmt" data-lang="de">// Bei κ-Warnungen und LM-Problemen: Homotopie kritisch</span><span class="cmt" data-lang="en">// On κ warnings and LM issues: homotopy critical</span>
 java cmd.CASSolver \
     -I:example/NozzleSystem_4_fixed.cas \
     -S:HOMOTOPY \
     -SH:CRITICAL \
     -SH:INNER=LEVENBERG_MARQUARDT</pre>
 
-      <div class="note amber">
+      <div class="note amber" data-lang="de">
         <strong>Bekanntes Problem:</strong> Das NozzleSystem_4_fixed konvergiert
         mit Newton und LM bei guten Startwerten. Homotopie zeigt bei diesem Modell
         Stagnationsverhalten — Verbesserung durch echten Tangenten-Prädiktor geplant
         (Roadmap R-03). Bei Konvergenzproblemen zuerst <code>-DI</code> versuchen
         und Startwerte in der <code>-U:</code>-Datei manuell setzen.
+      </div><div class="note amber" data-lang="en">
+        <strong>Known issue:</strong> NozzleSystem_4_fixed converges with Newton and LM
+        given good starting values. Homotopy shows stagnation on this model — improvement
+        via a true tangent predictor is planned (Roadmap R-03). On convergence issues,
+        try <code>-DI</code> first and set starting values manually in the <code>-U:</code> file.
       </div>
     </div>
   </div>
@@ -329,79 +637,79 @@ java cmd.CASSolver \
 
 <!-- ── Eigenes Modell ── -->
 <section id="eigenes">
-  <h2>Eigenes Modell aufbauen — Schritt für Schritt</h2>
+  <h2 data-lang="de">Eigenes Modell aufbauen — Schritt für Schritt</h2><h2 data-lang="en">Build Your Own Model — Step by Step</h2>
 
-  <p>Empfohlene Vorgehensweise beim Aufbau eines neuen CAS-Modells:</p>
+  <p data-lang="de">Empfohlene Vorgehensweise beim Aufbau eines neuen CAS-Modells:</p><p data-lang="en">Recommended approach for building a new CAS model:</p>
 
   <div class="tbl-wrap">
   <table>
-    <thead><tr><th>Schritt</th><th>Aktion</th><th>Tipp</th></tr></thead>
+    <thead><tr><th data-lang="de">Schritt</th><th data-lang="en">Step</th><th data-lang="de">Aktion</th><th data-lang="en">Action</th><th data-lang="de">Tipp</th><th data-lang="en">Tip</th></tr></thead>
     <tbody>
       <tr>
         <td>1</td>
-        <td>Variablen definieren — erst alle Fixed, dann Free</td>
-        <td>Beginne mit physikalisch bekannten Größen als Fixed. Nur was wirklich unbekannt ist als Free.</td>
+        <td data-lang="de">Variablen definieren — erst alle Fixed, dann Free</td><td data-lang="en">Define variables — first all Fixed, then Free</td>
+        <td data-lang="de">Beginne mit physikalisch bekannten Größen als Fixed. Nur was wirklich unbekannt ist als Free.</td><td data-lang="en">Start with physically known quantities as Fixed. Only what is truly unknown becomes Free.</td>
       </tr>
       <tr>
         <td>2</td>
-        <td>Gleichgewicht prüfen: n Gleichungen = n Freie</td>
-        <td><code>-I:model.cas -TEST</code> zeigt Systemgröße. Zu viele Gleichungen → System überbestimmt.</td>
+        <td data-lang="de">Gleichgewicht prüfen: n Gleichungen = n Freie</td><td data-lang="en">Check balance: n equations = n free variables</td>
+        <td data-lang="de"><code>-I:model.cas -TEST</code> zeigt Systemgröße. Zu viele Gleichungen → System überbestimmt.</td><td data-lang="en"><code>-I:model.cas -TEST</code> shows system size. Too many equations → overdetermined system.</td>
       </tr>
       <tr>
         <td>3</td>
-        <td>Startwerte physikalisch sinnvoll wählen</td>
-        <td>Schlechte Startwerte sind häufigste Konvergenz-Ursache. Mit <code>-DI</code> automatisch verbessern.</td>
+        <td data-lang="de">Startwerte physikalisch sinnvoll wählen</td><td data-lang="en">Choose physically sensible starting values</td>
+        <td data-lang="de">Schlechte Startwerte sind häufigste Konvergenz-Ursache. Mit <code>-DI</code> automatisch verbessern.</td><td data-lang="en">Poor starting values are the most common cause of non-convergence. Improve them automatically with <code>-DI</code>.</td>
       </tr>
       <tr>
         <td>4</td>
-        <td>Bounds setzen</td>
-        <td>Lower/Upper sollten physikalisch sinnvoll sein — PhysicalProjector verhindert negative Drücke etc.</td>
+        <td data-lang="de">Bounds setzen</td><td data-lang="en">Set bounds</td>
+        <td data-lang="de">Lower/Upper sollten physikalisch sinnvoll sein — PhysicalProjector verhindert negative Drücke etc.</td><td data-lang="en">Lower/Upper should be physically sensible — PhysicalProjector prevents negative pressures etc.</td>
       </tr>
       <tr>
         <td>5</td>
-        <td>Mit Newton-Sparse-Armijo testen</td>
-        <td>Konvergiert meist in 3–10 Iterationen bei gut formulierten Systemen.</td>
+        <td data-lang="de">Mit Newton-Sparse-Armijo testen</td><td data-lang="en">Test with Newton-Sparse-Armijo</td>
+        <td data-lang="de">Konvergiert meist in 3–10 Iterationen bei gut formulierten Systemen.</td><td data-lang="en">Usually converges in 3–10 iterations on well-formulated systems.</td>
       </tr>
       <tr>
         <td>6</td>
-        <td>Falls nicht konvergiert: Diagnose</td>
-        <td>Log nach κ-Warnungen durchsuchen. <code>-DV:start.txt</code> Startvektor inspizieren.</td>
+        <td data-lang="de">Falls nicht konvergiert: Diagnose</td><td data-lang="en">If not converged: diagnose</td>
+        <td data-lang="de">Log nach κ-Warnungen durchsuchen. <code>-DV:start.txt</code> Startvektor inspizieren.</td><td data-lang="en">Search the log for κ warnings. Inspect the starting vector with <code>-DV:start.txt</code>.</td>
       </tr>
       <tr>
         <td>7</td>
-        <td>Batch-Parameterstudie</td>
-        <td>CSV-Datei mit Betriebspunkten → <code>-I:studie.csv</code>. BroydenSparse für schnelle Serien.</td>
+        <td data-lang="de">Batch-Parameterstudie</td><td data-lang="en">Batch parameter study</td>
+        <td data-lang="de">CSV-Datei mit Betriebspunkten → <code>-I:studie.csv</code>. BroydenSparse für schnelle Serien.</td><td data-lang="en">CSV file with operating points → <code>-I:studie.csv</code>. BroydenSparse for fast series.</td>
       </tr>
     </tbody>
   </table>
   </div>
 
-  <h3>Minimales Starter-Template</h3>
-  <pre><span class="cmt">// template.cas — Minimal-Vorlage für ein neues Modell</span>
+  <h3 data-lang="de">Minimales Starter-Template</h3><h3 data-lang="en">Minimal starter template</h3>
+  <pre><span class="cmt" data-lang="de">// template.cas — Minimal-Vorlage für ein neues Modell</span><span class="cmt" data-lang="en">// template.cas — minimal template for a new model</span>
 
-<span class="cmt">// ── Fixierte Eingangsgrößen ────────────────────────────</span>
-IN_A <span class="kw">AS REAL</span> (Description: <span class="str">"Eingangsgröße A"</span>, Lower: 0, Value: 100, Upper: 1000, Spec: Fixed, Unit: <span class="str">"Pa"</span>);
-IN_B <span class="kw">AS REAL</span> (Description: <span class="str">"Eingangsgröße B"</span>, Lower: 0, Value: 300, Upper: 600, Spec: Fixed, Unit: <span class="str">"K"</span>);
+<span class="cmt" data-lang="de">// ── Fixierte Eingangsgrößen ────────────────────────────</span><span class="cmt" data-lang="en">// ── Fixed input quantities ─────────────────────────────</span>
+IN_A <span class="kw">AS REAL</span> (<span data-lang="de">Description: <span class="str">"Eingangsgröße A"</span></span><span data-lang="en">Description: <span class="str">"Input A"</span></span>, Lower: 0, Value: 100, Upper: 1000, Spec: Fixed, Unit: <span class="str">"Pa"</span>);
+IN_B <span class="kw">AS REAL</span> (<span data-lang="de">Description: <span class="str">"Eingangsgröße B"</span></span><span data-lang="en">Description: <span class="str">"Input B"</span></span>, Lower: 0, Value: 300, Upper: 600, Spec: Fixed, Unit: <span class="str">"K"</span>);
 
-<span class="cmt">// ── Unbekannte (freie Variablen) ───────────────────────</span>
-OUT_X <span class="kw">AS REAL</span> (Description: <span class="str">"Unbekannte X"</span>, Lower: 0, Value: 50, Upper: 500, Spec: Free, Unit: <span class="str">"Pa"</span>);
-OUT_Y <span class="kw">AS REAL</span> (Description: <span class="str">"Unbekannte Y"</span>, Lower: 200, Value: 290, Upper: 400, Spec: Free, Unit: <span class="str">"K"</span>);
+<span class="cmt" data-lang="de">// ── Unbekannte (freie Variablen) ───────────────────────</span><span class="cmt" data-lang="en">// ── Unknowns (free variables) ─────────────────────────</span>
+OUT_X <span class="kw">AS REAL</span> (<span data-lang="de">Description: <span class="str">"Unbekannte X"</span></span><span data-lang="en">Description: <span class="str">"Unknown X"</span></span>, Lower: 0, Value: 50, Upper: 500, Spec: Free, Unit: <span class="str">"Pa"</span>);
+OUT_Y <span class="kw">AS REAL</span> (<span data-lang="de">Description: <span class="str">"Unbekannte Y"</span></span><span data-lang="en">Description: <span class="str">"Unknown Y"</span></span>, Lower: 200, Value: 290, Upper: 400, Spec: Free, Unit: <span class="str">"K"</span>);
 
-<span class="cmt">// ── Gleichungen (n frei = n Gleichungen) ───────────────</span>
-OUT_X = IN_A * 0.5;                      <span class="cmt">// Gleichung 1</span>
-OUT_Y = IN_B - 10;                        <span class="cmt">// Gleichung 2</span>
+<span class="cmt" data-lang="de">// ── Gleichungen (n frei = n Gleichungen) ───────────────</span><span class="cmt" data-lang="en">// ── Equations (n free = n equations) ──────────────────</span>
+OUT_X = IN_A * 0.5;                      <span class="cmt" data-lang="de">// Gleichung 1</span><span class="cmt" data-lang="en">// Equation 1</span>
+OUT_Y = IN_B - 10;                        <span class="cmt" data-lang="de">// Gleichung 2</span><span class="cmt" data-lang="en">// Equation 2</span>
 
-<span class="cmt">// Aufruf:</span>
+<span class="cmt" data-lang="de">// Aufruf:</span><span class="cmt" data-lang="en">// Invocation:</span>
 <span class="cmt">// java cmd.CASSolver -I:template.cas -S:NEWTON_SPARSE_ARMIJO</span></pre>
 </section>
 
 </main>
 
 <footer>
-  <span>CMDSolver Docs · Beispielmodelle · v2.5</span>
+  <span data-lang="de">CMDSolver Docs · Beispielmodelle · v2.5</span><span data-lang="en">CMDSolver Docs · Example Models · v2.5</span>
   <span>
-    <a href="api_reference.html">← API-Referenz</a> &nbsp;|&nbsp;
-    <a href="troubleshooting.html">Troubleshooting →</a>
+    <a href="api_reference.html" data-lang="de">← API-Referenz</a><a href="api_reference.html" data-lang="en">← API Reference</a> &nbsp;|&nbsp;
+    <a href="troubleshooting.html" data-lang="de">Troubleshooting →</a><a href="troubleshooting.html" data-lang="en">Troubleshooting →</a>
   </span>
 </footer>
 </body>

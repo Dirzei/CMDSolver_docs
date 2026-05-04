@@ -4,9 +4,262 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>CMDSolver Docs — Solver Optionen</title>
-<link rel="stylesheet" href="docs.css">
 <style>
-  .arg-block {
+/* CMDSolver Documentation — Shared Stylesheet */
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;1,400&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap');
+
+:root {
+  --bg:      #0d0f12;
+  --bg2:     #13161b;
+  --bg3:     #1a1e25;
+  --bg4:     #20252f;
+  --border:  #252a33;
+  --border2: #2e3540;
+  --text:    #c8cdd6;
+  --text2:   #7a8496;
+  --text3:   #4a5568;
+  --accent:  #4a9eff;
+  --ok:      #3ecf8e;
+  --warn:    #f0a030;
+  --err:     #ff5c5c;
+  --purple:  #a78bfa;
+  --teal:    #2dd4bf;
+  --mono:    'IBM Plex Mono', monospace;
+  --sans:    'IBM Plex Sans', sans-serif;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: var(--sans);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 13.5px;
+  line-height: 1.75;
+}
+
+/* ── Header ── */
+.doc-header {
+  border-bottom: 1px solid var(--border);
+  padding: 1.2rem 3rem;
+  display: flex; align-items: center;
+  justify-content: space-between; flex-wrap: wrap; gap: 1rem;
+}
+
+.breadcrumb {
+  font-family: var(--mono); font-size: 11px; color: var(--text3);
+  letter-spacing: .08em; text-transform: uppercase;
+  display: flex; align-items: center; gap: .5rem;
+}
+.breadcrumb a { color: var(--accent); text-decoration: none; }
+.breadcrumb span { color: var(--text3); }
+
+.doc-badge {
+  font-family: var(--mono); font-size: 11px;
+  padding: 3px 10px; border-radius: 4px;
+}
+.doc-badge.solver {
+  background: rgba(74,158,255,.1); border: 1px solid rgba(74,158,255,.25);
+  color: var(--accent);
+}
+.doc-badge.overview {
+  background: rgba(167,139,250,.1); border: 1px solid rgba(167,139,250,.25);
+  color: var(--purple);
+}
+.doc-badge.comparison {
+  background: rgba(62,207,142,.1); border: 1px solid rgba(62,207,142,.25);
+  color: var(--ok);
+}
+
+/* ── Hero ── */
+.hero {
+  padding: 2.5rem 3rem 2rem;
+  border-bottom: 1px solid var(--border);
+  background: linear-gradient(135deg, var(--bg) 0%, #0f1520 100%);
+}
+.hero-sub {
+  font-family: var(--mono); font-size: 11px; color: var(--text3);
+  letter-spacing: .15em; text-transform: uppercase; margin-bottom: .5rem;
+}
+h1 {
+  font-size: 28px; font-weight: 600; color: #e8ecf4;
+  letter-spacing: -.03em; margin-bottom: .5rem; line-height: 1.2;
+}
+.tagline {
+  font-size: 14px; color: var(--text2); margin-bottom: 1.5rem;
+  max-width: 680px;
+}
+.hero-stats { display: flex; gap: 2rem; flex-wrap: wrap; }
+.stat { display: flex; flex-direction: column; gap: .2rem; }
+.stat-val {
+  font-family: var(--mono); font-size: 18px; font-weight: 500; color: var(--ok);
+}
+.stat-lbl {
+  font-size: 11px; color: var(--text3);
+  text-transform: uppercase; letter-spacing: .08em;
+}
+
+/* ── Nav ── */
+nav {
+  position: sticky; top: 0; z-index: 10;
+  background: rgba(13,15,18,.95); backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--border);
+  padding: .6rem 3rem;
+  display: flex; gap: 1.5rem; flex-wrap: wrap;
+}
+nav a {
+  font-family: var(--mono); font-size: 11px; color: var(--text3);
+  text-decoration: none; letter-spacing: .08em;
+  text-transform: uppercase; transition: color .15s;
+}
+nav a:hover { color: var(--accent); }
+
+/* ── Main ── */
+main { padding: 2rem 3rem 4rem; max-width: 1040px; }
+
+section { margin-bottom: 3.5rem; scroll-margin-top: 3rem; }
+
+section > h2 {
+  font-size: 12px; font-family: var(--mono);
+  letter-spacing: .12em; text-transform: uppercase;
+  color: var(--text3); margin-bottom: 1.4rem;
+  padding-bottom: .5rem; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: .6rem;
+}
+section > h2::before {
+  content: ''; display: inline-block;
+  width: 8px; height: 8px; border-radius: 50%; background: var(--accent);
+}
+
+h3 { font-size: 14px; font-weight: 500; color: #e8ecf4; margin: 1.6rem 0 .6rem; }
+h4 { font-size: 13px; font-weight: 500; color: var(--text2); margin: 1.2rem 0 .4rem; }
+
+p { color: var(--text); margin-bottom: .9rem; max-width: 780px; }
+
+/* ── Math ── */
+.math-block {
+  background: var(--bg3); border: 1px solid var(--border);
+  border-left: 3px solid var(--purple);
+  border-radius: 6px; padding: 1.2rem 1.5rem;
+  margin: 1rem 0 1.2rem; font-family: var(--mono);
+  font-size: 13px; line-height: 2.1; white-space: pre;
+}
+.math-block .eq  { color: #e8ecf4; }
+.math-block .cmt { color: var(--text3); font-style: italic; }
+.math-block .hi  { color: var(--teal); }
+.math-block .hi2 { color: var(--warn); }
+
+/* ── Notes ── */
+.note {
+  border-radius: 6px; padding: .85rem 1.1rem;
+  font-size: 13px; line-height: 1.7; margin-bottom: 1.2rem;
+}
+.note.blue   { background: rgba(74,158,255,.06);  border-left: 3px solid var(--accent); }
+.note.green  { background: rgba(62,207,142,.06);  border-left: 3px solid var(--ok); }
+.note.amber  { background: rgba(240,160,48,.06);  border-left: 3px solid var(--warn); }
+.note.red    { background: rgba(255,92,92,.06);   border-left: 3px solid var(--err); }
+.note.purple { background: rgba(167,139,250,.06); border-left: 3px solid var(--purple); }
+.note strong { color: #e8ecf4; }
+
+/* ── Code ── */
+code {
+  font-family: var(--mono); font-size: 11.5px;
+  background: rgba(255,255,255,.05); padding: 1px 5px;
+  border-radius: 3px; color: #a8c8f0;
+}
+pre {
+  font-family: var(--mono); font-size: 12px;
+  background: var(--bg3); border: 1px solid var(--border);
+  border-radius: 8px; padding: 1rem 1.2rem;
+  overflow-x: auto; line-height: 1.7; margin-bottom: 1rem; color: #c8cdd6;
+}
+.kw  { color: var(--purple); }
+.cmt { color: var(--text3); font-style: italic; }
+.fn  { color: var(--teal); }
+.num { color: var(--warn); }
+.str { color: var(--ok); }
+
+/* ── Tables ── */
+.tbl-wrap {
+  overflow-x: auto; border-radius: 8px;
+  border: 1px solid var(--border); margin-bottom: 1.5rem;
+}
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+thead th {
+  background: var(--bg3); padding: 9px 14px; text-align: left;
+  font-weight: 500; font-size: 11px; letter-spacing: .06em;
+  text-transform: uppercase; color: var(--text2);
+  border-bottom: 1px solid var(--border2); white-space: nowrap;
+}
+tbody tr { border-bottom: 1px solid var(--border); transition: background .1s; }
+tbody tr:last-child { border-bottom: none; }
+tbody tr:hover { background: var(--bg3); }
+td { padding: 9px 14px; vertical-align: top; line-height: 1.6; }
+td.center { text-align: center; }
+
+/* ── Badges ── */
+.badge {
+  display: inline-block; font-size: 11px; padding: 2px 9px;
+  border-radius: 12px; font-family: var(--mono); white-space: nowrap;
+}
+.b-ok   { background: rgba(62,207,142,.1);  color: var(--ok);     border: 1px solid rgba(62,207,142,.25); }
+.b-warn { background: rgba(240,160,48,.1);  color: var(--warn);   border: 1px solid rgba(240,160,48,.25); }
+.b-err  { background: rgba(255,92,92,.1);   color: var(--err);    border: 1px solid rgba(255,92,92,.25); }
+.b-info { background: rgba(74,158,255,.1);  color: var(--accent); border: 1px solid rgba(74,158,255,.25); }
+.b-na   { background: rgba(74,84,96,.1);    color: var(--text3);  border: 1px solid var(--border2); }
+
+/* ── Star rating ── */
+.stars { color: var(--warn); letter-spacing: -.05em; }
+.stars.dim { color: var(--border2); }
+
+/* ── File list ── */
+.file-list { list-style: none; }
+.file-list li {
+  display: flex; gap: 1rem; align-items: flex-start;
+  padding: .7rem 1rem; background: var(--bg2);
+  border: 1px solid var(--border); border-radius: 4px; margin-bottom: .4rem;
+}
+.file-icon {
+  font-family: var(--mono); font-size: 11px; color: var(--accent);
+  white-space: nowrap; margin-top: 2px; min-width: 50px;
+}
+.file-desc { font-size: 13px; color: var(--text2); }
+.file-desc strong { color: var(--text); display: block; margin-bottom: .2rem; }
+
+/* ── Flowchart ── */
+.flowchart {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 10px; padding: 1.5rem; margin: 1rem 0 1.5rem;
+  overflow-x: auto;
+}
+
+/* ── Footer ── */
+footer {
+  border-top: 1px solid var(--border); padding: 1.5rem 3rem;
+  font-family: var(--mono); font-size: 11px; color: var(--text3);
+  display: flex; justify-content: space-between; flex-wrap: wrap; gap: .5rem;
+}
+footer a { color: var(--accent); text-decoration: none; }
+
+/* ── Footnotes ── */
+.footnotes {
+  margin-top: 2rem; padding-top: 1.5rem;
+  border-top: 1px solid var(--border);
+  font-size: 12px; color: var(--text2);
+}
+.footnotes p { max-width: none; margin-bottom: .5rem; }
+sup { font-size: 10px; color: var(--accent); }
+
+/* Default: alle Sprachelemente sichtbar (kein JS-Flash) */
+/* Mit lang-Klasse auf body: nur die aktive Sprache sichtbar */
+
+/* Nur wenn body eine Sprachklasse hat, werden Elemente ausgeblendet */
+/* Sprach-Sichtbarkeit via class auf body */
+
+
+/* ── Seitenspezifische Klassen ────────────────────────
+   (aus alter solver_options.html wiederhergestellt) */
+.arg-block {
     background: var(--bg2); border: 1px solid var(--border);
     border-radius: 8px; padding: 1rem 1.4rem; margin-bottom: 1rem;
   }
@@ -27,75 +280,123 @@
   .arg-tag.exclusive { color: var(--warn); border-color: rgba(240,160,48,.2);
                        background: rgba(240,160,48,.06); }
 </style>
+<link rel="stylesheet" href="i18n.css">
 </head>
 <body>
+<script>
+(function(){
+  var stored = '';
+  try { stored = localStorage.getItem('cmdlang') || ''; } catch(e){}
+  var lang = stored || 'de';
 
+  function apply(l) {
+    lang = l;
+    try { localStorage.setItem('cmdlang', l); } catch(e){}
+    document.documentElement.lang = l;
+    var body = document.body;
+    body.classList.remove('lang-de','lang-en');
+    body.classList.add('lang-' + l);
+    document.querySelectorAll('.lang-btn').forEach(function(b){
+      b.classList.toggle('active', b.dataset.lang === l);
+    });
+  }
+
+  // Body-Klasse sofort setzen, damit data-lang-Elemente direkt korrekt
+  // sichtbar sind (kein Flash mit unsichtbarem Header-Inhalt).
+  apply(lang);
+  document.addEventListener('DOMContentLoaded', function(){
+    apply(lang); // erneut, damit jetzt auch die Buttons gestyled werden
+    document.querySelectorAll('.lang-btn').forEach(function(b){
+      b.addEventListener('click', function(){ apply(b.dataset.lang); });
+    });
+    // Sticky-Header Schatten via IntersectionObserver
+    var sentinel = document.querySelector('.header-sentinel');
+    var header   = document.querySelector('.doc-header');
+    if (sentinel && header && 'IntersectionObserver' in window) {
+      new IntersectionObserver(function(entries){
+        header.classList.toggle('scrolled', !entries[0].isIntersecting);
+      }).observe(sentinel);
+    }
+  });
+})();
+</script>
+
+
+
+
+<div class="header-sentinel"></div>
 <div class="doc-header">
   <div class="breadcrumb">
     <a href="index.html">CMDSolver Docs</a>
-    <span>›</span><span>Solver Optionen</span>
+    ›
   </div>
-  <span class="doc-badge overview">Referenz</span>
-</div>
+  <div class="doc-header-right"><div class="lang-switch"><button class="lang-btn" data-lang="de">DE</button><button class="lang-btn" data-lang="en">EN</button></div><span class="doc-badge overview">Referenz</span></div></div>
 
 <div class="hero">
-  <div class="hero-sub">Kapitel 3</div>
-  <h1>Solver Optionen<br>CLI Referenz</h1>
-  <p class="tagline">
-    Vollständige Referenz aller Kommandozeilenargumente — allgemeine Optionen
-    die für alle Solver gelten, und solver-spezifische Parameter.
-  </p>
-</div>
+  <div class="hero-sub"><span data-lang="de">CLI Referenz</span><span data-lang="en">CLI Reference</span></div>
+  <h1 data-lang="de">Solver Optionen<br>CLI Referenz</h1><h1 data-lang="en">Solver Options<br>CLI Reference</h1>
+  <p class="tagline" data-lang="de">Alle Kommandozeilenargumente für CASSolver — allgemeine Optionen, solver-spezifische Parameter, Diagnose, Batch-Modus und Sprung-Erkennung.</p>
+  <p class="tagline" data-lang="en">All command-line arguments for CASSolver — general options, solver-specific parameters, diagnostics, batch mode, and jump detection.</p>
+  </div>
 
 <nav>
-  <a href="#aufruf">Aufruf</a>
-  <a href="#allgemein">Allgemein</a>
-  <a href="#solver-wahl">Solver-Wahl</a>
-  <a href="#homotopie">Homotopie</a>
-  <a href="#broyden">Broyden</a>
-  <a href="#diagnose">Diagnose</a>
-  <a href="#batch">Batch</a>
-  <a href="#uebersicht">Übersicht</a>
+  <a href="#aufruf" data-lang="de">Aufruf</a><a href="#aufruf" data-lang="en">Invocation</a>
+  <a href="#allgemein" data-lang="de">Allgemein</a><a href="#allgemein" data-lang="en">General</a>
+  <a href="#solver-wahl" data-lang="de">Solver-Wahl</a><a href="#solver-wahl" data-lang="en">Solver Choice</a>
+  <a href="#homotopie" data-lang="de">Homotopie</a><a href="#homotopie" data-lang="en">Homotopy</a>
+  <a href="#broyden" data-lang="de">Broyden</a><a href="#broyden" data-lang="en">Broyden</a>
+  <a href="#diagnose" data-lang="de">Diagnose</a><a href="#diagnose" data-lang="en">Diagnostics</a>
+  <a href="#batch" data-lang="de">Batch</a><a href="#batch" data-lang="en">Batch</a>
+  <a href="#uebersicht" data-lang="de">Übersicht</a><a href="#uebersicht" data-lang="en">Overview</a>
 </nav>
 
 <main>
 
 <!-- Aufruf -->
 <section id="aufruf">
-  <h2>Grundaufruf</h2>
+  <h2 data-lang="de">Grundaufruf</h2><h2 data-lang="en">Basic Invocation</h2>
 
   <pre>java CASSolver -I:&lt;modelldatei&gt; [optionen]
 java CASSolver -I:model.cas -S:NEWTON_SPARSE_ARMIJO -DI
 java CASSolver -I:model.cas -S:HOMOTOPY -SH:STEPS=50 -SH:DS=0.02 -SH:INNER=LEVENBERG_MARQUARDT
-java CASSolver -I:model.csv -BA                          <span class="cmt">// Batch-Modus</span>
-java CASSolver -h                                        <span class="cmt">// Hilfe</span>
-java CASSolver -I:model.cas -TEST                        <span class="cmt">// alle Solver testen</span></pre>
+java CASSolver -I:model.csv -BA                          <span class="cmt" data-lang="de">// Batch-Modus</span><span class="cmt" data-lang="en">// batch mode</span>
+java CASSolver -h                                        <span class="cmt" data-lang="de">// Hilfe</span><span class="cmt" data-lang="en">// help</span>
+java CASSolver -I:model.cas -TEST                        <span class="cmt" data-lang="de">// alle Solver testen</span><span class="cmt" data-lang="en">// test all solvers</span></pre>
 
-  <div class="note blue">
+  <div class="note blue" data-lang="de">
     <strong>Argumente sind case-insensitiv.</strong> <code>-S:NEWTON_ARMIJO</code>
     und <code>-s:newton_armijo</code> sind gleichwertig. Pfade folgen dem
     Betriebssystem (Windows: Backslash oder Forward-Slash).
+  </div><div class="note blue" data-lang="en">
+    <strong>Arguments are case-insensitive.</strong> <code>-S:NEWTON_ARMIJO</code>
+    and <code>-s:newton_armijo</code> are equivalent. Paths follow the
+    operating system (Windows: backslash or forward slash).
   </div>
 </section>
 
 <!-- Allgemeine Optionen -->
 <section id="allgemein">
-  <h2>Allgemeine Optionen — für alle Solver</h2>
+  <h2 data-lang="de">Allgemeine Optionen — für alle Solver</h2><h2 data-lang="en">General Options — for All Solvers</h2>
 
   <div class="arg-block">
     <div class="arg-sig">-I:&lt;datei&gt;</div>
-    <div class="arg-desc">
+    <div class="arg-desc" data-lang="de">
       Eingabedatei. Unterstützte Formate: <code>.cas</code> (Gleichungssystem),
       <code>.dat</code> (Gleichungssystem), <code>.csv</code> (Batch-Parameterstudie).
+    </div><div class="arg-desc" data-lang="en">
+      Input file. Supported formats: <code>.cas</code> (equation system),
+      <code>.dat</code> (equation system), <code>.csv</code> (batch parameter study).
     </div>
     <div class="arg-example">-I:model.cas &nbsp;&nbsp; -I:C:\Work\nozzle.cas</div>
-    <div class="arg-solver-tags"><span class="arg-tag all">Alle Solver</span></div>
+    <div class="arg-solver-tags"><span class="arg-tag all" data-lang="de">Alle Solver</span><span class="arg-tag all" data-lang="en">All solvers</span></div>
   </div>
 
   <div class="arg-block">
     <div class="arg-sig">-S:&lt;solver&gt;</div>
-    <div class="arg-desc">
+    <div class="arg-desc" data-lang="de">
       Solver-Auswahl. Standard: <code>NEWTON_ARMIJO</code>.
+    </div><div class="arg-desc" data-lang="en">
+      Solver selection. Default: <code>NEWTON_ARMIJO</code>.
     </div>
     <div class="arg-example">-S:NEWTON_SPARSE_ARMIJO &nbsp;&nbsp; -S:LEVENBERG_MARQUARDT &nbsp;&nbsp; -S:HOMOTOPY</div>
     <div class="arg-solver-tags">
@@ -111,122 +412,148 @@ java CASSolver -I:model.cas -TEST                        <span class="cmt">// al
 
   <div class="arg-block">
     <div class="arg-sig">-U:&lt;datei&gt;</div>
-    <div class="arg-desc">
+    <div class="arg-desc" data-lang="de">
       Variable-Update-Datei — überschreibt Startwerte, Bounds und Status
       aus der CAS-Datei. Format pro Zeile:
       <br><code>Name:VAR; Value:1.0; Status:Fixed; Lower:0.0; Upper:2.0; Unit:m/s; Descr:text</code>
+    </div><div class="arg-desc" data-lang="en">
+      Variable update file — overrides starting values, bounds, and status
+      from the CAS file. Per-line format:
+      <br><code>Name:VAR; Value:1.0; Status:Fixed; Lower:0.0; Upper:2.0; Unit:m/s; Descr:text</code>
     </div>
     <div class="arg-example">-U:betriebspunkt.txt</div>
-    <div class="arg-solver-tags"><span class="arg-tag all">Alle Solver</span></div>
+    <div class="arg-solver-tags"><span class="arg-tag all" data-lang="de">Alle Solver</span><span class="arg-tag all" data-lang="en">All solvers</span></div>
   </div>
 
   <div class="arg-block">
     <div class="arg-sig">-SC:&lt;strategie&gt;</div>
-    <div class="arg-desc">
+    <div class="arg-desc" data-lang="de">
       Skalierungsstrategie für die Jacobi-Matrix. Standard: <code>NONE</code>.
       <br><code>NONE</code> — keine Skalierung
       <br><code>DIAGONAL</code> — Skalierung über Jacobi-Diagonale
       <br><code>UNIT_INTERVAL</code> — Skalierung über Variablen-Bounds
+    </div><div class="arg-desc" data-lang="en">
+      Scaling strategy for the Jacobian. Default: <code>NONE</code>.
+      <br><code>NONE</code> — no scaling
+      <br><code>DIAGONAL</code> — scaling via Jacobian diagonal
+      <br><code>UNIT_INTERVAL</code> — scaling via variable bounds
     </div>
     <div class="arg-example">-SC:DIAGONAL &nbsp;&nbsp; -SC:UNIT_INTERVAL</div>
-    <div class="arg-solver-tags"><span class="arg-tag all">Alle Solver</span></div>
+    <div class="arg-solver-tags"><span class="arg-tag all" data-lang="de">Alle Solver</span><span class="arg-tag all" data-lang="en">All solvers</span></div>
   </div>
 
   <div class="arg-block">
     <div class="arg-sig">-SN</div>
-    <div class="arg-desc">
+    <div class="arg-desc" data-lang="de">
       Residuen-Normierung (N3-Modus) aktivieren. Berechnet fsum als
       <code>Σ|Fᵢ(x)|/|Fᵢ(x₀)|</code> statt <code>Σ|Fᵢ(x)|</code>.
       Empfohlen bei Systemen mit sehr unterschiedlichen Gleichungsgrößenordnungen
       (z.B. Pa-Gleichungen neben kg/s-Gleichungen).
+    </div><div class="arg-desc" data-lang="en">
+      Enable residual normalization (N3 mode). Computes fsum as
+      <code>Σ|Fᵢ(x)|/|Fᵢ(x₀)|</code> instead of <code>Σ|Fᵢ(x)|</code>.
+      Recommended on systems with widely varying equation magnitudes
+      (e.g., Pa equations alongside kg/s equations).
     </div>
     <div class="arg-example">-SN</div>
-    <div class="arg-solver-tags"><span class="arg-tag all">Alle Solver</span></div>
+    <div class="arg-solver-tags"><span class="arg-tag all" data-lang="de">Alle Solver</span><span class="arg-tag all" data-lang="en">All solvers</span></div>
   </div>
 
   <div class="arg-block">
     <div class="arg-sig">-TEST</div>
-    <div class="arg-desc">
+    <div class="arg-desc" data-lang="de">
       Test-Modus: alle 7 Solver werden nacheinander auf demselben Modell
       ausgeführt und verglichen. Startwerte werden für jeden Solver zurückgesetzt.
       Nützlich für Solver-Auswahl und Performance-Vergleich.
+    </div><div class="arg-desc" data-lang="en">
+      Test mode: all 7 solvers are run sequentially on the same model and
+      compared. Starting values are reset for each solver. Useful for solver
+      selection and performance comparison.
     </div>
     <div class="arg-example">java CASSolver -I:model.cas -TEST</div>
-    <div class="arg-solver-tags"><span class="arg-tag all">Alle Solver</span></div>
+    <div class="arg-solver-tags"><span class="arg-tag all" data-lang="de">Alle Solver</span><span class="arg-tag all" data-lang="en">All solvers</span></div>
   </div>
 
   <div class="arg-block">
     <div class="arg-sig">-h / --help</div>
-    <div class="arg-desc">
+    <div class="arg-desc" data-lang="de">
       Zeigt die vollständige Hilfe mit allen Argumenten und verfügbaren Solvern.
+    </div><div class="arg-desc" data-lang="en">
+      Shows the full help with all arguments and available solvers.
     </div>
     <div class="arg-example">java CASSolver -h</div>
-    <div class="arg-solver-tags"><span class="arg-tag all">Alle Solver</span></div>
+    <div class="arg-solver-tags"><span class="arg-tag all" data-lang="de">Alle Solver</span><span class="arg-tag all" data-lang="en">All solvers</span></div>
   </div>
 </section>
 
 <!-- Solver-Wahl Parameter -->
 <section id="solver-wahl">
-  <h2>Allgemeine Solver-Parameter</h2>
+  <h2 data-lang="de">Allgemeine Solver-Parameter</h2><h2 data-lang="en">General Solver Parameters</h2>
 
-  <p>Diese Parameter gelten für alle direkten Solver (Newton, LM, Broyden) —
-  nicht für Homotopie (die hat eigene <code>-SH:</code> Parameter).</p>
+  <p data-lang="de">Diese Parameter gelten für alle direkten Solver (Newton, LM, Broyden) —
+  nicht für Homotopie (die hat eigene <code>-SH:</code> Parameter).</p><p data-lang="en">These parameters apply to all direct solvers (Newton, LM, Broyden) —
+  not to homotopy (which has its own <code>-SH:</code> parameters).</p>
 
-  <div class="note blue">
+  <div class="note blue" data-lang="de">
     <strong>Hinweis:</strong> Toleranz und maximale Iterationen werden über
     <code>SolverConfig</code> gesetzt — aktuell nicht direkt über CLI-Argumente
     konfigurierbar. Standard-Werte: <code>tol=1e-7</code>, <code>maxIter=100</code>.
     Über <code>SolverAPI</code> sind diese Werte programmtisch setzbar.
+  </div><div class="note blue" data-lang="en">
+    <strong>Note:</strong> Tolerance and maximum iterations are set via
+    <code>SolverConfig</code> — currently not directly configurable through
+    CLI arguments. Defaults: <code>tol=1e-7</code>, <code>maxIter=100</code>.
+    These values are settable programmatically through <code>SolverAPI</code>.
   </div>
 
   <div class="tbl-wrap">
   <table>
-    <thead><tr><th>Parameter</th><th>Default</th><th>Gilt für</th><th>Beschreibung</th></tr></thead>
+    <thead><tr><th>Parameter</th><th>Default</th><th data-lang="de">Gilt für</th><th data-lang="en">Applies to</th><th data-lang="de">Beschreibung</th><th data-lang="en">Description</th></tr></thead>
     <tbody>
       <tr>
         <td><code>tolerance</code></td><td><code>1e-7</code></td>
-        <td>Alle direkten Solver</td>
-        <td>Konvergenzschwelle: ||F(x)|| &lt; tolerance</td>
+        <td data-lang="de">Alle direkten Solver</td><td data-lang="en">All direct solvers</td>
+        <td data-lang="de">Konvergenzschwelle: ||F(x)|| &lt; tolerance</td><td data-lang="en">Convergence threshold: ||F(x)|| &lt; tolerance</td>
       </tr>
       <tr>
         <td><code>maxIter</code></td><td><code>100</code></td>
-        <td>Alle direkten Solver</td>
-        <td>Maximale Iterationen vor Abbruch</td>
+        <td data-lang="de">Alle direkten Solver</td><td data-lang="en">All direct solvers</td>
+        <td data-lang="de">Maximale Iterationen vor Abbruch</td><td data-lang="en">Maximum iterations before abort</td>
       </tr>
       <tr>
         <td><code>armijoAlphaInit</code></td><td><code>1.0</code></td>
         <td>NEWTON_ARMIJO, NEWTON_SPARSE_ARMIJO</td>
-        <td>Initialer Schrittweiten-Faktor α</td>
+        <td data-lang="de">Initialer Schrittweiten-Faktor α</td><td data-lang="en">Initial step-size factor α</td>
       </tr>
       <tr>
         <td><code>armijoAlphaMin</code></td><td><code>1e-4</code></td>
         <td>NEWTON_ARMIJO, NEWTON_SPARSE_ARMIJO</td>
-        <td>Minimales α vor Abbruch der Liniensuche</td>
+        <td data-lang="de">Minimales α vor Abbruch der Liniensuche</td><td data-lang="en">Minimum α before line search aborts</td>
       </tr>
       <tr>
         <td><code>armijoRho</code></td><td><code>0.5</code></td>
         <td>NEWTON_ARMIJO, NEWTON_SPARSE_ARMIJO</td>
-        <td>Reduktionsfaktor pro Backtracking-Schritt</td>
+        <td data-lang="de">Reduktionsfaktor pro Backtracking-Schritt</td><td data-lang="en">Reduction factor per backtracking step</td>
       </tr>
       <tr>
         <td><code>armijoC1</code></td><td><code>1e-4</code></td>
         <td>NEWTON_ARMIJO, NEWTON_SPARSE_ARMIJO</td>
-        <td>Wolfe-Bedingungskonstante c₁</td>
+        <td data-lang="de">Wolfe-Bedingungskonstante c₁</td><td data-lang="en">Wolfe condition constant c₁</td>
       </tr>
       <tr>
         <td><code>lmMuInit</code></td><td><code>1e-6</code></td>
         <td>LEVENBERG_MARQUARDT</td>
-        <td>Initialer μ-Faktor (× max Diagonale JᵀJ)</td>
+        <td data-lang="de">Initialer μ-Faktor (× max Diagonale JᵀJ)</td><td data-lang="en">Initial μ factor (× max diagonal of JᵀJ)</td>
       </tr>
       <tr>
         <td><code>lmNuUp</code></td><td><code>2.0</code></td>
         <td>LEVENBERG_MARQUARDT</td>
-        <td>μ-Erhöhungsfaktor bei schlechtem Schritt</td>
+        <td data-lang="de">μ-Erhöhungsfaktor bei schlechtem Schritt</td><td data-lang="en">μ increase factor on bad step</td>
       </tr>
       <tr>
         <td><code>lmNuDown</code></td><td><code>5.0</code></td>
         <td>LEVENBERG_MARQUARDT</td>
-        <td>μ-Reduktionsfaktor bei gutem Schritt</td>
+        <td data-lang="de">μ-Reduktionsfaktor bei gutem Schritt</td><td data-lang="en">μ reduction factor on good step</td>
       </tr>
     </tbody>
   </table>
@@ -235,55 +562,71 @@ java CASSolver -I:model.cas -TEST                        <span class="cmt">// al
 
 <!-- Homotopie -->
 <section id="homotopie">
-  <h2>Homotopie-Optionen  <code style="font-size:12px">-SH:...</code></h2>
+  <h2 data-lang="de">Homotopie-Optionen  <code style="font-size:12px">-SH:...</code></h2><h2 data-lang="en">Homotopy Options  <code style="font-size:12px">-SH:...</code></h2>
 
-  <div class="note amber">
+  <div class="note amber" data-lang="de">
     <strong>Nur für <code>-S:HOMOTOPY</code></strong> — alle <code>-SH:</code>
     Argumente werden ignoriert wenn ein anderer Solver gewählt ist.
+  </div><div class="note amber" data-lang="en">
+    <strong>Only for <code>-S:HOMOTOPY</code></strong> — all <code>-SH:</code>
+    arguments are ignored when a different solver is selected.
   </div>
 
   <div class="arg-block">
     <div class="arg-sig">-SH:STEPS=&lt;n&gt;</div>
-    <div class="arg-desc">
+    <div class="arg-desc" data-lang="de">
       Anzahl der Homotopie-Schritte (Pfadpunkte). Standard: 10.
       Mehr Schritte = kleinere Einzelschritte = robuster aber langsamer.
       Bei komplexen Systemen: 50–100.
+    </div><div class="arg-desc" data-lang="en">
+      Number of homotopy steps (path points). Default: 10.
+      More steps = smaller individual steps = more robust but slower.
+      For complex systems: 50–100.
     </div>
     <div class="arg-example">-SH:STEPS=50</div>
-    <div class="arg-solver-tags"><span class="arg-tag exclusive">Nur HOMOTOPY</span></div>
+    <div class="arg-solver-tags"><span class="arg-tag exclusive" data-lang="de">Nur HOMOTOPY</span><span class="arg-tag exclusive" data-lang="en">HOMOTOPY only</span></div>
   </div>
 
   <div class="arg-block">
     <div class="arg-sig">-SH:DS=&lt;x&gt;</div>
-    <div class="arg-desc">
+    <div class="arg-desc" data-lang="de">
       Initiale Schrittweite Δt entlang des Homotopie-Pfades. Standard: 0.1.
       Bei numerisch schwierigen Systemen (nahe Ma=1, Phasenübergang): 0.02.
+    </div><div class="arg-desc" data-lang="en">
+      Initial step size Δt along the homotopy path. Default: 0.1.
+      For numerically difficult systems (near Ma=1, phase transition): 0.02.
     </div>
     <div class="arg-example">-SH:DS=0.02 &nbsp;&nbsp; -SH:DS=0.05</div>
-    <div class="arg-solver-tags"><span class="arg-tag exclusive">Nur HOMOTOPY</span></div>
+    <div class="arg-solver-tags"><span class="arg-tag exclusive" data-lang="de">Nur HOMOTOPY</span><span class="arg-tag exclusive" data-lang="en">HOMOTOPY only</span></div>
   </div>
 
   <div class="arg-block">
     <div class="arg-sig">-SH:INNER=&lt;solver&gt;</div>
-    <div class="arg-desc">
+    <div class="arg-desc" data-lang="de">
       Innerer Korrektor-Solver für jeden Homotopie-Schritt. Standard: NEWTON_ARMIJO.
       Bei schlecht konditionierten Systemen (κ > 10¹²): LEVENBERG_MARQUARDT.
+    </div><div class="arg-desc" data-lang="en">
+      Inner corrector solver for each homotopy step. Default: NEWTON_ARMIJO.
+      On ill-conditioned systems (κ > 10¹²): LEVENBERG_MARQUARDT.
     </div>
     <div class="arg-example">-SH:INNER=LEVENBERG_MARQUARDT &nbsp;&nbsp; -SH:INNER=NEWTON_SPARSE_ARMIJO</div>
-    <div class="arg-solver-tags"><span class="arg-tag exclusive">Nur HOMOTOPY</span></div>
+    <div class="arg-solver-tags"><span class="arg-tag exclusive" data-lang="de">Nur HOMOTOPY</span><span class="arg-tag exclusive" data-lang="en">HOMOTOPY only</span></div>
   </div>
 
   <div class="arg-block">
     <div class="arg-sig">-SH:CRITICAL</div>
-    <div class="arg-desc">
+    <div class="arg-desc" data-lang="de">
       Vorkonfigurierte Einstellung für kritische Systeme (z.B. Strömung nahe Ma=1,
       Phasenübergänge). Setzt automatisch: STEPS=50, DS=0.02, DSMAX=0.1, ITER_TARGET=3.
+    </div><div class="arg-desc" data-lang="en">
+      Preset for critical systems (e.g., flow near Ma=1, phase transitions).
+      Automatically sets: STEPS=50, DS=0.02, DSMAX=0.1, ITER_TARGET=3.
     </div>
     <div class="arg-example">-SH:CRITICAL</div>
-    <div class="arg-solver-tags"><span class="arg-tag exclusive">Nur HOMOTOPY</span></div>
+    <div class="arg-solver-tags"><span class="arg-tag exclusive" data-lang="de">Nur HOMOTOPY</span><span class="arg-tag exclusive" data-lang="en">HOMOTOPY only</span></div>
   </div>
 
-  <h3>Vollständiges Beispiel</h3>
+  <h3 data-lang="de">Vollständiges Beispiel</h3><h3 data-lang="en">Complete example</h3>
   <pre>java CASSolver -I:nozzle.cas \
   -S:HOMOTOPY \
   -SH:INNER=LEVENBERG_MARQUARDT \
@@ -293,88 +636,171 @@ java CASSolver -I:model.cas -TEST                        <span class="cmt">// al
 
 <!-- Broyden -->
 <section id="broyden">
-  <h2>Broyden-Optionen  <code style="font-size:12px">-SB:...</code></h2>
+  <h2 data-lang="de">Broyden-Optionen  <code style="font-size:12px">-SB:...</code></h2><h2 data-lang="en">Broyden Options  <code style="font-size:12px">-SB:...</code></h2>
 
-  <div class="note amber">
+  <div class="note amber" data-lang="de">
     <strong>Nur für <code>-S:BROYDEN</code> und <code>-S:BROYDEN_SPARSE</code></strong>
+  </div><div class="note amber" data-lang="en">
+    <strong>Only for <code>-S:BROYDEN</code> and <code>-S:BROYDEN_SPARSE</code></strong>
   </div>
 
   <div class="arg-block">
     <div class="arg-sig">-SB:RESET=&lt;n&gt;</div>
-    <div class="arg-desc">
+    <div class="arg-desc" data-lang="de">
       Jacobi-Reset-Intervall — alle n Iterationen wird die Jacobi vollständig
       neu berechnet statt durch Rang-1-Update aktualisiert. Standard: 25.
       Kleinere Werte: robuster aber langsamer. Größere Werte: schneller aber
       mehr Akkumulationsfehler.
+    </div><div class="arg-desc" data-lang="en">
+      Jacobian reset interval — every n iterations the Jacobian is fully
+      rebuilt instead of being updated via rank-1 update. Default: 25.
+      Smaller values: more robust but slower. Larger values: faster but more
+      accumulated error.
     </div>
     <div class="arg-example">-SB:RESET=10 &nbsp;&nbsp; -SB:RESET=50</div>
-    <div class="arg-solver-tags"><span class="arg-tag exclusive">Nur BROYDEN / BROYDEN_SPARSE</span></div>
+    <div class="arg-solver-tags"><span class="arg-tag exclusive" data-lang="de">Nur BROYDEN / BROYDEN_SPARSE</span><span class="arg-tag exclusive" data-lang="en">BROYDEN / BROYDEN_SPARSE only</span></div>
   </div>
 
   <div class="arg-block">
     <div class="arg-sig">-SB:KAPPA=&lt;x&gt;</div>
-    <div class="arg-desc">
+    <div class="arg-desc" data-lang="de">
       Konditionszahl-Schwellwert für erzwungenen Reset. Standard: 1e10.
       Wenn κ(J) diesen Wert überschreitet, wird die Jacobi sofort neu
       aufgebaut unabhängig vom Reset-Intervall.
+    </div><div class="arg-desc" data-lang="en">
+      Condition-number threshold for forced reset. Default: 1e10.
+      When κ(J) exceeds this value, the Jacobian is rebuilt immediately
+      regardless of the reset interval.
     </div>
     <div class="arg-example">-SB:KAPPA=1e8</div>
-    <div class="arg-solver-tags"><span class="arg-tag exclusive">Nur BROYDEN / BROYDEN_SPARSE</span></div>
+    <div class="arg-solver-tags"><span class="arg-tag exclusive" data-lang="de">Nur BROYDEN / BROYDEN_SPARSE</span><span class="arg-tag exclusive" data-lang="en">BROYDEN / BROYDEN_SPARSE only</span></div>
   </div>
 
   <div class="arg-block">
     <div class="arg-sig">-SB:WARMKAPPA=&lt;x&gt;</div>
-    <div class="arg-desc">
+    <div class="arg-desc" data-lang="de">
       Konditionszahl-Schwellwert für Warm-Start bei Parameterstudien.
       Wenn der Startvektor vom vorherigen BatchRunner-Run übernommen wird,
       wird die Jacobi nur neu aufgebaut wenn κ diesen Wert überschreitet.
+    </div><div class="arg-desc" data-lang="en">
+      Condition-number threshold for warm-start in parameter studies.
+      When the starting vector is carried over from the previous BatchRunner
+      run, the Jacobian is rebuilt only when κ exceeds this value.
     </div>
     <div class="arg-example">-SB:WARMKAPPA=1e6</div>
-    <div class="arg-solver-tags"><span class="arg-tag exclusive">Nur BROYDEN / BROYDEN_SPARSE</span></div>
+    <div class="arg-solver-tags"><span class="arg-tag exclusive" data-lang="de">Nur BROYDEN / BROYDEN_SPARSE</span><span class="arg-tag exclusive" data-lang="en">BROYDEN / BROYDEN_SPARSE only</span></div>
   </div>
 </section>
 
 <!-- Diagnose -->
 <section id="diagnose">
-  <h2>Diagnose- und Debug-Optionen</h2>
+  <h2 data-lang="de">Diagnose- und Debug-Optionen</h2><h2 data-lang="en">Diagnostic and Debug Options</h2>
 
   <div class="arg-block">
     <div class="arg-sig">-DI</div>
-    <div class="arg-desc">
+    <div class="arg-desc" data-lang="de">
       Diagnose-Modus: Führt vor dem eigentlichen Solve einen
       <code>InitialValueAnalyzer</code>-Durchlauf durch. Optimiert Startwerte
       automatisch — besonders nützlich wenn viele Variablen schlecht initialisiert sind.
       Der Solver startet dann mit einem besseren Startvektor.
+    </div><div class="arg-desc" data-lang="en">
+      Diagnostic mode: runs an <code>InitialValueAnalyzer</code> pass before
+      the actual solve. Optimizes starting values automatically — especially
+      useful when many variables are poorly initialized. The solver then starts
+      with a better starting vector.
     </div>
     <div class="arg-example">java CASSolver -I:model.cas -DI</div>
-    <div class="arg-solver-tags"><span class="arg-tag all">Alle Solver</span></div>
+    <div class="arg-solver-tags"><span class="arg-tag all" data-lang="de">Alle Solver</span><span class="arg-tag all" data-lang="en">All solvers</span></div>
+  </div>
+
+  <div class="arg-block">
+    <div class="arg-sig">-DIAG</div>
+    <div class="arg-desc" data-lang="de">
+      Pre-Solve Modell-Diagnose: Analysiert das Gleichungssystem vor dem Solve
+      systematisch und erstellt einen HTML-Bericht (<code>model_diagnostics.html</code>
+      neben der CAS-Datei) mit Traffic-Light Status (GREEN/AMBER/RED).
+      <br><br>
+      Analysierte Kategorien:
+      <ul style="margin:.4rem 0 0 1.2rem;line-height:2">
+        <li><b>Bounds Consistency</b> — Lower &gt; Upper, Value außerhalb Bounds,
+            zu enge/weite Bounds, negative Bounds für physikalische Einheiten</li>
+        <li><b>NaN Risk</b> — SQRT/LOG/LN mit problematischen Bounds (bounds-basiert,
+            keine False Positives bei sicheren Bounds)</li>
+        <li><b>Scale Analysis</b> — Größenordnungs-Spanne über alle Variablen,
+            Warnung ab 10⁴, Fehler ab 10⁸</li>
+        <li><b>Structural Analysis</b> — Orphaned Variables, Constant Equations,
+            System-Balance (freie Variablen vs. Gleichungen)</li>
+        <li><b>Jacobian Analysis</b> — κ bei x₀, Null-Zeilen (nur bei freien
+            Variablen mit Ableitungen ≈ 0), Null-Spalten</li>
+        <li><b>Residual Analysis</b> — NaN in F(x₀), Residuen-Dominanz</li>
+      </ul>
+      Bei <code>NOT_CONVERGED</code> wird der Bericht automatisch erzeugt
+      (auch ohne <code>-DIAG</code>).
+      <br>Am Ende des Reports: konkrete Solver-Empfehlung basierend auf den Befunden.
+    </div><div class="arg-desc" data-lang="en">
+      Pre-solve model diagnostics: systematically analyzes the equation system
+      before the solve and produces an HTML report
+      (<code>model_diagnostics.html</code> next to the CAS file) with traffic-light
+      status (GREEN/AMBER/RED).
+      <br><br>
+      Categories analyzed:
+      <ul style="margin:.4rem 0 0 1.2rem;line-height:2">
+        <li><b>Bounds consistency</b> — Lower &gt; Upper, value outside bounds,
+            bounds too tight/wide, negative bounds for physical units</li>
+        <li><b>NaN risk</b> — SQRT/LOG/LN with problematic bounds (bounds-based,
+            no false positives on safe bounds)</li>
+        <li><b>Scale analysis</b> — magnitude span across all variables,
+            warning from 10⁴, error from 10⁸</li>
+        <li><b>Structural analysis</b> — orphaned variables, constant equations,
+            system balance (free variables vs. equations)</li>
+        <li><b>Jacobian analysis</b> — κ at x₀, zero rows (only on free
+            variables with derivatives ≈ 0), zero columns</li>
+        <li><b>Residual analysis</b> — NaN in F(x₀), residual dominance</li>
+      </ul>
+      On <code>NOT_CONVERGED</code> the report is generated automatically
+      (even without <code>-DIAG</code>).
+      <br>End of the report: concrete solver recommendation based on the findings.
+    </div>
+    <div class="arg-example">java CASSolver -I:model.cas -DIAG -S:NEWTON_SPARSE_ARMIJO -SC:EQUILIBRATE</div>
+    <div class="arg-solver-tags"><span class="arg-tag all" data-lang="de">Alle Solver</span><span class="arg-tag all" data-lang="en">All solvers</span></div>
   </div>
 
   <div class="arg-block">
     <div class="arg-sig">-DV:&lt;datei&gt;</div>
-    <div class="arg-desc">
+    <div class="arg-desc" data-lang="de">
       Startvektor-Dump: Schreibt alle Variablenwerte vor Iteration 0 in eine
       Textdatei im <code>-U:</code>-Format. Nützlich für Debugging — der Dump
       kann direkt als <code>-U:</code>-Datei wiederverwendet werden.
+    </div><div class="arg-desc" data-lang="en">
+      Starting-vector dump: writes all variable values before iteration 0
+      into a text file in <code>-U:</code> format. Useful for debugging — the
+      dump can be reused directly as a <code>-U:</code> file.
     </div>
     <div class="arg-example">-DV:startvektor.txt</div>
     <div class="arg-solver-tags">
-      <span class="arg-tag exclusive">Nur NEWTON_ARMIJO</span>
+      <span class="arg-tag exclusive" data-lang="de">Nur NEWTON_ARMIJO</span><span class="arg-tag exclusive" data-lang="en">NEWTON_ARMIJO only</span>
     </div>
   </div>
 </section>
 
 <!-- Batch -->
 <section id="batch">
-  <h2>Batch-Optionen</h2>
+  <h2 data-lang="de">Batch-Optionen</h2><h2 data-lang="en">Batch Options</h2>
 
   <div class="arg-block">
     <div class="arg-sig">-I:&lt;datei.csv&gt;</div>
-    <div class="arg-desc">
+    <div class="arg-desc" data-lang="de">
       Batch-Modus: Wenn die Eingabedatei eine <code>.csv</code>-Datei ist,
       wird automatisch BatchRunner aktiviert. Die CSV enthält eine Zeile pro
       Betriebspunkt mit Variablenwerten. Die zugehörige <code>.cas</code>-Datei
       wird automatisch gesucht (gleiches Verzeichnis, gleicher Name).
+      → <a href="batch_mode.html">Vollständige Batch-Dokumentation</a>
+    </div><div class="arg-desc" data-lang="en">
+      Batch mode: when the input file is a <code>.csv</code>, BatchRunner is
+      activated automatically. The CSV contains one line per operating point
+      with variable values. The matching <code>.cas</code> file is located
+      automatically (same directory, same name).
+      → <a href="batch_mode.html">Full batch documentation</a>
     </div>
     <div class="arg-example">java CASSolver -I:parameterstudie.csv</div>
     <div class="arg-solver-tags"><span class="arg-tag all">Alle Solver</span></div>
@@ -382,18 +808,54 @@ java CASSolver -I:model.cas -TEST                        <span class="cmt">// al
 
   <div class="arg-block">
     <div class="arg-sig">-BA</div>
-    <div class="arg-desc">
+    <div class="arg-desc" data-lang="de">
       Batch-Ausgabe: Alle Variablen in die Batch-Ausgabedatei schreiben —
       auch fixierte Variablen. Standard: nur freie Variablen.
+    </div><div class="arg-desc" data-lang="en">
+      Batch output: write all variables to the batch output file — including
+      fixed variables. Default: only free variables.
     </div>
     <div class="arg-example">java CASSolver -I:studie.csv -BA</div>
-    <div class="arg-solver-tags"><span class="arg-tag all">Alle Solver (nur Batch)</span></div>
+    <div class="arg-solver-tags"><span class="arg-tag all" data-lang="de">Alle Solver (nur Batch)</span><span class="arg-tag all" data-lang="en">All solvers (batch only)</span></div>
+  </div>
+
+  <div class="arg-block">
+    <div class="arg-sig">-BC:JUMPTHRESH=&lt;wert&gt;</div>
+    <div class="arg-desc" data-lang="de">
+      Warm-Start Sprung-Erkennung: Wenn sich ein Input-Wert zwischen zwei
+      aufeinanderfolgenden Runs um mehr als den angegebenen relativen Anteil ändert,
+      wird der Warm-Start verworfen und mit den CAS-Startwerten neu begonnen.
+      <br><br>
+      Standard: <code>0.20</code> (20%). Der maximale relative Sprung wird über
+      alle Input-Spalten berechnet:
+      <br>
+      <code>relJump = |neu - alt| / max(|alt|, |neu|, 1e-10)</code>
+      <br><br>
+      Besonders nützlich bei Sägezahnkurven als Batch-Input — verhindert dass
+      der Warm-Start bei großen Sprüngen den Solver fehlleitet.
+      <code>0</code> deaktiviert die Erkennung vollständig.
+    </div><div class="arg-desc" data-lang="en">
+      Warm-start jump detection: if an input value changes between two
+      consecutive runs by more than the given relative fraction, the warm start
+      is discarded and the run restarts with the CAS starting values.
+      <br><br>
+      Default: <code>0.20</code> (20 %). The maximum relative jump is computed
+      across all input columns:
+      <br>
+      <code>relJump = |new - old| / max(|old|, |new|, 1e-10)</code>
+      <br><br>
+      Particularly useful with sawtooth curves as batch input — prevents the
+      warm start from misleading the solver on large jumps.
+      <code>0</code> disables detection entirely.
+    </div>
+    <div class="arg-example">java CASSolver -I:studie.csv -BC:JUMPTHRESH=0.10</div>
+    <div class="arg-solver-tags"><span class="arg-tag all" data-lang="de">Alle Solver (nur Batch)</span><span class="arg-tag all" data-lang="en">All solvers (batch only)</span></div>
   </div>
 </section>
 
 <!-- Übersicht -->
 <section id="uebersicht">
-  <h2>Vollständige Übersicht — Solver und ihre Optionen</h2>
+  <h2 data-lang="de">Vollständige Übersicht — Solver und ihre Optionen</h2><h2 data-lang="en">Complete Overview — Solvers and Their Options</h2>
 
   <div class="tbl-wrap">
   <table>
@@ -406,7 +868,7 @@ java CASSolver -I:model.cas -TEST                        <span class="cmt">// al
         <th>LM</th>
         <th>Broyden</th>
         <th>Broyden<br>Sparse</th>
-        <th>Homotopie</th>
+        <th data-lang="de">Homotopie</th><th data-lang="en">Homotopy</th>
       </tr>
     </thead>
     <tbody>
@@ -421,7 +883,7 @@ java CASSolver -I:model.cas -TEST                        <span class="cmt">// al
         <td class="center">✅</td><td class="center">✅</td><td class="center">✅</td><td class="center">✅</td>
       </tr>
       <tr>
-        <td><code>-DV: Startvektor-Dump</code></td>
+        <td data-lang="de"><code>-DV: Startvektor-Dump</code></td><td data-lang="en"><code>-DV: Starting-vector dump</code></td>
         <td class="center">✅</td><td class="center">—</td><td class="center">—</td>
         <td class="center">—</td><td class="center">—</td><td class="center">—</td><td class="center">—</td>
       </tr>
@@ -436,12 +898,12 @@ java CASSolver -I:model.cas -TEST                        <span class="cmt">// al
         <td class="center">—</td><td class="center">✅</td><td class="center">✅</td><td class="center">—</td>
       </tr>
       <tr>
-        <td>Armijo-Parameter</td>
+        <td data-lang="de">Armijo-Parameter</td><td data-lang="en">Armijo parameters</td>
         <td class="center">✅</td><td class="center">—</td><td class="center">✅</td>
         <td class="center">—</td><td class="center">✅</td><td class="center">—</td><td class="center">—</td>
       </tr>
       <tr>
-        <td>LM μ-Parameter</td>
+        <td data-lang="de">LM μ-Parameter</td><td data-lang="en">LM μ parameters</td>
         <td class="center">—</td><td class="center">—</td><td class="center">—</td>
         <td class="center">✅</td><td class="center">—</td><td class="center">—</td><td class="center">—</td>
       </tr>
@@ -449,39 +911,39 @@ java CASSolver -I:model.cas -TEST                        <span class="cmt">// al
   </table>
   </div>
 
-  <h3>Schnellreferenz — häufigste Kombinationen</h3>
-  <pre><span class="cmt">// Standard (empfohlen für die meisten Systeme)</span>
+  <h3 data-lang="de">Schnellreferenz — häufigste Kombinationen</h3><h3 data-lang="en">Quick reference — most common combinations</h3>
+  <pre><span class="cmt" data-lang="de">// Standard (empfohlen für die meisten Systeme)</span><span class="cmt" data-lang="en">// Default (recommended for most systems)</span>
 java CASSolver -I:model.cas
 
-<span class="cmt">// Mit schlechten Startwerten</span>
+<span class="cmt" data-lang="de">// Mit schlechten Startwerten</span><span class="cmt" data-lang="en">// With poor starting values</span>
 java CASSolver -I:model.cas -DI
 
-<span class="cmt">// Großes System, guter Startvektor</span>
+<span class="cmt" data-lang="de">// Großes System, guter Startvektor</span><span class="cmt" data-lang="en">// Large system, good starting vector</span>
 java CASSolver -I:model.cas -S:NEWTON_SPARSE_ARMIJO
 
-<span class="cmt">// Schlecht konditioniert (κ-Warnungen im Log)</span>
+<span class="cmt" data-lang="de">// Schlecht konditioniert (κ-Warnungen im Log)</span><span class="cmt" data-lang="en">// Ill-conditioned (κ warnings in the log)</span>
 java CASSolver -I:model.cas -S:LEVENBERG_MARQUARDT
 
-<span class="cmt">// Newton scheitert, LM scheitert</span>
+<span class="cmt" data-lang="de">// Newton scheitert, LM scheitert</span><span class="cmt" data-lang="en">// Newton fails, LM fails</span>
 java CASSolver -I:model.cas -S:HOMOTOPY -SH:INNER=LEVENBERG_MARQUARDT -SH:STEPS=50 -SH:DS=0.02
 
-<span class="cmt">// Parameterstudie</span>
+<span class="cmt" data-lang="de">// Parameterstudie</span><span class="cmt" data-lang="en">// Parameter study</span>
 java CASSolver -I:studie.csv -S:BROYDEN_SPARSE
 
-<span class="cmt">// Solver vergleichen</span>
+<span class="cmt" data-lang="de">// Solver vergleichen</span><span class="cmt" data-lang="en">// Compare solvers</span>
 java CASSolver -I:model.cas -TEST
 
-<span class="cmt">// Startvektor analysieren</span>
+<span class="cmt" data-lang="de">// Startvektor analysieren</span><span class="cmt" data-lang="en">// Analyze starting vector</span>
 java CASSolver -I:model.cas -DV:start.txt -S:NEWTON_ARMIJO</pre>
 </section>
 
 </main>
 
 <footer>
-  <span>CMDSolver Docs · Solver Optionen · v2.5</span>
+  <span data-lang="de">CMDSolver Docs · Solver Optionen · v2.5</span><span data-lang="en">CMDSolver Docs · Solver Options · v2.5</span>
   <span>
-    <a href="solver_comparison.html">← Vergleichsmatrix</a> &nbsp;|&nbsp;
-    <a href="parser_syntax.html">Parser →</a>
+    <a href="solver_comparison.html" data-lang="de">← Vergleichsmatrix</a><a href="solver_comparison.html" data-lang="en">← Comparison Matrix</a> &nbsp;|&nbsp;
+    <a href="parser_syntax.html" data-lang="de">Parser →</a><a href="parser_syntax.html" data-lang="en">Parser →</a>
   </span>
 </footer>
 </body>

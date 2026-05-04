@@ -4,102 +4,397 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>CMDSolver Docs — Newton-Sparse+Armijo</title>
-<link rel="stylesheet" href="docs.css">
+<style>
+/* CMDSolver Documentation — Shared Stylesheet */
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;1,400&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap');
+
+:root {
+  --bg:      #0d0f12;
+  --bg2:     #13161b;
+  --bg3:     #1a1e25;
+  --bg4:     #20252f;
+  --border:  #252a33;
+  --border2: #2e3540;
+  --text:    #c8cdd6;
+  --text2:   #7a8496;
+  --text3:   #4a5568;
+  --accent:  #4a9eff;
+  --ok:      #3ecf8e;
+  --warn:    #f0a030;
+  --err:     #ff5c5c;
+  --purple:  #a78bfa;
+  --teal:    #2dd4bf;
+  --mono:    'IBM Plex Mono', monospace;
+  --sans:    'IBM Plex Sans', sans-serif;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: var(--sans);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 13.5px;
+  line-height: 1.75;
+}
+
+/* ── Header ── */
+.doc-header {
+  border-bottom: 1px solid var(--border);
+  padding: 1.2rem 3rem;
+  display: flex; align-items: center;
+  justify-content: space-between; flex-wrap: wrap; gap: 1rem;
+}
+
+.breadcrumb {
+  font-family: var(--mono); font-size: 11px; color: var(--text3);
+  letter-spacing: .08em; text-transform: uppercase;
+  display: flex; align-items: center; gap: .5rem;
+}
+.breadcrumb a { color: var(--accent); text-decoration: none; }
+.breadcrumb span { color: var(--text3); }
+
+.doc-badge {
+  font-family: var(--mono); font-size: 11px;
+  padding: 3px 10px; border-radius: 4px;
+}
+.doc-badge.solver {
+  background: rgba(74,158,255,.1); border: 1px solid rgba(74,158,255,.25);
+  color: var(--accent);
+}
+.doc-badge.overview {
+  background: rgba(167,139,250,.1); border: 1px solid rgba(167,139,250,.25);
+  color: var(--purple);
+}
+.doc-badge.comparison {
+  background: rgba(62,207,142,.1); border: 1px solid rgba(62,207,142,.25);
+  color: var(--ok);
+}
+
+/* ── Hero ── */
+.hero {
+  padding: 2.5rem 3rem 2rem;
+  border-bottom: 1px solid var(--border);
+  background: linear-gradient(135deg, var(--bg) 0%, #0f1520 100%);
+}
+.hero-sub {
+  font-family: var(--mono); font-size: 11px; color: var(--text3);
+  letter-spacing: .15em; text-transform: uppercase; margin-bottom: .5rem;
+}
+h1 {
+  font-size: 28px; font-weight: 600; color: #e8ecf4;
+  letter-spacing: -.03em; margin-bottom: .5rem; line-height: 1.2;
+}
+.tagline {
+  font-size: 14px; color: var(--text2); margin-bottom: 1.5rem;
+  max-width: 680px;
+}
+.hero-stats { display: flex; gap: 2rem; flex-wrap: wrap; }
+.stat { display: flex; flex-direction: column; gap: .2rem; }
+.stat-val {
+  font-family: var(--mono); font-size: 18px; font-weight: 500; color: var(--ok);
+}
+.stat-lbl {
+  font-size: 11px; color: var(--text3);
+  text-transform: uppercase; letter-spacing: .08em;
+}
+
+/* ── Nav ── */
+nav {
+  position: sticky; top: 0; z-index: 10;
+  background: rgba(13,15,18,.95); backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--border);
+  padding: .6rem 3rem;
+  display: flex; gap: 1.5rem; flex-wrap: wrap;
+}
+nav a {
+  font-family: var(--mono); font-size: 11px; color: var(--text3);
+  text-decoration: none; letter-spacing: .08em;
+  text-transform: uppercase; transition: color .15s;
+}
+nav a:hover { color: var(--accent); }
+
+/* ── Main ── */
+main { padding: 2rem 3rem 4rem; max-width: 1040px; }
+
+section { margin-bottom: 3.5rem; scroll-margin-top: 3rem; }
+
+section > h2 {
+  font-size: 12px; font-family: var(--mono);
+  letter-spacing: .12em; text-transform: uppercase;
+  color: var(--text3); margin-bottom: 1.4rem;
+  padding-bottom: .5rem; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: .6rem;
+}
+section > h2::before {
+  content: ''; display: inline-block;
+  width: 8px; height: 8px; border-radius: 50%; background: var(--accent);
+}
+
+h3 { font-size: 14px; font-weight: 500; color: #e8ecf4; margin: 1.6rem 0 .6rem; }
+h4 { font-size: 13px; font-weight: 500; color: var(--text2); margin: 1.2rem 0 .4rem; }
+
+p { color: var(--text); margin-bottom: .9rem; max-width: 780px; }
+
+/* ── Math ── */
+.math-block {
+  background: var(--bg3); border: 1px solid var(--border);
+  border-left: 3px solid var(--purple);
+  border-radius: 6px; padding: 1.2rem 1.5rem;
+  margin: 1rem 0 1.2rem; font-family: var(--mono);
+  font-size: 13px; line-height: 2.1; white-space: pre;
+}
+.math-block .eq  { color: #e8ecf4; }
+.math-block .cmt { color: var(--text3); font-style: italic; }
+.math-block .hi  { color: var(--teal); }
+.math-block .hi2 { color: var(--warn); }
+
+/* ── Notes ── */
+.note {
+  border-radius: 6px; padding: .85rem 1.1rem;
+  font-size: 13px; line-height: 1.7; margin-bottom: 1.2rem;
+}
+.note.blue   { background: rgba(74,158,255,.06);  border-left: 3px solid var(--accent); }
+.note.green  { background: rgba(62,207,142,.06);  border-left: 3px solid var(--ok); }
+.note.amber  { background: rgba(240,160,48,.06);  border-left: 3px solid var(--warn); }
+.note.red    { background: rgba(255,92,92,.06);   border-left: 3px solid var(--err); }
+.note.purple { background: rgba(167,139,250,.06); border-left: 3px solid var(--purple); }
+.note strong { color: #e8ecf4; }
+
+/* ── Code ── */
+code {
+  font-family: var(--mono); font-size: 11.5px;
+  background: rgba(255,255,255,.05); padding: 1px 5px;
+  border-radius: 3px; color: #a8c8f0;
+}
+pre {
+  font-family: var(--mono); font-size: 12px;
+  background: var(--bg3); border: 1px solid var(--border);
+  border-radius: 8px; padding: 1rem 1.2rem;
+  overflow-x: auto; line-height: 1.7; margin-bottom: 1rem; color: #c8cdd6;
+}
+.kw  { color: var(--purple); }
+.cmt { color: var(--text3); font-style: italic; }
+.fn  { color: var(--teal); }
+.num { color: var(--warn); }
+.str { color: var(--ok); }
+
+/* ── Tables ── */
+.tbl-wrap {
+  overflow-x: auto; border-radius: 8px;
+  border: 1px solid var(--border); margin-bottom: 1.5rem;
+}
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+thead th {
+  background: var(--bg3); padding: 9px 14px; text-align: left;
+  font-weight: 500; font-size: 11px; letter-spacing: .06em;
+  text-transform: uppercase; color: var(--text2);
+  border-bottom: 1px solid var(--border2); white-space: nowrap;
+}
+tbody tr { border-bottom: 1px solid var(--border); transition: background .1s; }
+tbody tr:last-child { border-bottom: none; }
+tbody tr:hover { background: var(--bg3); }
+td { padding: 9px 14px; vertical-align: top; line-height: 1.6; }
+td.center { text-align: center; }
+
+/* ── Badges ── */
+.badge {
+  display: inline-block; font-size: 11px; padding: 2px 9px;
+  border-radius: 12px; font-family: var(--mono); white-space: nowrap;
+}
+.b-ok   { background: rgba(62,207,142,.1);  color: var(--ok);     border: 1px solid rgba(62,207,142,.25); }
+.b-warn { background: rgba(240,160,48,.1);  color: var(--warn);   border: 1px solid rgba(240,160,48,.25); }
+.b-err  { background: rgba(255,92,92,.1);   color: var(--err);    border: 1px solid rgba(255,92,92,.25); }
+.b-info { background: rgba(74,158,255,.1);  color: var(--accent); border: 1px solid rgba(74,158,255,.25); }
+.b-na   { background: rgba(74,84,96,.1);    color: var(--text3);  border: 1px solid var(--border2); }
+
+/* ── Star rating ── */
+.stars { color: var(--warn); letter-spacing: -.05em; }
+.stars.dim { color: var(--border2); }
+
+/* ── File list ── */
+.file-list { list-style: none; }
+.file-list li {
+  display: flex; gap: 1rem; align-items: flex-start;
+  padding: .7rem 1rem; background: var(--bg2);
+  border: 1px solid var(--border); border-radius: 4px; margin-bottom: .4rem;
+}
+.file-icon {
+  font-family: var(--mono); font-size: 11px; color: var(--accent);
+  white-space: nowrap; margin-top: 2px; min-width: 50px;
+}
+.file-desc { font-size: 13px; color: var(--text2); }
+.file-desc strong { color: var(--text); display: block; margin-bottom: .2rem; }
+
+/* ── Flowchart ── */
+.flowchart {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 10px; padding: 1.5rem; margin: 1rem 0 1.5rem;
+  overflow-x: auto;
+}
+
+/* ── Footer ── */
+footer {
+  border-top: 1px solid var(--border); padding: 1.5rem 3rem;
+  font-family: var(--mono); font-size: 11px; color: var(--text3);
+  display: flex; justify-content: space-between; flex-wrap: wrap; gap: .5rem;
+}
+footer a { color: var(--accent); text-decoration: none; }
+
+/* ── Footnotes ── */
+.footnotes {
+  margin-top: 2rem; padding-top: 1.5rem;
+  border-top: 1px solid var(--border);
+  font-size: 12px; color: var(--text2);
+}
+.footnotes p { max-width: none; margin-bottom: .5rem; }
+sup { font-size: 10px; color: var(--accent); }
+
+/* Default: alle Sprachelemente sichtbar (kein JS-Flash) */
+/* Mit lang-Klasse auf body: nur die aktive Sprache sichtbar */
+
+/* Nur wenn body eine Sprachklasse hat, werden Elemente ausgeblendet */
+/* Sprach-Sichtbarkeit via class auf body */
+</style>
+<link rel="stylesheet" href="i18n.css">
 </head>
 <body>
+<script>
+(function(){
+  var stored = '';
+  try { stored = localStorage.getItem('cmdlang') || ''; } catch(e){}
+  var lang = stored || 'de';
 
+  function apply(l) {
+    lang = l;
+    try { localStorage.setItem('cmdlang', l); } catch(e){}
+    document.documentElement.lang = l;
+    var body = document.body;
+    body.classList.remove('lang-de','lang-en');
+    body.classList.add('lang-' + l);
+    document.querySelectorAll('.lang-btn').forEach(function(b){
+      b.classList.toggle('active', b.dataset.lang === l);
+    });
+  }
+
+  // Body-Klasse sofort setzen, damit data-lang-Elemente direkt korrekt
+  // sichtbar sind (kein Flash mit unsichtbarem Header-Inhalt).
+  apply(lang);
+  document.addEventListener('DOMContentLoaded', function(){
+    apply(lang); // erneut, damit jetzt auch die Buttons gestyled werden
+    document.querySelectorAll('.lang-btn').forEach(function(b){
+      b.addEventListener('click', function(){ apply(b.dataset.lang); });
+    });
+    // Sticky-Header Schatten via IntersectionObserver
+    var sentinel = document.querySelector('.header-sentinel');
+    var header   = document.querySelector('.doc-header');
+    if (sentinel && header && 'IntersectionObserver' in window) {
+      new IntersectionObserver(function(entries){
+        header.classList.toggle('scrolled', !entries[0].isIntersecting);
+      }).observe(sentinel);
+    }
+  });
+})();
+</script>
+
+
+
+
+<div class="header-sentinel"></div>
 <div class="doc-header">
   <div class="breadcrumb">
     <a href="index.html">CMDSolver Docs</a>
-    <span>›</span><span>Solver</span>
-    <span>›</span><span>Newton-Sparse+Armijo</span>
+    ›
+    ›
   </div>
-  <span class="doc-badge solver">SolverType.NEWTON_SPARSE_ARMIJO</span>
-</div>
+  <div class="doc-header-right"><div class="lang-switch"><button class="lang-btn" data-lang="de">DE</button><button class="lang-btn" data-lang="en">EN</button></div><span class="doc-badge solver">SolverType.NEWTON_SPARSE_ARMIJO</span></div></div>
 
 <div class="hero">
-  <div class="hero-sub">Solver 3 von 7</div>
-  <h1>Newton-GSPAR<br>Sparse LU + Armijo</h1>
-  <p class="tagline">
-    Die beste Kombination: GSPAR Sparse-LU für Geschwindigkeit,
-    Armijo-Backtracking für Robustheit. Empfohlener Standard-Solver für
-    große Systeme. ★ Empfehlung
-  </p>
+  <div class="hero-sub"><span data-lang="de">Solver 3 von 7</span><span data-lang="en">Solver 3 of 7</span></div>
+  <h1 data-lang="de">Newton-GSPAR<br>Sparse LU + Armijo</h1><h1 data-lang="en">Newton-GSPAR<br>Sparse LU + Armijo</h1>
+  <p class="tagline" data-lang="de">Die beste Kombination: GSPAR Sparse-LU für Geschwindigkeit, Armijo-Backtracking für Robustheit. Empfohlener Standard-Solver für große Systeme. ★ Empfehlung</p>
+  <p class="tagline" data-lang="en">The best combination: GSPAR sparse LU for speed, Armijo backtracking for robustness. Recommended default solver for large systems. ★ Recommended</p>
   <div class="hero-stats">
-    <div class="stat"><span class="stat-val">3</span><span class="stat-lbl">Iter (SimpleSystem)</span></div>
+    <div class="stat"><span class="stat-val">3</span><span class="stat-lbl" data-lang="de">Iter (SimpleSystem)</span><span class="stat-lbl" data-lang="en">Iter (SimpleSystem)</span></div>
     <div class="stat"><span class="stat-val">3.16e-11</span><span class="stat-lbl">fsum</span></div>
-    <div class="stat"><span class="stat-val">~30ms</span><span class="stat-lbl">Laufzeit</span></div>
-    <div class="stat"><span class="stat-val">Sparse+Armijo</span><span class="stat-lbl">Jacobi-Typ</span></div>
+    <div class="stat"><span class="stat-val">~30ms</span><span class="stat-lbl" data-lang="de">Laufzeit</span><span class="stat-lbl" data-lang="en">Runtime</span></div>
+    <div class="stat"><span class="stat-val">Sparse+Armijo</span><span class="stat-lbl" data-lang="de">Jacobi-Typ</span><span class="stat-lbl" data-lang="en">Jacobian type</span></div>
   </div>
 </div>
 
 <nav>
-  <a href="#theorie">Theorie</a>
-  <a href="#pseudocode">Pseudocode</a>
-  <a href="#dateien">Dateien</a>
-  <a href="#parameter">Parameter</a>
-  <a href="#verhalten">Verhalten</a>
+  <a href="#theorie" data-lang="de">Theorie</a><a href="#theorie" data-lang="en">Theory</a>
+  <a href="#pseudocode" data-lang="de">Pseudocode</a><a href="#pseudocode" data-lang="en">Pseudocode</a>
+  <a href="#dateien" data-lang="de">Dateien</a><a href="#dateien" data-lang="en">Files</a>
+  <a href="#parameter" data-lang="de">Parameter</a><a href="#parameter" data-lang="en">Parameters</a>
+  <a href="#verhalten" data-lang="de">Verhalten</a><a href="#verhalten" data-lang="en">Behavior</a>
 </nav>
 
 <main>
 
 <section id="theorie">
-  <h2>Theoretischer Kontext</h2>
+  <h2 data-lang="de">Theoretischer Kontext</h2><h2 data-lang="en">Theoretical Context</h2>
 
-  <p>
+  <p data-lang="de">
     NEWTON_SPARSE_ARMIJO kombiniert die Stärken von NEWTON_SPARSE und NEWTON_ARMIJO:
+  </p><p data-lang="en">
+    NEWTON_SPARSE_ARMIJO combines the strengths of NEWTON_SPARSE and NEWTON_ARMIJO:
   </p>
 
   <div class="tbl-wrap">
   <table>
-    <thead><tr><th>Komponente</th><th>Von</th><th>Vorteil</th></tr></thead>
+    <thead><tr><th data-lang="de">Komponente</th><th data-lang="en">Component</th><th data-lang="de">Von</th><th data-lang="en">From</th><th data-lang="de">Vorteil</th><th data-lang="en">Benefit</th></tr></thead>
     <tbody>
       <tr>
-        <td>GSPAR Sparse-LU</td>
+        <td data-lang="de">GSPAR Sparse-LU</td><td data-lang="en">GSPAR sparse LU</td>
         <td>NEWTON_SPARSE</td>
-        <td>O(nnz) statt O(n³) — bis zu 10× schneller bei großen Systemen</td>
+        <td data-lang="de">O(nnz) statt O(n³) — bis zu 10× schneller bei großen Systemen</td><td data-lang="en">O(nnz) instead of O(n³) — up to 10× faster on large systems</td>
       </tr>
       <tr>
-        <td>Armijo-Liniensuche</td>
+        <td data-lang="de">Armijo-Liniensuche</td><td data-lang="en">Armijo line search</td>
         <td>NEWTON_ARMIJO</td>
-        <td>Schrittweitendämpfung — vergrößerter Einzugsbereich</td>
+        <td data-lang="de">Schrittweitendämpfung — vergrößerter Einzugsbereich</td><td data-lang="en">Step damping — enlarged basin of attraction</td>
       </tr>
     </tbody>
   </table>
   </div>
 
   <div class="math-block">
-    <div class="eq"><span class="hi">Schritt k:</span></div>
-    <div class="eq">  Δxₖ ← gspar_solve(J, −F(x))    <span class="cmt">← Sparse-LU, kein J⁻¹</span></div>
-    <div class="eq">  α ← armijo_search(x, Δx, F)     <span class="cmt">← Backtracking</span></div>
+    <div class="eq"><span class="hi" data-lang="de">Schritt k:</span><span class="hi" data-lang="en">Step k:</span></div>
+    <div class="eq">  Δxₖ ← gspar_solve(J, −F(x))    <span class="cmt" data-lang="de">← Sparse-LU, kein J⁻¹</span><span class="cmt" data-lang="en">← sparse LU, no J⁻¹</span></div>
+    <div class="eq">  α ← armijo_search(x, Δx, F)     <span class="cmt" data-lang="de">← Backtracking</span><span class="cmt" data-lang="en">← backtracking</span></div>
     <div class="eq">  xₖ₊₁ = xₖ + α · Δxₖ</div>
     <div class="eq"></div>
-    <div class="eq"><span class="hi">Vorteil gegenüber NEWTON_ARMIJO:</span></div>
-    <div class="eq">  Kein J⁻¹ berechnen — direkte LU-Lösung ist stabiler und schneller</div>
+    <div class="eq"><span class="hi" data-lang="de">Vorteil gegenüber NEWTON_ARMIJO:</span><span class="hi" data-lang="en">Advantage over NEWTON_ARMIJO:</span></div>
+    <div class="eq" data-lang="de">  Kein J⁻¹ berechnen — direkte LU-Lösung ist stabiler und schneller</div><div class="eq" data-lang="en">  No J⁻¹ computation — direct LU solve is more stable and faster</div>
   </div>
 
-  <div class="note green">
+  <div class="note green" data-lang="de">
     <strong>Warum dieser Solver als Standard empfohlen wird:</strong>
     Er vereint quadratische Konvergenz (Newton), Geschwindigkeit (Sparse-LU)
     und Robustheit (Armijo). Für die meisten thermodynamischen Systeme in
     CMDSolver ist dies die optimale Wahl.
+  </div><div class="note green" data-lang="en">
+    <strong>Why this solver is recommended as default:</strong> it unites
+    quadratic convergence (Newton), speed (sparse LU) and robustness (Armijo).
+    For most thermodynamic systems in CMDSolver this is the optimal choice.
   </div>
 </section>
 
 <section id="pseudocode">
-  <h2>Pseudocode</h2>
+  <h2 data-lang="de">Pseudocode</h2><h2 data-lang="en">Pseudocode</h2>
 <pre><span class="kw">function</span> <span class="fn">newton_sparse_armijo_solve</span>(F, x₀, tol, maxIter):
     x ← InitGuessApplier(x₀)
-    f0sq_init ← ||F(x₀)||²    <span class="cmt">// für relative Konvergenz</span>
+    f0sq_init ← ||F(x₀)||²    <span class="cmt" data-lang="de">// für relative Konvergenz</span><span class="cmt" data-lang="en">// for relative convergence</span>
 
     <span class="kw">for</span> k = 0 <span class="kw">to</span> maxIter:
-        J ← buildJacobian(F, x)        <span class="cmt">// parallel</span>
+        J ← buildJacobian(F, x)        <span class="cmt" data-lang="de">// parallel</span><span class="cmt" data-lang="en">// parallel</span>
         f ← F(x)
 
-        <span class="cmt">// ── GSPAR Sparse-LU ──</span>
-        Δx ← gspar_solve(J, −f)        <span class="cmt">// kein J⁻¹</span>
+        <span class="cmt" data-lang="de">// ── GSPAR Sparse-LU ──</span><span class="cmt" data-lang="en">// ── GSPAR sparse LU ──</span>
+        Δx ← gspar_solve(J, −f)        <span class="cmt" data-lang="de">// kein J⁻¹</span><span class="cmt" data-lang="en">// no J⁻¹</span>
 
-        <span class="cmt">// ── Armijo-Backtracking ──</span>
+        <span class="cmt" data-lang="de">// ── Armijo-Backtracking ──</span><span class="cmt" data-lang="en">// ── Armijo backtracking ──</span>
         α ← 1.0
         f0sq ← ||f||²
         <span class="kw">while</span> α > α_min:
@@ -118,63 +413,70 @@
 </section>
 
 <section id="dateien">
-  <h2>Wichtige Dateien</h2>
+  <h2 data-lang="de">Wichtige Dateien</h2><h2 data-lang="en">Key Files</h2>
   <ul class="file-list">
     <li>
-      <span class="file-icon">KERN</span>
+      <span class="file-icon" data-lang="de">KERN</span><span class="file-icon" data-lang="en">CORE</span>
       <div class="file-desc">
-        <strong>NewtonArmijoGSPARSolver.java</strong>
+        <span data-lang="de"><strong>NewtonArmijoGSPARSolver.java</strong>
         Erbt von GSPARSolver, überschreibt <code>computeStep()</code> um
         Armijo-Backtracking nach der GSPAR-LU-Lösung hinzuzufügen.
-        <br><code>apps/eqnParser/solver/NewtonArmijoGSPARSolver.java</code>
+        <br><code>apps/eqnParser/solver/NewtonArmijoGSPARSolver.java</code></span><span data-lang="en"><strong>NewtonArmijoGSPARSolver.java</strong>
+        Inherits from GSPARSolver and overrides <code>computeStep()</code> to
+        add Armijo backtracking after the GSPAR LU solve.
+        <br><code>apps/eqnParser/solver/NewtonArmijoGSPARSolver.java</code></span>
       </div>
     </li>
     <li>
-      <span class="file-icon">BASIS</span>
+      <span class="file-icon" data-lang="de">BASIS</span><span class="file-icon" data-lang="en">BASE</span>
       <div class="file-desc">
-        <strong>GSPARSolver.java</strong>
+        <span data-lang="de"><strong>GSPARSolver.java</strong>
         Basisklasse — stellt GSPAR Sparse-LU bereit.
-        <br><code>apps/eqnParser/solver/GSPARSolver.java</code>
+        <br><code>apps/eqnParser/solver/GSPARSolver.java</code></span><span data-lang="en"><strong>GSPARSolver.java</strong>
+        Base class — provides GSPAR sparse LU.
+        <br><code>apps/eqnParser/solver/GSPARSolver.java</code></span>
       </div>
     </li>
     <li>
-      <span class="file-icon">SPARSE</span>
+      <span class="file-icon" data-lang="de">SPARSE</span><span class="file-icon" data-lang="en">SPARSE</span>
       <div class="file-desc">
-        <strong>GSPAR.java</strong>
+        <span data-lang="de"><strong>GSPAR.java</strong>
         Sparse-LU Implementierung (CSR-Format, MIN_FILL-Pivotierung).
-        <br><code>apps/eqnParser/solver/gspar/GSPAR.java</code>
+        <br><code>apps/eqnParser/solver/gspar/GSPAR.java</code></span><span data-lang="en"><strong>GSPAR.java</strong>
+        Sparse-LU implementation (CSR format, MIN_FILL pivoting).
+        <br><code>apps/eqnParser/solver/gspar/GSPAR.java</code></span>
       </div>
     </li>
   </ul>
 </section>
 
 <section id="parameter">
-  <h2>Parameter</h2>
+  <h2 data-lang="de">Parameter</h2><h2 data-lang="en">Parameters</h2>
   <pre>java CASSolver -I:model.cas -S:NEWTON_SPARSE_ARMIJO</pre>
   <div class="tbl-wrap">
   <table>
-    <thead><tr><th>Parameter</th><th>Default</th><th>Beschreibung</th></tr></thead>
+    <thead><tr><th>Parameter</th><th>Default</th><th data-lang="de">Beschreibung</th><th data-lang="en">Description</th></tr></thead>
     <tbody>
-      <tr><td><code>tolerance</code></td><td><code>1e-7</code></td><td>Konvergenzschwelle</td></tr>
-      <tr><td><code>maxIter</code></td><td><code>100</code></td><td>Maximale Iterationen</td></tr>
-      <tr><td><code>armijoC1</code></td><td><code>1e-4</code></td><td>Armijo-Abstiegsbedingung</td></tr>
-      <tr><td><code>armijoRho</code></td><td><code>0.5</code></td><td>Schrittweiten-Reduktionsfaktor</td></tr>
-      <tr><td><code>armijoAlphaMin</code></td><td><code>1e-8</code></td><td>Minimales α vor Abbruch</td></tr>
+      <tr><td><code>tolerance</code></td><td><code>1e-7</code></td><td data-lang="de">Konvergenzschwelle</td><td data-lang="en">Convergence threshold</td></tr>
+      <tr><td><code>maxIter</code></td><td><code>100</code></td><td data-lang="de">Maximale Iterationen</td><td data-lang="en">Maximum iterations</td></tr>
+      <tr><td><code>armijoC1</code></td><td><code>1e-4</code></td><td data-lang="de">Armijo-Abstiegsbedingung</td><td data-lang="en">Armijo descent condition</td></tr>
+      <tr><td><code>armijoRho</code></td><td><code>0.5</code></td><td data-lang="de">Schrittweiten-Reduktionsfaktor</td><td data-lang="en">Step-size reduction factor</td></tr>
+      <tr><td><code>armijoAlphaMin</code></td><td><code>1e-8</code></td><td data-lang="de">Minimales α vor Abbruch</td><td data-lang="en">Minimum α before abort</td></tr>
     </tbody>
   </table>
   </div>
 </section>
 
 <section id="verhalten">
-  <h2>Konvergenzverhalten</h2>
+  <h2 data-lang="de">Konvergenzverhalten</h2><h2 data-lang="en">Convergence Behavior</h2>
   <div class="tbl-wrap">
   <table>
-    <thead><tr><th>Situation</th><th>Verhalten</th></tr></thead>
+    <thead><tr><th data-lang="de">Situation</th><th data-lang="en">Situation</th><th data-lang="de">Verhalten</th><th data-lang="en">Behavior</th></tr></thead>
     <tbody>
-      <tr><td>Standardfall — empfohlener Solver</td><td><span class="badge b-ok">✅ Optimal</span></td></tr>
-      <tr><td>Große Systeme (n &gt; 200)</td><td><span class="badge b-ok">✅ Deutlich schneller als NEWTON_ARMIJO</span></td></tr>
-      <tr><td>Schlechter Startvektor</td><td><span class="badge b-warn">⚠️ Armijo hilft — aber nicht unbegrenzt</span></td></tr>
-      <tr><td>Schlecht konditioniert (κ &gt; 10¹²)</td><td><span class="badge b-warn">⚠️ → Levenberg-Marquardt</span></td></tr>
+      <tr><td data-lang="de">Standardfall — empfohlener Solver</td><td data-lang="en">Default case — recommended solver</td><td><span class="badge b-ok" data-lang="de">✅ Optimal</span><span class="badge b-ok" data-lang="en">✅ Optimal</span></td></tr>
+      <tr><td data-lang="de">Große Systeme (n &gt; 200)</td><td data-lang="en">Large systems (n &gt; 200)</td><td><span class="badge b-ok" data-lang="de">✅ Deutlich schneller als NEWTON_ARMIJO</span><span class="badge b-ok" data-lang="en">✅ Substantially faster than NEWTON_ARMIJO</span></td></tr>
+      <tr><td data-lang="de">Schlechter Startvektor</td><td data-lang="en">Poor starting vector</td><td><span class="badge b-warn" data-lang="de">⚠️ Armijo hilft — aber nicht unbegrenzt</span><span class="badge b-warn" data-lang="en">⚠️ Armijo helps — but not indefinitely</span></td></tr>
+      <tr><td data-lang="de">Schlecht konditioniert (κ &gt; 10¹²)</td><td data-lang="en">Ill-conditioned (κ &gt; 10¹²)</td><td><span class="badge b-warn" data-lang="de">⚠️ → Levenberg-Marquardt</span><span class="badge b-warn" data-lang="en">⚠️ → Levenberg-Marquardt</span></td></tr>
     </tbody>
   </table>
   </div>
@@ -183,10 +485,10 @@
 </main>
 
 <footer>
-  <span>CMDSolver Docs · Newton-Sparse+Armijo · v2.5</span>
+  <span data-lang="de">CMDSolver Docs · Newton-Sparse+Armijo · v2.5</span><span data-lang="en">CMDSolver Docs · Newton-Sparse+Armijo · v2.5</span>
   <span>
-    <a href="solver_newton_sparse.html">← Newton-Sparse</a> &nbsp;|&nbsp;
-    <a href="solver_lm.html">Levenberg-Marquardt →</a>
+    <a href="solver_newton_sparse.html" data-lang="de">← Newton-Sparse</a><a href="solver_newton_sparse.html" data-lang="en">← Newton-Sparse</a> &nbsp;|&nbsp;
+    <a href="solver_lm.html" data-lang="de">Levenberg-Marquardt →</a><a href="solver_lm.html" data-lang="en">Levenberg-Marquardt →</a>
   </span>
 </footer>
 </body>

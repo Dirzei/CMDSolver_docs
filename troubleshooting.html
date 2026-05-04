@@ -4,9 +4,262 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>CMDSolver Docs — Troubleshooting</title>
-<link rel="stylesheet" href="docs.css">
 <style>
-  .symptom {
+/* CMDSolver Documentation — Shared Stylesheet */
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;1,400&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap');
+
+:root {
+  --bg:      #0d0f12;
+  --bg2:     #13161b;
+  --bg3:     #1a1e25;
+  --bg4:     #20252f;
+  --border:  #252a33;
+  --border2: #2e3540;
+  --text:    #c8cdd6;
+  --text2:   #7a8496;
+  --text3:   #4a5568;
+  --accent:  #4a9eff;
+  --ok:      #3ecf8e;
+  --warn:    #f0a030;
+  --err:     #ff5c5c;
+  --purple:  #a78bfa;
+  --teal:    #2dd4bf;
+  --mono:    'IBM Plex Mono', monospace;
+  --sans:    'IBM Plex Sans', sans-serif;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: var(--sans);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 13.5px;
+  line-height: 1.75;
+}
+
+/* ── Header ── */
+.doc-header {
+  border-bottom: 1px solid var(--border);
+  padding: 1.2rem 3rem;
+  display: flex; align-items: center;
+  justify-content: space-between; flex-wrap: wrap; gap: 1rem;
+}
+
+.breadcrumb {
+  font-family: var(--mono); font-size: 11px; color: var(--text3);
+  letter-spacing: .08em; text-transform: uppercase;
+  display: flex; align-items: center; gap: .5rem;
+}
+.breadcrumb a { color: var(--accent); text-decoration: none; }
+.breadcrumb span { color: var(--text3); }
+
+.doc-badge {
+  font-family: var(--mono); font-size: 11px;
+  padding: 3px 10px; border-radius: 4px;
+}
+.doc-badge.solver {
+  background: rgba(74,158,255,.1); border: 1px solid rgba(74,158,255,.25);
+  color: var(--accent);
+}
+.doc-badge.overview {
+  background: rgba(167,139,250,.1); border: 1px solid rgba(167,139,250,.25);
+  color: var(--purple);
+}
+.doc-badge.comparison {
+  background: rgba(62,207,142,.1); border: 1px solid rgba(62,207,142,.25);
+  color: var(--ok);
+}
+
+/* ── Hero ── */
+.hero {
+  padding: 2.5rem 3rem 2rem;
+  border-bottom: 1px solid var(--border);
+  background: linear-gradient(135deg, var(--bg) 0%, #0f1520 100%);
+}
+.hero-sub {
+  font-family: var(--mono); font-size: 11px; color: var(--text3);
+  letter-spacing: .15em; text-transform: uppercase; margin-bottom: .5rem;
+}
+h1 {
+  font-size: 28px; font-weight: 600; color: #e8ecf4;
+  letter-spacing: -.03em; margin-bottom: .5rem; line-height: 1.2;
+}
+.tagline {
+  font-size: 14px; color: var(--text2); margin-bottom: 1.5rem;
+  max-width: 680px;
+}
+.hero-stats { display: flex; gap: 2rem; flex-wrap: wrap; }
+.stat { display: flex; flex-direction: column; gap: .2rem; }
+.stat-val {
+  font-family: var(--mono); font-size: 18px; font-weight: 500; color: var(--ok);
+}
+.stat-lbl {
+  font-size: 11px; color: var(--text3);
+  text-transform: uppercase; letter-spacing: .08em;
+}
+
+/* ── Nav ── */
+nav {
+  position: sticky; top: 0; z-index: 10;
+  background: rgba(13,15,18,.95); backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--border);
+  padding: .6rem 3rem;
+  display: flex; gap: 1.5rem; flex-wrap: wrap;
+}
+nav a {
+  font-family: var(--mono); font-size: 11px; color: var(--text3);
+  text-decoration: none; letter-spacing: .08em;
+  text-transform: uppercase; transition: color .15s;
+}
+nav a:hover { color: var(--accent); }
+
+/* ── Main ── */
+main { padding: 2rem 3rem 4rem; max-width: 1040px; }
+
+section { margin-bottom: 3.5rem; scroll-margin-top: 3rem; }
+
+section > h2 {
+  font-size: 12px; font-family: var(--mono);
+  letter-spacing: .12em; text-transform: uppercase;
+  color: var(--text3); margin-bottom: 1.4rem;
+  padding-bottom: .5rem; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: .6rem;
+}
+section > h2::before {
+  content: ''; display: inline-block;
+  width: 8px; height: 8px; border-radius: 50%; background: var(--accent);
+}
+
+h3 { font-size: 14px; font-weight: 500; color: #e8ecf4; margin: 1.6rem 0 .6rem; }
+h4 { font-size: 13px; font-weight: 500; color: var(--text2); margin: 1.2rem 0 .4rem; }
+
+p { color: var(--text); margin-bottom: .9rem; max-width: 780px; }
+
+/* ── Math ── */
+.math-block {
+  background: var(--bg3); border: 1px solid var(--border);
+  border-left: 3px solid var(--purple);
+  border-radius: 6px; padding: 1.2rem 1.5rem;
+  margin: 1rem 0 1.2rem; font-family: var(--mono);
+  font-size: 13px; line-height: 2.1; white-space: pre;
+}
+.math-block .eq  { color: #e8ecf4; }
+.math-block .cmt { color: var(--text3); font-style: italic; }
+.math-block .hi  { color: var(--teal); }
+.math-block .hi2 { color: var(--warn); }
+
+/* ── Notes ── */
+.note {
+  border-radius: 6px; padding: .85rem 1.1rem;
+  font-size: 13px; line-height: 1.7; margin-bottom: 1.2rem;
+}
+.note.blue   { background: rgba(74,158,255,.06);  border-left: 3px solid var(--accent); }
+.note.green  { background: rgba(62,207,142,.06);  border-left: 3px solid var(--ok); }
+.note.amber  { background: rgba(240,160,48,.06);  border-left: 3px solid var(--warn); }
+.note.red    { background: rgba(255,92,92,.06);   border-left: 3px solid var(--err); }
+.note.purple { background: rgba(167,139,250,.06); border-left: 3px solid var(--purple); }
+.note strong { color: #e8ecf4; }
+
+/* ── Code ── */
+code {
+  font-family: var(--mono); font-size: 11.5px;
+  background: rgba(255,255,255,.05); padding: 1px 5px;
+  border-radius: 3px; color: #a8c8f0;
+}
+pre {
+  font-family: var(--mono); font-size: 12px;
+  background: var(--bg3); border: 1px solid var(--border);
+  border-radius: 8px; padding: 1rem 1.2rem;
+  overflow-x: auto; line-height: 1.7; margin-bottom: 1rem; color: #c8cdd6;
+}
+.kw  { color: var(--purple); }
+.cmt { color: var(--text3); font-style: italic; }
+.fn  { color: var(--teal); }
+.num { color: var(--warn); }
+.str { color: var(--ok); }
+
+/* ── Tables ── */
+.tbl-wrap {
+  overflow-x: auto; border-radius: 8px;
+  border: 1px solid var(--border); margin-bottom: 1.5rem;
+}
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+thead th {
+  background: var(--bg3); padding: 9px 14px; text-align: left;
+  font-weight: 500; font-size: 11px; letter-spacing: .06em;
+  text-transform: uppercase; color: var(--text2);
+  border-bottom: 1px solid var(--border2); white-space: nowrap;
+}
+tbody tr { border-bottom: 1px solid var(--border); transition: background .1s; }
+tbody tr:last-child { border-bottom: none; }
+tbody tr:hover { background: var(--bg3); }
+td { padding: 9px 14px; vertical-align: top; line-height: 1.6; }
+td.center { text-align: center; }
+
+/* ── Badges ── */
+.badge {
+  display: inline-block; font-size: 11px; padding: 2px 9px;
+  border-radius: 12px; font-family: var(--mono); white-space: nowrap;
+}
+.b-ok   { background: rgba(62,207,142,.1);  color: var(--ok);     border: 1px solid rgba(62,207,142,.25); }
+.b-warn { background: rgba(240,160,48,.1);  color: var(--warn);   border: 1px solid rgba(240,160,48,.25); }
+.b-err  { background: rgba(255,92,92,.1);   color: var(--err);    border: 1px solid rgba(255,92,92,.25); }
+.b-info { background: rgba(74,158,255,.1);  color: var(--accent); border: 1px solid rgba(74,158,255,.25); }
+.b-na   { background: rgba(74,84,96,.1);    color: var(--text3);  border: 1px solid var(--border2); }
+
+/* ── Star rating ── */
+.stars { color: var(--warn); letter-spacing: -.05em; }
+.stars.dim { color: var(--border2); }
+
+/* ── File list ── */
+.file-list { list-style: none; }
+.file-list li {
+  display: flex; gap: 1rem; align-items: flex-start;
+  padding: .7rem 1rem; background: var(--bg2);
+  border: 1px solid var(--border); border-radius: 4px; margin-bottom: .4rem;
+}
+.file-icon {
+  font-family: var(--mono); font-size: 11px; color: var(--accent);
+  white-space: nowrap; margin-top: 2px; min-width: 50px;
+}
+.file-desc { font-size: 13px; color: var(--text2); }
+.file-desc strong { color: var(--text); display: block; margin-bottom: .2rem; }
+
+/* ── Flowchart ── */
+.flowchart {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 10px; padding: 1.5rem; margin: 1rem 0 1.5rem;
+  overflow-x: auto;
+}
+
+/* ── Footer ── */
+footer {
+  border-top: 1px solid var(--border); padding: 1.5rem 3rem;
+  font-family: var(--mono); font-size: 11px; color: var(--text3);
+  display: flex; justify-content: space-between; flex-wrap: wrap; gap: .5rem;
+}
+footer a { color: var(--accent); text-decoration: none; }
+
+/* ── Footnotes ── */
+.footnotes {
+  margin-top: 2rem; padding-top: 1.5rem;
+  border-top: 1px solid var(--border);
+  font-size: 12px; color: var(--text2);
+}
+.footnotes p { max-width: none; margin-bottom: .5rem; }
+sup { font-size: 10px; color: var(--accent); }
+
+/* Default: alle Sprachelemente sichtbar (kein JS-Flash) */
+/* Mit lang-Klasse auf body: nur die aktive Sprache sichtbar */
+
+/* Nur wenn body eine Sprachklasse hat, werden Elemente ausgeblendet */
+/* Sprach-Sichtbarkeit via class auf body */
+
+
+/* ── Seitenspezifische Klassen ────────────────────────
+   (aus alter troubleshooting.html wiederhergestellt) */
+.symptom {
     background: var(--bg2); border: 1px solid var(--border);
     border-radius: 8px; overflow: hidden; margin-bottom: 1.5rem;
   }
@@ -55,86 +308,128 @@
   .qr-sym { min-width: 200px; font-family: var(--mono); font-size: 12px; color: var(--warn); }
   .qr-sol { color: var(--text2); }
 </style>
+<link rel="stylesheet" href="i18n.css">
 </head>
 <body>
+<script>
+(function(){
+  var stored = '';
+  try { stored = localStorage.getItem('cmdlang') || ''; } catch(e){}
+  var lang = stored || 'de';
 
+  function apply(l) {
+    lang = l;
+    try { localStorage.setItem('cmdlang', l); } catch(e){}
+    document.documentElement.lang = l;
+    var body = document.body;
+    body.classList.remove('lang-de','lang-en');
+    body.classList.add('lang-' + l);
+    document.querySelectorAll('.lang-btn').forEach(function(b){
+      b.classList.toggle('active', b.dataset.lang === l);
+    });
+  }
+
+  // Body-Klasse sofort setzen, damit data-lang-Elemente direkt korrekt
+  // sichtbar sind (kein Flash mit unsichtbarem Header-Inhalt).
+  apply(lang);
+  document.addEventListener('DOMContentLoaded', function(){
+    apply(lang); // erneut, damit jetzt auch die Buttons gestyled werden
+    document.querySelectorAll('.lang-btn').forEach(function(b){
+      b.addEventListener('click', function(){ apply(b.dataset.lang); });
+    });
+    // Sticky-Header Schatten via IntersectionObserver
+    var sentinel = document.querySelector('.header-sentinel');
+    var header   = document.querySelector('.doc-header');
+    if (sentinel && header && 'IntersectionObserver' in window) {
+      new IntersectionObserver(function(entries){
+        header.classList.toggle('scrolled', !entries[0].isIntersecting);
+      }).observe(sentinel);
+    }
+  });
+})();
+</script>
+
+
+
+
+<div class="header-sentinel"></div>
 <div class="doc-header">
   <div class="breadcrumb">
     <a href="index.html">CMDSolver Docs</a>
-    <span>›</span><span>Troubleshooting</span>
+    ›
   </div>
-  <span class="doc-badge overview">Hilfe</span>
-</div>
+  <div class="doc-header-right"><div class="lang-switch"><button class="lang-btn" data-lang="de">DE</button><button class="lang-btn" data-lang="en">EN</button></div><span class="doc-badge overview">Hilfe</span></div></div>
 
 <div class="hero">
-  <div class="hero-sub">Troubleshooting &amp; FAQ</div>
-  <h1>Probleme lösen</h1>
-  <p class="tagline">
-    Häufige Probleme mit Symptom, Diagnose und konkreter Lösung —
-    von Konvergenzfehlern über Parse-Probleme bis zu Performance-Fragen.
-  </p>
-</div>
+  <div class="hero-sub"><span data-lang="de">Hilfe</span><span data-lang="en">Help</span></div>
+  <h1 data-lang="de">Probleme lösen</h1><h1 data-lang="en">Troubleshooting</h1>
+  <p class="tagline" data-lang="de">Häufige Probleme mit Symptom, Diagnose und konkreter Lösung — von Konvergenzfehlern über Parse-Probleme bis zu Performance-Fragen.</p>
+  <p class="tagline" data-lang="en">Common issues with symptom, diagnosis, and concrete fix — from convergence failures and parse errors to performance questions.</p>
+  </div>
 
 <nav>
-  <a href="#konvergenz">Konvergenz</a>
-  <a href="#parser">Parser-Fehler</a>
-  <a href="#kappa">Konditionszahl</a>
-  <a href="#nan">NaN / Divergenz</a>
-  <a href="#performance">Performance</a>
-  <a href="#faq">FAQ</a>
-  <a href="#quickref">Schnellreferenz</a>
+  <a href="#konvergenz" data-lang="de">Konvergenz</a><a href="#konvergenz" data-lang="en">Convergence</a>
+  <a href="#parser" data-lang="de">Parser-Fehler</a><a href="#parser" data-lang="en">Parser errors</a>
+  <a href="#kappa" data-lang="de">Konditionszahl</a><a href="#kappa" data-lang="en">Condition number</a>
+  <a href="#nan" data-lang="de">NaN / Divergenz</a><a href="#nan" data-lang="en">NaN / divergence</a>
+  <a href="#performance" data-lang="de">Performance</a><a href="#performance" data-lang="en">Performance</a>
+  <a href="#faq" data-lang="de">FAQ</a><a href="#faq" data-lang="en">FAQ</a>
+  <a href="#quickref" data-lang="de">Schnellreferenz</a><a href="#quickref" data-lang="en">Quick reference</a>
 </nav>
 
 <main>
 
 <!-- ── Konvergenz ── -->
 <section id="konvergenz">
-  <h2>Konvergenzprobleme</h2>
+  <h2 data-lang="de">Konvergenzprobleme</h2><h2 data-lang="en">Convergence Problems</h2>
 
   <div class="symptom">
     <div class="symptom-header">
       <span class="symptom-icon">❌</span>
-      <span class="symptom-title">Solver meldet NOT_CONVERGED — keine Fehlermeldung</span>
+      <span class="symptom-title" data-lang="de">Solver meldet NOT_CONVERGED — keine Fehlermeldung</span><span class="symptom-title" data-lang="en">Solver reports NOT_CONVERGED — no error message</span>
     </div>
     <div class="symptom-body">
       <div class="diag-step">
         <span class="diag-arrow">→ 1</span>
         <div class="diag-content">
-          <strong>Schlechter Startvektor?</strong>
-          Diagnose-Modus aktivieren: <code>-DI</code> lässt <code>InitialValueAnalyzer</code>
-          die Startwerte optimieren. Oft reicht das.
+          <strong data-lang="de">Schlechter Startvektor?</strong><strong data-lang="en">Bad starting vector?</strong>
+          <span data-lang="de">Diagnose-Modus aktivieren: <code>-DI</code> lässt <code>InitialValueAnalyzer</code>
+          die Startwerte optimieren. Oft reicht das.</span><span data-lang="en">Enable diagnostic mode: <code>-DI</code> lets <code>InitialValueAnalyzer</code>
+          optimize the starting values. Often that's enough.</span>
           <pre style="margin-top:.5rem;font-size:11px">java cmd.CASSolver -I:model.cas -DI</pre>
         </div>
       </div>
       <div class="diag-step">
         <span class="diag-arrow">→ 2</span>
         <div class="diag-content">
-          <strong>Startvektor inspizieren:</strong>
-          <code>-DV:start.txt</code> schreibt den tatsächlichen Startvektor vor Iteration 0.
-          Physikalisch plausibel? Temperatur &gt; 0K? Druck &gt; 0Pa?
+          <strong data-lang="de">Startvektor inspizieren:</strong><strong data-lang="en">Inspect the starting vector:</strong>
+          <span data-lang="de"><code>-DV:start.txt</code> schreibt den tatsächlichen Startvektor vor Iteration 0.
+          Physikalisch plausibel? Temperatur &gt; 0K? Druck &gt; 0Pa?</span><span data-lang="en"><code>-DV:start.txt</code> writes the actual starting vector before iteration 0.
+          Physically plausible? Temperature &gt; 0K? Pressure &gt; 0Pa?</span>
           <pre style="margin-top:.5rem;font-size:11px">java cmd.CASSolver -I:model.cas -S:NEWTON_ARMIJO -DV:start.txt</pre>
         </div>
       </div>
       <div class="diag-step">
         <span class="diag-arrow">→ 3</span>
         <div class="diag-content">
-          <strong>Andere Solver versuchen:</strong>
-          <code>-TEST</code> zeigt alle 7 Solver. Konvergiert einer davon → Startwert-Problem.
-          Konvergiert keiner → Modell-Problem.
+          <strong data-lang="de">Andere Solver versuchen:</strong><strong data-lang="en">Try other solvers:</strong>
+          <span data-lang="de"><code>-TEST</code> zeigt alle 7 Solver. Konvergiert einer davon → Startwert-Problem.
+          Konvergiert keiner → Modell-Problem.</span><span data-lang="en"><code>-TEST</code> runs all 7 solvers. If one converges → starting-value issue.
+          If none converges → model issue.</span>
         </div>
       </div>
       <div class="diag-step">
         <span class="diag-arrow">→ 4</span>
         <div class="diag-content">
-          <strong>Levenberg-Marquardt als robustere Alternative:</strong>
-          Bei κ-Warnungen im Log immer LM versuchen.
+          <strong data-lang="de">Levenberg-Marquardt als robustere Alternative:</strong><strong data-lang="en">Levenberg-Marquardt as a more robust alternative:</strong>
+          <span data-lang="de">Bei κ-Warnungen im Log immer LM versuchen.</span><span data-lang="en">Always try LM when κ warnings appear in the log.</span>
           <pre style="margin-top:.5rem;font-size:11px">java cmd.CASSolver -I:model.cas -S:LEVENBERG_MARQUARDT -DI</pre>
         </div>
       </div>
       <div class="diag-step">
         <span class="diag-arrow">→ 5</span>
         <div class="diag-content">
-          <strong>Homotopie als letztes Mittel:</strong>
+          <strong data-lang="de">Homotopie als letztes Mittel:</strong><strong data-lang="en">Homotopy as a last resort:</strong>
           <pre style="margin-top:.5rem;font-size:11px">java cmd.CASSolver -I:model.cas -S:HOMOTOPY -SH:CRITICAL -SH:INNER=LEVENBERG_MARQUARDT</pre>
         </div>
       </div>
@@ -144,32 +439,35 @@
   <div class="symptom">
     <div class="symptom-header">
       <span class="symptom-icon">🔄</span>
-      <span class="symptom-title">Solver iteriert bis maxIter ohne Verbesserung (fsum stagniert)</span>
+      <span class="symptom-title" data-lang="de">Solver iteriert bis maxIter ohne Verbesserung (fsum stagniert)</span><span class="symptom-title" data-lang="en">Solver iterates to maxIter without improvement (fsum stagnates)</span>
     </div>
     <div class="symptom-body">
       <div class="diag-step">
         <span class="diag-arrow">→ 1</span>
         <div class="diag-content">
-          <strong>fsum-Verlauf im Log prüfen:</strong>
-          Sinkt fsum gar nicht? → Schlechter Startvektor oder falsches Vorzeichen in Gleichung.
-          Sinkt fsum anfangs, stagniert dann? → Möglicherweise zwei Lösungen oder nahezu singuläre Jacobi.
+          <strong data-lang="de">fsum-Verlauf im Log prüfen:</strong><strong data-lang="en">Inspect fsum trajectory in the log:</strong>
+          <span data-lang="de">Sinkt fsum gar nicht? → Schlechter Startvektor oder falsches Vorzeichen in Gleichung.
+          Sinkt fsum anfangs, stagniert dann? → Möglicherweise zwei Lösungen oder nahezu singuläre Jacobi.</span><span data-lang="en">Does fsum not drop at all? → Bad starting vector or wrong sign in an equation.
+          Drops initially, then stagnates? → Possibly two solutions or nearly singular Jacobian.</span>
         </div>
       </div>
       <div class="diag-step">
         <span class="diag-arrow">→ 2</span>
         <div class="diag-content">
-          <strong>Residuen-Normierung aktivieren:</strong>
-          Bei gemischten Einheiten (Pa + kg/s) kann eine Gleichung dominieren.
-          <code>-SN</code> normiert auf Startwert-Residuen.
+          <strong data-lang="de">Residuen-Normierung aktivieren:</strong><strong data-lang="en">Enable residual normalization:</strong>
+          <span data-lang="de">Bei gemischten Einheiten (Pa + kg/s) kann eine Gleichung dominieren.
+          <code>-SN</code> normiert auf Startwert-Residuen.</span><span data-lang="en">With mixed units (Pa + kg/s) one equation can dominate.
+          <code>-SN</code> normalizes to starting-value residuals.</span>
           <pre style="margin-top:.5rem;font-size:11px">java cmd.CASSolver -I:model.cas -SN</pre>
         </div>
       </div>
       <div class="diag-step">
         <span class="diag-arrow">→ 3</span>
         <div class="diag-content">
-          <strong>Gleichgewicht prüfen:</strong>
-          n freie Variablen = n Gleichungen? Log zeigt beim Start:
-          <code>Starting ... [n=X, maxIter=100, ...]</code> — X muss der Anzahl freier Variablen entsprechen.
+          <strong data-lang="de">Gleichgewicht prüfen:</strong><strong data-lang="en">Check balance:</strong>
+          <span data-lang="de">n freie Variablen = n Gleichungen? Log zeigt beim Start:
+          <code>Starting ... [n=X, maxIter=100, ...]</code> — X muss der Anzahl freier Variablen entsprechen.</span><span data-lang="en">n free variables = n equations? At startup the log shows:
+          <code>Starting ... [n=X, maxIter=100, ...]</code> — X must match the number of free variables.</span>
         </div>
       </div>
     </div>
@@ -178,37 +476,39 @@
 
 <!-- ── Parser-Fehler ── -->
 <section id="parser">
-  <h2>Parser-Fehler</h2>
+  <h2 data-lang="de">Parser-Fehler</h2><h2 data-lang="en">Parser Errors</h2>
 
   <div class="symptom">
     <div class="symptom-header">
       <span class="symptom-icon">⚠️</span>
-      <span class="symptom-title">ParseError: "Variable not found" oder stille Fehler</span>
+      <span class="symptom-title" data-lang="de">ParseError: "Variable not found" oder stille Fehler</span><span class="symptom-title" data-lang="en">ParseError: "Variable not found" or silent failures</span>
     </div>
     <div class="symptom-body">
       <div class="diag-step">
         <span class="diag-arrow">→ 1</span>
         <div class="diag-content">
-          <strong>ParseErrors im SolverResult prüfen:</strong>
+          <strong data-lang="de">ParseErrors im SolverResult prüfen:</strong><strong data-lang="en">Inspect ParseErrors on SolverResult:</strong>
           <pre style="margin-top:.5rem;font-size:11px">SolverResult r = api.solve();
 r.getParseErrors().forEach(e -> System.err.println(e.format()));</pre>
-          Jeder ParseError enthält Zeilennummer und Kontext.
+          <span data-lang="de">Jeder ParseError enthält Zeilennummer und Kontext.</span><span data-lang="en">Every ParseError contains a line number and context.</span>
         </div>
       </div>
       <div class="diag-step">
         <span class="diag-arrow">→ 2</span>
         <div class="diag-content">
-          <strong>Variablenname-Tippfehler:</strong>
-          CMDSolver ist case-insensitiv — aber Punkt-Notation muss exakt stimmen.
-          <code>PARTM.F060.PS</code> ≠ <code>PARTM.F060.Ps</code> (Letzteres würde nach toUpperCase zu ersterem).
+          <strong data-lang="de">Variablenname-Tippfehler:</strong><strong data-lang="en">Variable-name typo:</strong>
+          <span data-lang="de">CMDSolver ist case-insensitiv — aber Punkt-Notation muss exakt stimmen.
+          <code>PARTM.F060.PS</code> ≠ <code>PARTM.F060.Ps</code> (Letzteres würde nach toUpperCase zu ersterem).</span><span data-lang="en">CMDSolver is case-insensitive — but the dot notation must match exactly.
+          <code>PARTM.F060.PS</code> ≠ <code>PARTM.F060.Ps</code> (the latter would become the former after toUpperCase).</span>
         </div>
       </div>
       <div class="diag-step">
         <span class="diag-arrow">→ 3</span>
         <div class="diag-content">
-          <strong>Variable deklariert aber nicht in Gleichung:</strong>
-          Freie Variable ohne Gleichung → System ist unterbestimmt.
-          Jede freie Variable braucht genau eine Gleichung die sie "bestimmt".
+          <strong data-lang="de">Variable deklariert aber nicht in Gleichung:</strong><strong data-lang="en">Variable declared but not used in equations:</strong>
+          <span data-lang="de">Freie Variable ohne Gleichung → System ist unterbestimmt.
+          Jede freie Variable braucht genau eine Gleichung die sie "bestimmt".</span><span data-lang="en">Free variable without an equation → the system is underdetermined.
+          Every free variable needs exactly one equation that "determines" it.</span>
         </div>
       </div>
     </div>
@@ -217,15 +517,16 @@ r.getParseErrors().forEach(e -> System.err.println(e.format()));</pre>
   <div class="symptom">
     <div class="symptom-header">
       <span class="symptom-icon">⚠️</span>
-      <span class="symptom-title">INITIALIZE-Block Override wird ignoriert</span>
+      <span class="symptom-title" data-lang="de">INITIALIZE-Block Override wird ignoriert</span><span class="symptom-title" data-lang="en">INITIALIZE block override is ignored</span>
     </div>
     <div class="symptom-body">
       <div class="diag-step">
         <span class="diag-arrow">→ 1</span>
         <div class="diag-content">
-          <strong>Syntax für Mehrfach-Punktnamen:</strong>
-          Für <code>PARTM.F060.PS.Upper = ...</code> muss der vollständige Name
-          vor dem letzten Punkt stehen. Der Parser verwendet <code>lastIndexOf('.')</code>.
+          <strong data-lang="de">Syntax für Mehrfach-Punktnamen:</strong><strong data-lang="en">Syntax for multi-dot names:</strong>
+          <span data-lang="de">Für <code>PARTM.F060.PS.Upper = ...</code> muss der vollständige Name
+          vor dem letzten Punkt stehen. Der Parser verwendet <code>lastIndexOf('.')</code>.</span><span data-lang="en">For <code>PARTM.F060.PS.Upper = ...</code> the full name must appear
+          before the last dot. The parser uses <code>lastIndexOf('.')</code>.</span>
           <pre style="margin-top:.5rem;font-size:11px">INITIALIZE
   PARTM.F060.PS = 100000;          // Startwert
   PARTM.F060.PS.Upper = 200000;   // Upper-Bound
@@ -236,10 +537,12 @@ ENDINIT</pre>
       <div class="diag-step">
         <span class="diag-arrow">→ 2</span>
         <div class="diag-content">
-          <strong>initStructSwitches vor INITIALIZE:</strong>
-          Strukturelle IF-Bedingungen (VAR.SPEC==FIXED) müssen vor dem INITIALIZE-Block
+          <strong data-lang="de">initStructSwitches vor INITIALIZE:</strong><strong data-lang="en">initStructSwitches before INITIALIZE:</strong>
+          <span data-lang="de">Strukturelle IF-Bedingungen (VAR.SPEC==FIXED) müssen vor dem INITIALIZE-Block
           ausgewertet werden. Das macht <code>EqnSystem</code> automatisch — wenn der
-          Aufruf fehlt (z.B. bei direktem EqnData-Aufruf) funktioniert INITIALIZE nicht.
+          Aufruf fehlt (z.B. bei direktem EqnData-Aufruf) funktioniert INITIALIZE nicht.</span><span data-lang="en">Structural IF conditions (VAR.SPEC==FIXED) must be evaluated before the INITIALIZE
+          block. <code>EqnSystem</code> does this automatically — if the call is missing
+          (e.g., on direct EqnData usage) INITIALIZE will not work.</span>
         </div>
       </div>
     </div>
@@ -248,24 +551,26 @@ ENDINIT</pre>
   <div class="symptom">
     <div class="symptom-header">
       <span class="symptom-icon">🔴</span>
-      <span class="symptom-title">Kompilierfehler: hunderte Fehler nach Datei-Update</span>
+      <span class="symptom-title" data-lang="de">Kompilierfehler: hunderte Fehler nach Datei-Update</span><span class="symptom-title" data-lang="en">Compilation errors: hundreds of errors after file update</span>
     </div>
     <div class="symptom-body">
       <div class="diag-step">
         <span class="diag-arrow">→ 1</span>
         <div class="diag-content">
-          <strong>Versionsmischung:</strong> Wahrscheinlichste Ursache. Dateien aus v2.3 und v2.4+
+          <strong data-lang="de">Versionsmischung:</strong><strong data-lang="en">Version mixing:</strong> <span data-lang="de">Wahrscheinlichste Ursache. Dateien aus v2.3 und v2.4+
           dürfen nicht gemischt werden. v2.4's <code>EqnSysReader</code> ruft
-          <code>ParseError</code>-Methoden auf die in v2.3's <code>SystemData</code> fehlen.
-          <strong>Lösung:</strong> Alle Dateien aus demselben ZIP kopieren.
+          <code>ParseError</code>-Methoden auf die in v2.3's <code>SystemData</code> fehlen.</span><span data-lang="en">Most likely cause. Files from v2.3 and v2.4+
+          must not be mixed. v2.4's <code>EqnSysReader</code> calls
+          <code>ParseError</code> methods that are missing from v2.3's <code>SystemData</code>.</span>
+          <strong data-lang="de">Lösung:</strong><strong data-lang="en">Fix:</strong> <span data-lang="de">Alle Dateien aus demselben ZIP kopieren.</span><span data-lang="en">Copy all files from the same ZIP.</span>
         </div>
       </div>
       <div class="diag-step">
         <span class="diag-arrow">→ 2</span>
         <div class="diag-content">
-          <strong>Doppelte Klassendeklaration:</strong>
+          <strong data-lang="de">Doppelte Klassendeklaration:</strong><strong data-lang="en">Duplicate class declaration:</strong>
           <pre style="margin-top:.5rem;font-size:11px">grep -c "^public class EqnData" EqnData.java  // muss 1 ergeben</pre>
-          Wenn 2: Javadoc steht nach statt vor <code>public class</code>.
+          <span data-lang="de">Wenn 2: Javadoc steht nach statt vor <code>public class</code>.</span><span data-lang="en">If 2: Javadoc is placed after instead of before <code>public class</code>.</span>
         </div>
       </div>
     </div>
@@ -274,40 +579,44 @@ ENDINIT</pre>
 
 <!-- ── Konditionszahl ── -->
 <section id="kappa">
-  <h2>Konditionszahl-Warnungen</h2>
+  <h2 data-lang="de">Konditionszahl-Warnungen</h2><h2 data-lang="en">Condition Number Warnings</h2>
 
   <div class="symptom">
     <div class="symptom-header">
       <span class="symptom-icon">⚠️</span>
-      <span class="symptom-title">Log: "kappa=4.62e+11 [POOR] — ill-conditioned Jacobian"</span>
+      <span class="symptom-title" data-lang="de">Log: "kappa=4.62e+11 [POOR] — ill-conditioned Jacobian"</span><span class="symptom-title" data-lang="en">Log: "kappa=4.62e+11 [POOR] — ill-conditioned Jacobian"</span>
     </div>
     <div class="symptom-body">
-      <p>Konditionszahl κ misst wie empfindlich das System auf kleine Änderungen reagiert.
-      κ &gt; 10⁸ ist problematisch, κ &gt; 10¹² gefährlich für Newton.</p>
+      <p data-lang="de">Konditionszahl κ misst wie empfindlich das System auf kleine Änderungen reagiert.
+      κ &gt; 10⁸ ist problematisch, κ &gt; 10¹² gefährlich für Newton.</p><p data-lang="en">The condition number κ measures how sensitive the system is to small changes.
+      κ &gt; 10⁸ is problematic, κ &gt; 10¹² dangerous for Newton.</p>
 
       <div class="diag-step">
         <span class="diag-arrow">→ 1</span>
         <div class="diag-content">
-          <strong>Ursachen für hohes κ:</strong>
-          Gemischte Einheiten (Pa ~ 10⁵, kg/s ~ 1, dimensionslos ~ 10⁻³) erzeugen
+          <strong data-lang="de">Ursachen für hohes κ:</strong><strong data-lang="en">Causes of high κ:</strong>
+          <span data-lang="de">Gemischte Einheiten (Pa ~ 10⁵, kg/s ~ 1, dimensionslos ~ 10⁻³) erzeugen
           riesige Spanne in der Jacobi. Verschiedene Größenordnungen werden direkt
-          im Jacobi-Eintrag sichtbar.
+          im Jacobi-Eintrag sichtbar.</span><span data-lang="en">Mixed units (Pa ~ 10⁵, kg/s ~ 1, dimensionless ~ 10⁻³) produce a huge span
+          in the Jacobian. Different orders of magnitude become visible directly
+          in the Jacobian entries.</span>
         </div>
       </div>
       <div class="diag-step">
         <span class="diag-arrow">→ 2</span>
         <div class="diag-content">
-          <strong>Sofortmaßnahme: Levenberg-Marquardt:</strong>
-          LM ist robust bis κ ~ 10²⁵. Einfach Solver wechseln:
+          <strong data-lang="de">Sofortmaßnahme: Levenberg-Marquardt:</strong><strong data-lang="en">Quick fix: Levenberg-Marquardt:</strong>
+          <span data-lang="de">LM ist robust bis κ ~ 10²⁵. Einfach Solver wechseln:</span><span data-lang="en">LM is robust up to κ ~ 10²⁵. Simply switch solvers:</span>
           <pre style="margin-top:.5rem;font-size:11px">java cmd.CASSolver -I:model.cas -S:LEVENBERG_MARQUARDT</pre>
         </div>
       </div>
       <div class="diag-step">
         <span class="diag-arrow">→ 3</span>
         <div class="diag-content">
-          <strong>Mittelfristig: Gleichungen normieren:</strong>
-          Gleichungen in Pa durch 1e5 teilen, kg/s-Gleichungen durch 1 lassen.
-          Das reduziert die Spanne in der Jacobi und verbessert κ um 2–4 Größenordnungen.
+          <strong data-lang="de">Mittelfristig: Gleichungen normieren:</strong><strong data-lang="en">Medium-term: normalize equations:</strong>
+          <span data-lang="de">Gleichungen in Pa durch 1e5 teilen, kg/s-Gleichungen durch 1 lassen.
+          Das reduziert die Spanne in der Jacobi und verbessert κ um 2–4 Größenordnungen.</span><span data-lang="en">Divide Pa equations by 1e5, leave kg/s equations as-is.
+          This reduces the span in the Jacobian and improves κ by 2–4 orders of magnitude.</span>
         </div>
       </div>
     </div>
@@ -316,38 +625,43 @@ ENDINIT</pre>
 
 <!-- ── NaN ── -->
 <section id="nan">
-  <h2>NaN und Divergenz</h2>
+  <h2 data-lang="de">NaN und Divergenz</h2><h2 data-lang="en">NaN and Divergence</h2>
 
   <div class="symptom">
     <div class="symptom-header">
       <span class="symptom-icon">💥</span>
-      <span class="symptom-title">Log: "NaN detected — treating as divergence"</span>
+      <span class="symptom-title" data-lang="de">Log: "NaN detected — treating as divergence"</span><span class="symptom-title" data-lang="en">Log: "NaN detected — treating as divergence"</span>
     </div>
     <div class="symptom-body">
       <div class="diag-step">
         <span class="diag-arrow">→ 1</span>
         <div class="diag-content">
-          <strong>Physikalisch unmöglicher Zwischenwert:</strong>
-          Eine Gleichung hat einen Wert außerhalb des physikalischen Bereichs erzeugt —
+          <strong data-lang="de">Physikalisch unmöglicher Zwischenwert:</strong><strong data-lang="en">Physically impossible intermediate value:</strong>
+          <span data-lang="de">Eine Gleichung hat einen Wert außerhalb des physikalischen Bereichs erzeugt —
           z.B. negative Temperatur in SQRT(T), Division durch Null.
-          PhysicalProjector fängt viele Fälle, aber nicht alle.
+          PhysicalProjector fängt viele Fälle, aber nicht alle.</span><span data-lang="en">An equation produced a value outside the physical range —
+          e.g., negative temperature in SQRT(T), division by zero.
+          PhysicalProjector catches many cases, but not all.</span>
         </div>
       </div>
       <div class="diag-step">
         <span class="diag-arrow">→ 2</span>
         <div class="diag-content">
-          <strong>Bounds strenger setzen:</strong>
-          Lower-Bounds für T (≥ 1K), p (≥ 1Pa), Flächen (≥ 1e-6 m²) verhindern
+          <strong data-lang="de">Bounds strenger setzen:</strong><strong data-lang="en">Set tighter bounds:</strong>
+          <span data-lang="de">Lower-Bounds für T (≥ 1K), p (≥ 1Pa), Flächen (≥ 1e-6 m²) verhindern
           physikalisch unmögliche Zwischenwerte. PhysicalProjector projiziert nur
-          auf User-Bounds wenn diese enger sind als die physikalischen Defaults.
+          auf User-Bounds wenn diese enger sind als die physikalischen Defaults.</span><span data-lang="en">Lower bounds for T (≥ 1K), p (≥ 1Pa), areas (≥ 1e-6 m²) prevent
+          physically impossible intermediate values. PhysicalProjector only projects
+          onto user bounds when they are tighter than the physical defaults.</span>
         </div>
       </div>
       <div class="diag-step">
         <span class="diag-arrow">→ 3</span>
         <div class="diag-content">
-          <strong>Armijo-Liniensuche hilft:</strong>
-          <code>NEWTON_SPARSE_ARMIJO</code> halbiert den Schritt wenn der Versuchspunkt
-          NaN erzeugt. Ohne Armijo (<code>NEWTON_SPARSE</code>) kann NaN sofort auftreten.
+          <strong data-lang="de">Armijo-Liniensuche hilft:</strong><strong data-lang="en">Armijo line search helps:</strong>
+          <span data-lang="de"><code>NEWTON_SPARSE_ARMIJO</code> halbiert den Schritt wenn der Versuchspunkt
+          NaN erzeugt. Ohne Armijo (<code>NEWTON_SPARSE</code>) kann NaN sofort auftreten.</span><span data-lang="en"><code>NEWTON_SPARSE_ARMIJO</code> halves the step when the trial point
+          produces NaN. Without Armijo (<code>NEWTON_SPARSE</code>), NaN can occur immediately.</span>
         </div>
       </div>
     </div>
@@ -356,48 +670,53 @@ ENDINIT</pre>
   <div class="symptom">
     <div class="symptom-header">
       <span class="symptom-icon">📊</span>
-      <span class="symptom-title">Homotopie meldet fsum = NaN</span>
+      <span class="symptom-title" data-lang="de">Homotopie meldet fsum = NaN</span><span class="symptom-title" data-lang="en">Homotopy reports fsum = NaN</span>
     </div>
     <div class="symptom-body">
-      <p>Das ist <strong>normal</strong>. Der Homotopie-Solver gibt kein fsum über
+      <p data-lang="de">Das ist <strong>normal</strong>. Der Homotopie-Solver gibt kein fsum über
       den Standard-Kanal aus — er hat eine eigene interne Konvergenzprüfung über
-      den Pfadfortschritt t → 1. Nur der <code>isConverged()</code>-Status ist maßgeblich.</p>
+      den Pfadfortschritt t → 1. Nur der <code>isConverged()</code>-Status ist maßgeblich.</p><p data-lang="en">This is <strong>normal</strong>. The homotopy solver does not emit fsum on the
+      standard channel — it has its own internal convergence check based on path
+      progress t → 1. Only the <code>isConverged()</code> status matters.</p>
     </div>
   </div>
 </section>
 
 <!-- ── Performance ── -->
 <section id="performance">
-  <h2>Performance-Probleme</h2>
+  <h2 data-lang="de">Performance-Probleme</h2><h2 data-lang="en">Performance Problems</h2>
 
   <div class="symptom">
     <div class="symptom-header">
       <span class="symptom-icon">🐢</span>
-      <span class="symptom-title">Solver ist sehr langsam bei großem System (n &gt; 200)</span>
+      <span class="symptom-title" data-lang="de">Solver ist sehr langsam bei großem System (n &gt; 200)</span><span class="symptom-title" data-lang="en">Solver is very slow on large systems (n &gt; 200)</span>
     </div>
     <div class="symptom-body">
       <div class="diag-step">
         <span class="diag-arrow">→ 1</span>
         <div class="diag-content">
-          <strong>Sparse-LU verwenden:</strong>
-          <code>NEWTON_ARMIJO</code> verwendet dichte LU (O(n³)).
-          <code>NEWTON_SPARSE_ARMIJO</code> verwendet GSPAR Sparse-LU (O(nnz)) — bis 10× schneller.
+          <strong data-lang="de">Sparse-LU verwenden:</strong><strong data-lang="en">Use sparse LU:</strong>
+          <span data-lang="de"><code>NEWTON_ARMIJO</code> verwendet dichte LU (O(n³)).
+          <code>NEWTON_SPARSE_ARMIJO</code> verwendet GSPAR Sparse-LU (O(nnz)) — bis 10× schneller.</span><span data-lang="en"><code>NEWTON_ARMIJO</code> uses dense LU (O(n³)).
+          <code>NEWTON_SPARSE_ARMIJO</code> uses GSPAR sparse LU (O(nnz)) — up to 10× faster.</span>
         </div>
       </div>
       <div class="diag-step">
         <span class="diag-arrow">→ 2</span>
         <div class="diag-content">
-          <strong>Broyden-Sparse für Parameterstudien:</strong>
-          Wenn viele ähnliche Betriebspunkte gelöst werden: <code>BROYDEN_SPARSE</code>
-          spart Jacobi-Neuaufbauten. ~9ms vs ~30ms für SimpleSystem.
+          <strong data-lang="de">Broyden-Sparse für Parameterstudien:</strong><strong data-lang="en">Broyden-Sparse for parameter studies:</strong>
+          <span data-lang="de">Wenn viele ähnliche Betriebspunkte gelöst werden: <code>BROYDEN_SPARSE</code>
+          spart Jacobi-Neuaufbauten. ~9ms vs ~30ms für SimpleSystem.</span><span data-lang="en">When many similar operating points are solved: <code>BROYDEN_SPARSE</code>
+          saves Jacobian rebuilds. ~9ms vs ~30ms for SimpleSystem.</span>
         </div>
       </div>
       <div class="diag-step">
         <span class="diag-arrow">→ 3</span>
         <div class="diag-content">
-          <strong>BatchRunner für Parameterstudien:</strong>
-          CSV-Datei mit allen Betriebspunkten → <code>-I:studie.csv</code>.
-          Läuft alle Punkte sequenziell mit Warm-Start-Option.
+          <strong data-lang="de">BatchRunner für Parameterstudien:</strong><strong data-lang="en">BatchRunner for parameter studies:</strong>
+          <span data-lang="de">CSV-Datei mit allen Betriebspunkten → <code>-I:studie.csv</code>.
+          Läuft alle Punkte sequenziell mit Warm-Start-Option.</span><span data-lang="en">CSV file with all operating points → <code>-I:studie.csv</code>.
+          Runs all points sequentially with the warm-start option.</span>
         </div>
       </div>
     </div>
@@ -406,125 +725,145 @@ ENDINIT</pre>
 
 <!-- ── FAQ ── -->
 <section id="faq">
-  <h2>Häufige Fragen (FAQ)</h2>
+  <h2 data-lang="de">Häufige Fragen (FAQ)</h2><h2 data-lang="en">Frequently Asked Questions (FAQ)</h2>
 
-  <div class="faq-q">Wie viele Gleichungen kann CMDSolver lösen?</div>
+  <div class="faq-q" data-lang="de">Wie viele Gleichungen kann CMDSolver lösen?</div><div class="faq-q" data-lang="en">How many equations can CMDSolver handle?</div>
   <div class="faq-a">
-    Theoretisch unbegrenzt. Praktisch getestet bis ~600 Gleichungen (623-Gleichungen Benchmark).
+    <span data-lang="de">Theoretisch unbegrenzt. Praktisch getestet bis ~600 Gleichungen (623-Gleichungen Benchmark).
     Mit GSPAR Sparse-LU sind 1000–2000 Gleichungen realistisch. Bei n &gt; 2000 wird
-    GMRES als linearer Solver benötigt (Roadmap R-02).
+    GMRES als linearer Solver benötigt (Roadmap R-02).</span><span data-lang="en">Theoretically unlimited. Practically tested up to ~600 equations (623-equation benchmark).
+    With GSPAR sparse LU, 1000–2000 equations are realistic. For n &gt; 2000, GMRES
+    is needed as a linear solver (Roadmap R-02).</span>
   </div>
 
-  <div class="faq-q">Warum ist die Jacobi dicht obwohl das System sparse aussieht?</div>
+  <div class="faq-q" data-lang="de">Warum ist die Jacobi dicht obwohl das System sparse aussieht?</div><div class="faq-q" data-lang="en">Why is the Jacobian dense even though the system looks sparse?</div>
   <div class="faq-a">
-    In thermodynamischen Modellen hängen viele Variablen über physikalische Zusammenhänge
+    <span data-lang="de">In thermodynamischen Modellen hängen viele Variablen über physikalische Zusammenhänge
     zusammen — Gaszusammensetzung beeinflusst cp beeinflusst κ beeinflusst Schallgeschwindigkeit
     beeinflusst Machzahl usw. Das erzeugt trotzdem eine relativ dünn besetzte Jacobi
-    (5–15% Besetzung) — GSPAR Sparse-LU ist dennoch deutlich schneller als dichte LU.
+    (5–15% Besetzung) — GSPAR Sparse-LU ist dennoch deutlich schneller als dichte LU.</span><span data-lang="en">In thermodynamic models, many variables are coupled via physical relationships —
+    gas composition affects cp affects κ affects speed of sound affects Mach number, etc.
+    This still produces a relatively sparse Jacobian (5–15% fill) — GSPAR sparse LU is
+    nevertheless much faster than dense LU.</span>
   </div>
 
-  <div class="faq-q">Kann ich CMDSolver in einem Multi-Thread-Kontext verwenden?</div>
+  <div class="faq-q" data-lang="de">Kann ich CMDSolver in einem Multi-Thread-Kontext verwenden?</div><div class="faq-q" data-lang="en">Can I use CMDSolver in a multi-threaded context?</div>
   <div class="faq-a">
-    Ja — eine <code>SolverAPI</code>-Instanz pro Thread. Instanzen sind nicht thread-sicher
+    <span data-lang="de">Ja — eine <code>SolverAPI</code>-Instanz pro Thread. Instanzen sind nicht thread-sicher
     untereinander, aber mehrere unabhängige Instanzen können parallel laufen.
     Der interne Jacobi-Aufbau ist aktuell nicht parallelisiert
-    (<code>PARALLEL_JACOBI_THRESHOLD = 99999</code>).
+    (<code>PARALLEL_JACOBI_THRESHOLD = 99999</code>).</span><span data-lang="en">Yes — one <code>SolverAPI</code> instance per thread. Instances are not thread-safe
+    with each other, but multiple independent instances can run in parallel.
+    Internal Jacobian assembly is currently not parallelized
+    (<code>PARALLEL_JACOBI_THRESHOLD = 99999</code>).</span>
   </div>
 
-  <div class="faq-q">Warum hat die CAS-Datei Semikolon am Ende jeder Gleichung?</div>
+  <div class="faq-q" data-lang="de">Warum hat die CAS-Datei Semikolon am Ende jeder Gleichung?</div><div class="faq-q" data-lang="en">Why does the CAS file have a semicolon at the end of every equation?</div>
   <div class="faq-a">
-    Das Semikolon ist das Gleichungsende-Zeichen — der Parser behandelt es als Abschluss
+    <span data-lang="de">Das Semikolon ist das Gleichungsende-Zeichen — der Parser behandelt es als Abschluss
     der Residuumsform <code>LHS − (RHS) = 0</code>. Ohne Semikolon kann der Parser
     nicht unterscheiden ob die Zeile weitergeht. In der AS-REAL-Kurzform ist das Semikolon
-    ebenfalls obligatorisch.
+    ebenfalls obligatorisch.</span><span data-lang="en">The semicolon is the equation terminator — the parser treats it as the end of the
+    residual form <code>LHS − (RHS) = 0</code>. Without it, the parser cannot tell
+    whether the line continues. In the AS-REAL short form the semicolon is mandatory too.</span>
   </div>
 
-  <div class="faq-q">Was bedeutet "Fixed" vs "Free" für eine Variable?</div>
+  <div class="faq-q" data-lang="de">Was bedeutet "Fixed" vs "Free" für eine Variable?</div><div class="faq-q" data-lang="en">What does "Fixed" vs "Free" mean for a variable?</div>
   <div class="faq-a">
-    <strong>Fixed:</strong> Die Variable ist eine bekannte Randbedingung — ihr Wert ist
+    <span data-lang="de"><strong>Fixed:</strong> Die Variable ist eine bekannte Randbedingung — ihr Wert ist
     vorgegeben und wird vom Solver nicht verändert. <strong>Free:</strong> Die Variable
     ist eine Unbekannte die der Solver bestimmt. Anzahl Free-Variablen muss gleich
-    Anzahl der Gleichungen sein.
+    Anzahl der Gleichungen sein.</span><span data-lang="en"><strong>Fixed:</strong> the variable is a known boundary condition — its value is
+    given and not changed by the solver. <strong>Free:</strong> the variable is an
+    unknown that the solver determines. The number of free variables must equal the
+    number of equations.</span>
   </div>
 
-  <div class="faq-q">Kann ich die Lösung eines Betriebspunkts als Startvektor für den nächsten verwenden?</div>
+  <div class="faq-q" data-lang="de">Kann ich die Lösung eines Betriebspunkts als Startvektor für den nächsten verwenden?</div><div class="faq-q" data-lang="en">Can I use the solution of one operating point as the starting vector for the next?</div>
   <div class="faq-a">
-    Mit der <code>-DV:</code> Option wird der aktuelle Startvektor in eine Datei geschrieben
+    <span data-lang="de">Mit der <code>-DV:</code> Option wird der aktuelle Startvektor in eine Datei geschrieben
     die dann mit <code>-U:</code> als Startvektor für den nächsten Lauf verwendet werden kann.
-    SolverState Warm-Start (Roadmap R-14) wird das automatisieren.
+    SolverState Warm-Start (Roadmap R-14) wird das automatisieren.</span><span data-lang="en">With the <code>-DV:</code> option the current starting vector is written to a file
+    which can then be passed via <code>-U:</code> as the starting vector for the next run.
+    SolverState warm-start (Roadmap R-14) will automate this.</span>
   </div>
 
-  <div class="faq-q">Warum funktionieren ABS(), ROUND() und TRUNCATE() manchmal schlecht mit Newton?</div>
+  <div class="faq-q" data-lang="de">Warum funktionieren ABS(), ROUND() und TRUNCATE() manchmal schlecht mit Newton?</div><div class="faq-q" data-lang="en">Why do ABS(), ROUND(), and TRUNCATE() sometimes work badly with Newton?</div>
   <div class="faq-a">
-    Diese Funktionen sind an Knicken und Sprüngen nicht differenzierbar. Newton braucht
+    <span data-lang="de">Diese Funktionen sind an Knicken und Sprüngen nicht differenzierbar. Newton braucht
     glatte Ableitungen. An den Unstetigkeitsstellen (ABS bei 0, ROUND bei .5) ist die
     symbolische Ableitung undefiniert und die numerische Ableitung ungenau. Als Alternative:
     glatte Approximationen verwenden, z.B. <code>ABS(x) ≈ SQRT(x^2 + ε)</code> mit
-    kleinem ε &gt; 0.
+    kleinem ε &gt; 0.</span><span data-lang="en">These functions are not differentiable at kinks and jumps. Newton needs smooth
+    derivatives. At the discontinuities (ABS at 0, ROUND at .5) the symbolic derivative
+    is undefined and the numerical one is inaccurate. As an alternative, use smooth
+    approximations, e.g., <code>ABS(x) ≈ SQRT(x^2 + ε)</code> with small ε &gt; 0.</span>
   </div>
 
-  <div class="faq-q">Wie debugge ich eine Gleichung die immer NaN liefert?</div>
+  <div class="faq-q" data-lang="de">Wie debugge ich eine Gleichung die immer NaN liefert?</div><div class="faq-q" data-lang="en">How do I debug an equation that always returns NaN?</div>
   <div class="faq-a">
-    Startvektor mit <code>-DV:start.txt</code> speichern, Werte manuell in einer
+    <span data-lang="de">Startvektor mit <code>-DV:start.txt</code> speichern, Werte manuell in einer
     Tabellenkalkulation nachrechnen. Welche Variable hat einen unmöglichen Wert?
-    Dann Bounds für diese Variable strenger setzen und <code>-DI</code> aktivieren.
+    Dann Bounds für diese Variable strenger setzen und <code>-DI</code> aktivieren.</span><span data-lang="en">Save the starting vector with <code>-DV:start.txt</code>, then recompute values
+    manually in a spreadsheet. Which variable has an impossible value? Tighten that
+    variable's bounds and enable <code>-DI</code>.</span>
   </div>
 </section>
 
 <!-- ── Schnellreferenz ── -->
 <section id="quickref">
-  <h2>Schnellreferenz — Symptom → Lösung</h2>
+  <h2 data-lang="de">Schnellreferenz — Symptom → Lösung</h2><h2 data-lang="en">Quick Reference — Symptom → Fix</h2>
 
   <div class="quick-ref">
-    <div class="quick-ref-title">Häufige Symptome</div>
+    <div class="quick-ref-title" data-lang="de">Häufige Symptome</div><div class="quick-ref-title" data-lang="en">Common Symptoms</div>
 
     <div class="qr-row">
-      <span class="qr-sym">NOT_CONVERGED</span>
-      <span class="qr-sol">→ <code>-DI</code> → <code>-S:LEVENBERG_MARQUARDT</code> → <code>-S:HOMOTOPY -SH:CRITICAL</code></span>
+      <span class="qr-sym" data-lang="de">NOT_CONVERGED</span><span class="qr-sym" data-lang="en">NOT_CONVERGED</span>
+      <span class="qr-sol" data-lang="de">→ <code>-DI</code> → <code>-S:LEVENBERG_MARQUARDT</code> → <code>-S:HOMOTOPY -SH:CRITICAL</code></span><span class="qr-sol" data-lang="en">→ <code>-DI</code> → <code>-S:LEVENBERG_MARQUARDT</code> → <code>-S:HOMOTOPY -SH:CRITICAL</code></span>
     </div>
     <div class="qr-row">
-      <span class="qr-sym">κ &gt; 10¹² Warnung</span>
-      <span class="qr-sol">→ <code>-S:LEVENBERG_MARQUARDT</code> — immer</span>
+      <span class="qr-sym" data-lang="de">κ &gt; 10¹² Warnung</span><span class="qr-sym" data-lang="en">κ &gt; 10¹² warning</span>
+      <span class="qr-sol" data-lang="de">→ <code>-S:LEVENBERG_MARQUARDT</code> — immer</span><span class="qr-sol" data-lang="en">→ <code>-S:LEVENBERG_MARQUARDT</code> — always</span>
     </div>
     <div class="qr-row">
-      <span class="qr-sym">NaN detected</span>
-      <span class="qr-sol">→ Bounds prüfen, <code>NEWTON_SPARSE_ARMIJO</code> (hat Backtracking)</span>
+      <span class="qr-sym" data-lang="de">NaN detected</span><span class="qr-sym" data-lang="en">NaN detected</span>
+      <span class="qr-sol" data-lang="de">→ Bounds prüfen, <code>NEWTON_SPARSE_ARMIJO</code> (hat Backtracking)</span><span class="qr-sol" data-lang="en">→ Check bounds, <code>NEWTON_SPARSE_ARMIJO</code> (has backtracking)</span>
     </div>
     <div class="qr-row">
-      <span class="qr-sym">fsum stagniert</span>
-      <span class="qr-sol">→ <code>-SN</code> (Residuen-Normierung), Gleichungsformulierung prüfen</span>
+      <span class="qr-sym" data-lang="de">fsum stagniert</span><span class="qr-sym" data-lang="en">fsum stagnates</span>
+      <span class="qr-sol" data-lang="de">→ <code>-SN</code> (Residuen-Normierung), Gleichungsformulierung prüfen</span><span class="qr-sol" data-lang="en">→ <code>-SN</code> (residual normalization), check equation formulation</span>
     </div>
     <div class="qr-row">
-      <span class="qr-sym">ParseError Zeilennummer</span>
-      <span class="qr-sol">→ <code>result.getParseErrors().forEach(e -> print(e.format()))</code></span>
+      <span class="qr-sym" data-lang="de">ParseError Zeilennummer</span><span class="qr-sym" data-lang="en">ParseError line number</span>
+      <span class="qr-sol" data-lang="de">→ <code>result.getParseErrors().forEach(e -> print(e.format()))</code></span><span class="qr-sol" data-lang="en">→ <code>result.getParseErrors().forEach(e -> print(e.format()))</code></span>
     </div>
     <div class="qr-row">
-      <span class="qr-sym">INITIALIZE-Block ignoriert</span>
-      <span class="qr-sol">→ Syntax: <code>VAR.Lower = x;</code> und <code>VAR.Upper = x;</code> mit Semikolon</span>
+      <span class="qr-sym" data-lang="de">INITIALIZE-Block ignoriert</span><span class="qr-sym" data-lang="en">INITIALIZE block ignored</span>
+      <span class="qr-sol" data-lang="de">→ Syntax: <code>VAR.Lower = x;</code> und <code>VAR.Upper = x;</code> mit Semikolon</span><span class="qr-sol" data-lang="en">→ Syntax: <code>VAR.Lower = x;</code> and <code>VAR.Upper = x;</code> with semicolon</span>
     </div>
     <div class="qr-row">
-      <span class="qr-sym">150+ Kompilierfehler</span>
-      <span class="qr-sol">→ Versionsmischung — alle Dateien aus einem ZIP kopieren</span>
+      <span class="qr-sym" data-lang="de">150+ Kompilierfehler</span><span class="qr-sym" data-lang="en">150+ compile errors</span>
+      <span class="qr-sol" data-lang="de">→ Versionsmischung — alle Dateien aus einem ZIP kopieren</span><span class="qr-sol" data-lang="en">→ Version mixing — copy all files from one ZIP</span>
     </div>
     <div class="qr-row">
-      <span class="qr-sym">isCallEqn() undefined</span>
-      <span class="qr-sol">→ Nach EqnData-Refactoring verloren — aus v2.5 ZIP wiederherstellen</span>
+      <span class="qr-sym" data-lang="de">isCallEqn() undefined</span><span class="qr-sym" data-lang="en">isCallEqn() undefined</span>
+      <span class="qr-sol" data-lang="de">→ Nach EqnData-Refactoring verloren — aus v2.5 ZIP wiederherstellen</span><span class="qr-sol" data-lang="en">→ Lost after EqnData refactoring — restore from v2.5 ZIP</span>
     </div>
     <div class="qr-row">
-      <span class="qr-sym">Solver zu langsam</span>
-      <span class="qr-sol">→ <code>-S:NEWTON_SPARSE_ARMIJO</code> oder <code>-S:BROYDEN_SPARSE</code></span>
+      <span class="qr-sym" data-lang="de">Solver zu langsam</span><span class="qr-sym" data-lang="en">Solver too slow</span>
+      <span class="qr-sol" data-lang="de">→ <code>-S:NEWTON_SPARSE_ARMIJO</code> oder <code>-S:BROYDEN_SPARSE</code></span><span class="qr-sol" data-lang="en">→ <code>-S:NEWTON_SPARSE_ARMIJO</code> or <code>-S:BROYDEN_SPARSE</code></span>
     </div>
     <div class="qr-row">
-      <span class="qr-sym">Homotopie fsum=NaN</span>
-      <span class="qr-sol">→ Normal — nur <code>isConverged()</code> ist maßgeblich</span>
+      <span class="qr-sym" data-lang="de">Homotopie fsum=NaN</span><span class="qr-sym" data-lang="en">Homotopy fsum=NaN</span>
+      <span class="qr-sol" data-lang="de">→ Normal — nur <code>isConverged()</code> ist maßgeblich</span><span class="qr-sol" data-lang="en">→ Normal — only <code>isConverged()</code> is authoritative</span>
     </div>
     <div class="qr-row">
-      <span class="qr-sym">Doppelte Klasse EqnData</span>
-      <span class="qr-sol">→ Javadoc muss VOR <code>public class</code> stehen</span>
+      <span class="qr-sym" data-lang="de">Doppelte Klasse EqnData</span><span class="qr-sym" data-lang="en">Duplicate class EqnData</span>
+      <span class="qr-sol" data-lang="de">→ Javadoc muss VOR <code>public class</code> stehen</span><span class="qr-sol" data-lang="en">→ Javadoc must be BEFORE <code>public class</code></span>
     </div>
     <div class="qr-row">
-      <span class="qr-sym">System.out in Framework</span>
-      <span class="qr-sol">→ SolverLogger Handler registrieren (R-16) — System.out ist bereinigt ab v2.3</span>
+      <span class="qr-sym" data-lang="de">System.out in Framework</span><span class="qr-sym" data-lang="en">System.out in framework</span>
+      <span class="qr-sol" data-lang="de">→ SolverLogger Handler registrieren (R-16) — System.out ist bereinigt ab v2.3</span><span class="qr-sol" data-lang="en">→ Register a SolverLogger handler (R-16) — System.out is clean since v2.3</span>
     </div>
   </div>
 </section>
@@ -532,10 +871,10 @@ ENDINIT</pre>
 </main>
 
 <footer>
-  <span>CMDSolver Docs · Troubleshooting &amp; FAQ · v2.5</span>
+  <span data-lang="de">CMDSolver Docs · Troubleshooting &amp; FAQ · v2.5</span><span data-lang="en">CMDSolver Docs · Troubleshooting &amp; FAQ · v2.5</span>
   <span>
-    <a href="examples.html">← Beispiele</a> &nbsp;|&nbsp;
-    <a href="index.html">← Übersicht</a>
+    <a href="examples.html" data-lang="de">← Beispiele</a><a href="examples.html" data-lang="en">← Examples</a> &nbsp;|&nbsp;
+    <a href="index.html" data-lang="de">← Übersicht</a><a href="index.html" data-lang="en">← Overview</a>
   </span>
 </footer>
 </body>

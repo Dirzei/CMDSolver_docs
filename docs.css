@@ -242,3 +242,52 @@ footer a { color: var(--accent); text-decoration: none; }
 }
 .footnotes p { max-width: none; margin-bottom: .5rem; }
 sup { font-size: 10px; color: var(--accent); }
+
+/* ── Language Switcher ── */
+.lang-switch {
+  display: flex; align-items: center; gap: .4rem;
+  font-family: var(--mono); font-size: 11px;
+}
+.lang-btn {
+  background: none; border: 1px solid var(--border2);
+  color: var(--text3); padding: 3px 9px; border-radius: 4px;
+  cursor: pointer; font-family: var(--mono); font-size: 11px;
+  transition: all .15s; letter-spacing: .06em;
+}
+.lang-btn:hover { border-color: var(--accent); color: var(--accent); }
+.lang-btn.active {
+  background: rgba(74,158,255,.12); border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* Default: alle Sprachelemente sichtbar (kein JS-Flash) */
+/* Mit lang-Klasse auf body: nur die aktive Sprache sichtbar */
+
+/* Nur wenn body eine Sprachklasse hat, werden Elemente ausgeblendet */
+body.lang-de [data-lang="en"],
+body.lang-en [data-lang="de"] {
+  display: none !important;
+}
+
+/* Inline spans */
+body.lang-de span[data-lang="en"],
+body.lang-en span[data-lang="de"] {
+  display: none !important;
+}
+
+
+/* Inline spans */
+span[data-lang] { display: none; }
+body.lang-de span[data-lang="de"] { display: inline; }
+body.lang-en span[data-lang="en"] { display: inline; }
+/* Block elements */
+div[data-lang], section[data-lang], p[data-lang],
+li[data-lang], td[data-lang], th[data-lang] { display: none; }
+body.lang-de div[data-lang="de"] { display: block; }
+body.lang-en div[data-lang="en"] { display: block; }
+body.lang-de p[data-lang="de"]   { display: block; }
+body.lang-en p[data-lang="en"]   { display: block; }
+body.lang-de li[data-lang="de"]  { display: list-item; }
+body.lang-en li[data-lang="en"]  { display: list-item; }
+body.lang-de td[data-lang="de"]  { display: table-cell; }
+body.lang-en td[data-lang="en"]  { display: table-cell; }

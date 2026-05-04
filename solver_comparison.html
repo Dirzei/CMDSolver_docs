@@ -4,9 +4,262 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>CMDSolver Docs — Solver Vergleich</title>
-<link rel="stylesheet" href="docs.css">
 <style>
-  .comp-table thead th { font-size: 11px; text-align: center; padding: 10px 8px; }
+/* CMDSolver Documentation — Shared Stylesheet */
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;1,400&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap');
+
+:root {
+  --bg:      #0d0f12;
+  --bg2:     #13161b;
+  --bg3:     #1a1e25;
+  --bg4:     #20252f;
+  --border:  #252a33;
+  --border2: #2e3540;
+  --text:    #c8cdd6;
+  --text2:   #7a8496;
+  --text3:   #4a5568;
+  --accent:  #4a9eff;
+  --ok:      #3ecf8e;
+  --warn:    #f0a030;
+  --err:     #ff5c5c;
+  --purple:  #a78bfa;
+  --teal:    #2dd4bf;
+  --mono:    'IBM Plex Mono', monospace;
+  --sans:    'IBM Plex Sans', sans-serif;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: var(--sans);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 13.5px;
+  line-height: 1.75;
+}
+
+/* ── Header ── */
+.doc-header {
+  border-bottom: 1px solid var(--border);
+  padding: 1.2rem 3rem;
+  display: flex; align-items: center;
+  justify-content: space-between; flex-wrap: wrap; gap: 1rem;
+}
+
+.breadcrumb {
+  font-family: var(--mono); font-size: 11px; color: var(--text3);
+  letter-spacing: .08em; text-transform: uppercase;
+  display: flex; align-items: center; gap: .5rem;
+}
+.breadcrumb a { color: var(--accent); text-decoration: none; }
+.breadcrumb span { color: var(--text3); }
+
+.doc-badge {
+  font-family: var(--mono); font-size: 11px;
+  padding: 3px 10px; border-radius: 4px;
+}
+.doc-badge.solver {
+  background: rgba(74,158,255,.1); border: 1px solid rgba(74,158,255,.25);
+  color: var(--accent);
+}
+.doc-badge.overview {
+  background: rgba(167,139,250,.1); border: 1px solid rgba(167,139,250,.25);
+  color: var(--purple);
+}
+.doc-badge.comparison {
+  background: rgba(62,207,142,.1); border: 1px solid rgba(62,207,142,.25);
+  color: var(--ok);
+}
+
+/* ── Hero ── */
+.hero {
+  padding: 2.5rem 3rem 2rem;
+  border-bottom: 1px solid var(--border);
+  background: linear-gradient(135deg, var(--bg) 0%, #0f1520 100%);
+}
+.hero-sub {
+  font-family: var(--mono); font-size: 11px; color: var(--text3);
+  letter-spacing: .15em; text-transform: uppercase; margin-bottom: .5rem;
+}
+h1 {
+  font-size: 28px; font-weight: 600; color: #e8ecf4;
+  letter-spacing: -.03em; margin-bottom: .5rem; line-height: 1.2;
+}
+.tagline {
+  font-size: 14px; color: var(--text2); margin-bottom: 1.5rem;
+  max-width: 680px;
+}
+.hero-stats { display: flex; gap: 2rem; flex-wrap: wrap; }
+.stat { display: flex; flex-direction: column; gap: .2rem; }
+.stat-val {
+  font-family: var(--mono); font-size: 18px; font-weight: 500; color: var(--ok);
+}
+.stat-lbl {
+  font-size: 11px; color: var(--text3);
+  text-transform: uppercase; letter-spacing: .08em;
+}
+
+/* ── Nav ── */
+nav {
+  position: sticky; top: 0; z-index: 10;
+  background: rgba(13,15,18,.95); backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--border);
+  padding: .6rem 3rem;
+  display: flex; gap: 1.5rem; flex-wrap: wrap;
+}
+nav a {
+  font-family: var(--mono); font-size: 11px; color: var(--text3);
+  text-decoration: none; letter-spacing: .08em;
+  text-transform: uppercase; transition: color .15s;
+}
+nav a:hover { color: var(--accent); }
+
+/* ── Main ── */
+main { padding: 2rem 3rem 4rem; max-width: 1040px; }
+
+section { margin-bottom: 3.5rem; scroll-margin-top: 3rem; }
+
+section > h2 {
+  font-size: 12px; font-family: var(--mono);
+  letter-spacing: .12em; text-transform: uppercase;
+  color: var(--text3); margin-bottom: 1.4rem;
+  padding-bottom: .5rem; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: .6rem;
+}
+section > h2::before {
+  content: ''; display: inline-block;
+  width: 8px; height: 8px; border-radius: 50%; background: var(--accent);
+}
+
+h3 { font-size: 14px; font-weight: 500; color: #e8ecf4; margin: 1.6rem 0 .6rem; }
+h4 { font-size: 13px; font-weight: 500; color: var(--text2); margin: 1.2rem 0 .4rem; }
+
+p { color: var(--text); margin-bottom: .9rem; max-width: 780px; }
+
+/* ── Math ── */
+.math-block {
+  background: var(--bg3); border: 1px solid var(--border);
+  border-left: 3px solid var(--purple);
+  border-radius: 6px; padding: 1.2rem 1.5rem;
+  margin: 1rem 0 1.2rem; font-family: var(--mono);
+  font-size: 13px; line-height: 2.1; white-space: pre;
+}
+.math-block .eq  { color: #e8ecf4; }
+.math-block .cmt { color: var(--text3); font-style: italic; }
+.math-block .hi  { color: var(--teal); }
+.math-block .hi2 { color: var(--warn); }
+
+/* ── Notes ── */
+.note {
+  border-radius: 6px; padding: .85rem 1.1rem;
+  font-size: 13px; line-height: 1.7; margin-bottom: 1.2rem;
+}
+.note.blue   { background: rgba(74,158,255,.06);  border-left: 3px solid var(--accent); }
+.note.green  { background: rgba(62,207,142,.06);  border-left: 3px solid var(--ok); }
+.note.amber  { background: rgba(240,160,48,.06);  border-left: 3px solid var(--warn); }
+.note.red    { background: rgba(255,92,92,.06);   border-left: 3px solid var(--err); }
+.note.purple { background: rgba(167,139,250,.06); border-left: 3px solid var(--purple); }
+.note strong { color: #e8ecf4; }
+
+/* ── Code ── */
+code {
+  font-family: var(--mono); font-size: 11.5px;
+  background: rgba(255,255,255,.05); padding: 1px 5px;
+  border-radius: 3px; color: #a8c8f0;
+}
+pre {
+  font-family: var(--mono); font-size: 12px;
+  background: var(--bg3); border: 1px solid var(--border);
+  border-radius: 8px; padding: 1rem 1.2rem;
+  overflow-x: auto; line-height: 1.7; margin-bottom: 1rem; color: #c8cdd6;
+}
+.kw  { color: var(--purple); }
+.cmt { color: var(--text3); font-style: italic; }
+.fn  { color: var(--teal); }
+.num { color: var(--warn); }
+.str { color: var(--ok); }
+
+/* ── Tables ── */
+.tbl-wrap {
+  overflow-x: auto; border-radius: 8px;
+  border: 1px solid var(--border); margin-bottom: 1.5rem;
+}
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+thead th {
+  background: var(--bg3); padding: 9px 14px; text-align: left;
+  font-weight: 500; font-size: 11px; letter-spacing: .06em;
+  text-transform: uppercase; color: var(--text2);
+  border-bottom: 1px solid var(--border2); white-space: nowrap;
+}
+tbody tr { border-bottom: 1px solid var(--border); transition: background .1s; }
+tbody tr:last-child { border-bottom: none; }
+tbody tr:hover { background: var(--bg3); }
+td { padding: 9px 14px; vertical-align: top; line-height: 1.6; }
+td.center { text-align: center; }
+
+/* ── Badges ── */
+.badge {
+  display: inline-block; font-size: 11px; padding: 2px 9px;
+  border-radius: 12px; font-family: var(--mono); white-space: nowrap;
+}
+.b-ok   { background: rgba(62,207,142,.1);  color: var(--ok);     border: 1px solid rgba(62,207,142,.25); }
+.b-warn { background: rgba(240,160,48,.1);  color: var(--warn);   border: 1px solid rgba(240,160,48,.25); }
+.b-err  { background: rgba(255,92,92,.1);   color: var(--err);    border: 1px solid rgba(255,92,92,.25); }
+.b-info { background: rgba(74,158,255,.1);  color: var(--accent); border: 1px solid rgba(74,158,255,.25); }
+.b-na   { background: rgba(74,84,96,.1);    color: var(--text3);  border: 1px solid var(--border2); }
+
+/* ── Star rating ── */
+.stars { color: var(--warn); letter-spacing: -.05em; }
+.stars.dim { color: var(--border2); }
+
+/* ── File list ── */
+.file-list { list-style: none; }
+.file-list li {
+  display: flex; gap: 1rem; align-items: flex-start;
+  padding: .7rem 1rem; background: var(--bg2);
+  border: 1px solid var(--border); border-radius: 4px; margin-bottom: .4rem;
+}
+.file-icon {
+  font-family: var(--mono); font-size: 11px; color: var(--accent);
+  white-space: nowrap; margin-top: 2px; min-width: 50px;
+}
+.file-desc { font-size: 13px; color: var(--text2); }
+.file-desc strong { color: var(--text); display: block; margin-bottom: .2rem; }
+
+/* ── Flowchart ── */
+.flowchart {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 10px; padding: 1.5rem; margin: 1rem 0 1.5rem;
+  overflow-x: auto;
+}
+
+/* ── Footer ── */
+footer {
+  border-top: 1px solid var(--border); padding: 1.5rem 3rem;
+  font-family: var(--mono); font-size: 11px; color: var(--text3);
+  display: flex; justify-content: space-between; flex-wrap: wrap; gap: .5rem;
+}
+footer a { color: var(--accent); text-decoration: none; }
+
+/* ── Footnotes ── */
+.footnotes {
+  margin-top: 2rem; padding-top: 1.5rem;
+  border-top: 1px solid var(--border);
+  font-size: 12px; color: var(--text2);
+}
+.footnotes p { max-width: none; margin-bottom: .5rem; }
+sup { font-size: 10px; color: var(--accent); }
+
+/* Default: alle Sprachelemente sichtbar (kein JS-Flash) */
+/* Mit lang-Klasse auf body: nur die aktive Sprache sichtbar */
+
+/* Nur wenn body eine Sprachklasse hat, werden Elemente ausgeblendet */
+/* Sprach-Sichtbarkeit via class auf body */
+
+
+/* ── Seitenspezifische Klassen ────────────────────────
+   (aus alter solver_comparison.html wiederhergestellt) */
+.comp-table thead th { font-size: 11px; text-align: center; padding: 10px 8px; }
   .comp-table thead th:first-child { text-align: left; min-width: 180px; }
   .comp-table td { text-align: center; padding: 10px 8px; font-size: 12px; }
   .comp-table td:first-child { text-align: left; font-size: 13px; color: #e8ecf4; }
@@ -23,41 +276,80 @@
   .impl { color: var(--ok); font-size: 13px; }
   .na   { color: var(--text3); }
 </style>
+<link rel="stylesheet" href="i18n.css">
 </head>
 <body>
+<script>
+(function(){
+  var stored = '';
+  try { stored = localStorage.getItem('cmdlang') || ''; } catch(e){}
+  var lang = stored || 'de';
 
+  function apply(l) {
+    lang = l;
+    try { localStorage.setItem('cmdlang', l); } catch(e){}
+    document.documentElement.lang = l;
+    var body = document.body;
+    body.classList.remove('lang-de','lang-en');
+    body.classList.add('lang-' + l);
+    document.querySelectorAll('.lang-btn').forEach(function(b){
+      b.classList.toggle('active', b.dataset.lang === l);
+    });
+  }
+
+  // Body-Klasse sofort setzen, damit data-lang-Elemente direkt korrekt
+  // sichtbar sind (kein Flash mit unsichtbarem Header-Inhalt).
+  apply(lang);
+  document.addEventListener('DOMContentLoaded', function(){
+    apply(lang); // erneut, damit jetzt auch die Buttons gestyled werden
+    document.querySelectorAll('.lang-btn').forEach(function(b){
+      b.addEventListener('click', function(){ apply(b.dataset.lang); });
+    });
+    // Sticky-Header Schatten via IntersectionObserver
+    var sentinel = document.querySelector('.header-sentinel');
+    var header   = document.querySelector('.doc-header');
+    if (sentinel && header && 'IntersectionObserver' in window) {
+      new IntersectionObserver(function(entries){
+        header.classList.toggle('scrolled', !entries[0].isIntersecting);
+      }).observe(sentinel);
+    }
+  });
+})();
+</script>
+
+
+
+
+<div class="header-sentinel"></div>
 <div class="doc-header">
   <div class="breadcrumb">
     <a href="index.html">CMDSolver Docs</a>
     <span>›</span>
-    <span>Solver Vergleich</span>
+    <span data-lang="de">Solver Vergleich</span><span data-lang="en">Solver Comparison</span>
   </div>
-  <span class="doc-badge comparison">Vergleichsmatrix</span>
-</div>
+  <div class="doc-header-right"><div class="lang-switch"><button class="lang-btn" data-lang="de">DE</button><button class="lang-btn" data-lang="en">EN</button></div><span class="doc-badge comparison">Vergleichsmatrix</span></div></div>
 
 <div class="hero">
-  <div class="hero-sub">Kapitel 2</div>
-  <h1>Solver Vergleichsmatrix</h1>
-  <p class="tagline">
-    Alle 7 implementierten Solver im direkten Vergleich — Konvergenzverhalten,
-    Rechenaufwand, Robustheit und Einsatzempfehlungen auf einen Blick.
-  </p>
-</div>
+  <div class="hero-sub"><span data-lang="de">Vergleich</span><span data-lang="en">Comparison</span></div>
+  <h1 data-lang="de">Solver Vergleich</h1><h1 data-lang="en">Solver Comparison</h1>
+  <p class="tagline" data-lang="de">Alle 7 implementierten Solver im direkten Vergleich — Konvergenzverhalten, Rechenaufwand, Robustheit und Einsatzempfehlungen auf einen Blick.</p>
+  <p class="tagline" data-lang="en">All seven implemented solvers in direct comparison — convergence behavior, computational cost, robustness, and usage recommendations at a glance.</p>
+  </div>
 
 <nav>
-  <a href="#matrix">Vergleichsmatrix</a>
-  <a href="#leistung">Testergebnisse</a>
-  <a href="#anmerkungen">Anmerkungen</a>
-  <a href="#empfehlung">Empfehlung</a>
+  <a href="#matrix" data-lang="de">Vergleichsmatrix</a><a href="#matrix" data-lang="en">Comparison Matrix</a>
+  <a href="#leistung" data-lang="de">Testergebnisse</a><a href="#leistung" data-lang="en">Test Results</a>
+  <a href="#anmerkungen" data-lang="de">Anmerkungen</a><a href="#anmerkungen" data-lang="en">Notes</a>
+  <a href="#empfehlung" data-lang="de">Empfehlung</a><a href="#empfehlung" data-lang="en">Recommendation</a>
 </nav>
 
 <main>
 
 <!-- Vergleichsmatrix -->
 <section id="matrix">
-  <h2>Vergleichsmatrix</h2>
+  <h2 data-lang="de">Vergleichsmatrix</h2><h2 data-lang="en">Comparison Matrix</h2>
 
-  <div class="note blue">
+  <div class="note blue" data-lang="de">
     <strong>Bewertung:</strong>
     <span class="star-full">★★★</span> Sehr gut &nbsp;
     <span class="star-half">★★☆</span> Gut &nbsp;
@@ -65,13 +357,47 @@
     <span class="star-empty">☆☆☆</span> Ungeeignet
     &nbsp;&nbsp;|&nbsp;&nbsp;
     Fußnoten <sup>1–9</sup> erklären Bewertungen im Detail.
+  </div><div class="note blue" data-lang="en">
+    <strong>Rating:</strong>
+    <span class="star-full">★★★</span> Excellent &nbsp;
+    <span class="star-half">★★☆</span> Good &nbsp;
+    <span class="star-half">★☆☆</span> Limited &nbsp;
+    <span class="star-empty">☆☆☆</span> Unsuitable
+    &nbsp;&nbsp;|&nbsp;&nbsp;
+    Footnotes <sup>1–9</sup> explain ratings in detail.
+  </div>
+
+  <div class="note amber" data-lang="de">
+    <strong>Hinweis v2.12:</strong> Die folgende Vergleichsmatrix listet die
+    7 produktiv nutzbaren Solver. Zwei weitere Solver wurden experimentell
+    hinzugefügt aber sind hier nicht aufgeführt:
+    <ul style="margin-top: 0.4rem;">
+      <li><a href="solver_arc_length.html">ARC_LENGTH</a> — Bogen-Längen-Continuation
+        für Wendepunkte/Bifurkationen. Auf NozzleSystem nicht produktiv konvergent.</li>
+      <li><a href="solver_adaptive_lambda.html">ADAPTIVE_LAMBDA</a> — Wrapper über
+        Newton-Armijo. Phase 1 produktiv, Phase 2 (Continuation) experimentell.</li>
+    </ul>
+    Beide sind in den Detail-Seiten dokumentiert mit klarer Markierung wann
+    nicht zu verwenden.
+  </div><div class="note amber" data-lang="en">
+    <strong>Note v2.12:</strong> The following comparison matrix lists the
+    7 production-ready solvers. Two further solvers were added experimentally
+    but are not listed here:
+    <ul style="margin-top: 0.4rem;">
+      <li><a href="solver_arc_length.html">ARC_LENGTH</a> — arc-length continuation
+        for turning points/bifurcations. Not productively convergent on NozzleSystem.</li>
+      <li><a href="solver_adaptive_lambda.html">ADAPTIVE_LAMBDA</a> — wrapper around
+        Newton-Armijo. Phase 1 production-ready, Phase 2 (continuation) experimental.</li>
+    </ul>
+    Both are documented on their detail pages with a clear marker when not
+    to use them.
   </div>
 
   <div class="tbl-wrap">
   <table class="comp-table">
     <thead>
       <tr>
-        <th>Kriterium</th>
+        <th data-lang="de">Kriterium</th><th data-lang="en">Criterion</th>
         <th>Newton<br>Armijo</th>
         <th>Newton<br>Sparse</th>
         <th>Newton<br>Sparse+Armijo</th>
@@ -84,9 +410,9 @@
     <tbody>
 
       <!-- Konvergenz -->
-      <tr class="section-row"><td colspan="8">Konvergenzverhalten</td></tr>
+      <tr class="section-row" data-lang="de"><td colspan="8">Konvergenzverhalten</td></tr><tr class="section-row" data-lang="en"><td colspan="8">Convergence Behavior</td></tr>
       <tr>
-        <td>Konvergenzrate <sup>1</sup></td>
+        <td data-lang="de">Konvergenzrate <sup>1</sup></td><td data-lang="en">Convergence rate <sup>1</sup></td>
         <td><span class="star-full">★★★</span></td>
         <td><span class="star-full">★★★</span></td>
         <td><span class="star-full">★★★</span></td>
@@ -96,7 +422,7 @@
         <td><span class="star-half">★☆☆</span></td>
       </tr>
       <tr>
-        <td>Robustheit bei schlechtem Start <sup>2</sup></td>
+        <td data-lang="de">Robustheit bei schlechtem Start <sup>2</sup></td><td data-lang="en">Robustness with bad start <sup>2</sup></td>
         <td><span class="star-half">★★☆</span></td>
         <td><span class="star-half">★☆☆</span></td>
         <td><span class="star-half">★★☆</span></td>
@@ -106,7 +432,7 @@
         <td><span class="star-full">★★★</span></td>
       </tr>
       <tr>
-        <td>Robustheit bei hohem κ <sup>3</sup></td>
+        <td data-lang="de">Robustheit bei hohem κ <sup>3</sup></td><td data-lang="en">Robustness at high κ <sup>3</sup></td>
         <td><span class="star-half">★☆☆</span></td>
         <td><span class="star-half">★☆☆</span></td>
         <td><span class="star-half">★☆☆</span></td>
@@ -116,7 +442,7 @@
         <td><span class="star-half">★★☆</span></td>
       </tr>
       <tr>
-        <td>Globale Konvergenz <sup>4</sup></td>
+        <td data-lang="de">Globale Konvergenz <sup>4</sup></td><td data-lang="en">Global convergence <sup>4</sup></td>
         <td><span class="star-half">★★☆</span></td>
         <td><span class="star-half">★☆☆</span></td>
         <td><span class="star-half">★★☆</span></td>
@@ -127,29 +453,29 @@
       </tr>
 
       <!-- Rechenaufwand -->
-      <tr class="section-row"><td colspan="8">Rechenaufwand</td></tr>
+      <tr class="section-row" data-lang="de"><td colspan="8">Rechenaufwand</td></tr><tr class="section-row" data-lang="en"><td colspan="8">Computational Cost</td></tr>
       <tr>
-        <td>Aufwand pro Iteration <sup>5</sup></td>
-        <td><span class="star-half">★★☆</span><br><span class="na">O(n³) dicht</span></td>
+        <td data-lang="de">Aufwand pro Iteration <sup>5</sup></td><td data-lang="en">Cost per iteration <sup>5</sup></td>
+        <td><span class="star-half">★★☆</span><br><span class="na" data-lang="de">O(n³) dicht</span><span class="na" data-lang="en">O(n³) dense</span></td>
         <td><span class="star-full">★★★</span><br><span class="na">O(nnz) sparse</span></td>
         <td><span class="star-full">★★★</span><br><span class="na">O(nnz) sparse</span></td>
         <td><span class="star-half">★★☆</span><br><span class="na">O(n²) reg.</span></td>
         <td><span class="star-full">★★★</span><br><span class="na">O(n²) update</span></td>
         <td><span class="star-full">★★★</span><br><span class="na">O(nnz) sparse</span></td>
-        <td><span class="star-half">★☆☆</span><br><span class="na">viele Iter.</span></td>
+        <td><span class="star-half">★☆☆</span><br><span class="na" data-lang="de">viele Iter.</span><span class="na" data-lang="en">many iter.</span></td>
       </tr>
       <tr>
-        <td>Jacobi-Berechnung</td>
-        <td>Jede Iter.</td>
-        <td>Jede Iter.</td>
-        <td>Jede Iter.</td>
-        <td>Jede Iter.</td>
-        <td>Rang-1 Update</td>
-        <td>Rang-1 Update</td>
-        <td>Innerer Solver</td>
+        <td data-lang="de">Jacobi-Berechnung</td><td data-lang="en">Jacobian computation</td>
+        <td data-lang="de">Jede Iter.</td><td data-lang="en">Every iter.</td>
+        <td data-lang="de">Jede Iter.</td><td data-lang="en">Every iter.</td>
+        <td data-lang="de">Jede Iter.</td><td data-lang="en">Every iter.</td>
+        <td data-lang="de">Jede Iter.</td><td data-lang="en">Every iter.</td>
+        <td data-lang="de">Rang-1 Update</td><td data-lang="en">Rank-1 update</td>
+        <td data-lang="de">Rang-1 Update</td><td data-lang="en">Rank-1 update</td>
+        <td data-lang="de">Innerer Solver</td><td data-lang="en">Inner solver</td>
       </tr>
       <tr>
-        <td>Speicherbedarf <sup>6</sup></td>
+        <td data-lang="de">Speicherbedarf <sup>6</sup></td><td data-lang="en">Memory footprint <sup>6</sup></td>
         <td><span class="star-half">★☆☆</span><br><span class="na">O(n²)</span></td>
         <td><span class="star-full">★★★</span><br><span class="na">O(nnz)</span></td>
         <td><span class="star-full">★★★</span><br><span class="na">O(nnz)</span></td>
@@ -159,20 +485,20 @@
         <td><span class="star-half">★★☆</span><br><span class="na">O(n²)</span></td>
       </tr>
       <tr>
-        <td>Parallelisierbar</td>
-        <td><span class="impl">✅</span> Jacobi</td>
-        <td><span class="impl">✅</span> Jacobi</td>
-        <td><span class="impl">✅</span> Jacobi</td>
-        <td><span class="impl">✅</span> Jacobi</td>
+        <td data-lang="de">Parallelisierbar</td><td data-lang="en">Parallelizable</td>
+        <td data-lang="de"><span class="impl">✅</span> Jacobi</td><td data-lang="en"><span class="impl">✅</span> Jacobian</td>
+        <td data-lang="de"><span class="impl">✅</span> Jacobi</td><td data-lang="en"><span class="impl">✅</span> Jacobian</td>
+        <td data-lang="de"><span class="impl">✅</span> Jacobi</td><td data-lang="en"><span class="impl">✅</span> Jacobian</td>
+        <td data-lang="de"><span class="impl">✅</span> Jacobi</td><td data-lang="en"><span class="impl">✅</span> Jacobian</td>
         <td><span class="na">—</span></td>
         <td><span class="na">—</span></td>
-        <td><span class="impl">✅</span> Jacobi</td>
+        <td data-lang="de"><span class="impl">✅</span> Jacobi</td><td data-lang="en"><span class="impl">✅</span> Jacobian</td>
       </tr>
 
       <!-- Einsatz -->
-      <tr class="section-row"><td colspan="8">Einsatzbereich</td></tr>
+      <tr class="section-row" data-lang="de"><td colspan="8">Einsatzbereich</td></tr><tr class="section-row" data-lang="en"><td colspan="8">Application Range</td></tr>
       <tr>
-        <td>Empfohlene Systemgröße</td>
+        <td data-lang="de">Empfohlene Systemgröße</td><td data-lang="en">Recommended system size</td>
         <td>n &lt; 200</td>
         <td>n &lt; 2000</td>
         <td>n &lt; 2000</td>
@@ -182,27 +508,27 @@
         <td>n &lt; 500</td>
       </tr>
       <tr>
-        <td>Konditionszahl κ <sup>3</sup></td>
+        <td data-lang="de">Konditionszahl κ <sup>3</sup></td><td data-lang="en">Condition number κ <sup>3</sup></td>
         <td>&lt; 10⁸</td>
         <td>&lt; 10⁸</td>
         <td>&lt; 10⁸</td>
         <td>&lt; 10²⁵</td>
         <td>&lt; 10⁸</td>
         <td>&lt; 10⁸</td>
-        <td>beliebig</td>
+        <td data-lang="de">beliebig</td><td data-lang="en">arbitrary</td>
       </tr>
       <tr>
-        <td>Startvektornähe nötig <sup>2</sup></td>
-        <td>Mittel</td>
-        <td>Hoch</td>
-        <td>Mittel</td>
-        <td>Gering</td>
-        <td>Hoch</td>
-        <td>Hoch</td>
-        <td>Sehr gering</td>
+        <td data-lang="de">Startvektornähe nötig <sup>2</sup></td><td data-lang="en">Starting-vector proximity needed <sup>2</sup></td>
+        <td data-lang="de">Mittel</td><td data-lang="en">Medium</td>
+        <td data-lang="de">Hoch</td><td data-lang="en">High</td>
+        <td data-lang="de">Mittel</td><td data-lang="en">Medium</td>
+        <td data-lang="de">Gering</td><td data-lang="en">Low</td>
+        <td data-lang="de">Hoch</td><td data-lang="en">High</td>
+        <td data-lang="de">Hoch</td><td data-lang="en">High</td>
+        <td data-lang="de">Sehr gering</td><td data-lang="en">Very low</td>
       </tr>
       <tr>
-        <td>Geeignet für Parameterstudien <sup>7</sup></td>
+        <td data-lang="de">Geeignet für Parameterstudien <sup>7</sup></td><td data-lang="en">Suitable for parameter studies <sup>7</sup></td>
         <td><span class="star-half">★★☆</span></td>
         <td><span class="star-full">★★★</span></td>
         <td><span class="star-full">★★★</span></td>
@@ -213,9 +539,9 @@
       </tr>
 
       <!-- Implementierung -->
-      <tr class="section-row"><td colspan="8">Implementierung</td></tr>
+      <tr class="section-row" data-lang="de"><td colspan="8">Implementierung</td></tr><tr class="section-row" data-lang="en"><td colspan="8">Implementation</td></tr>
       <tr>
-        <td>Kernklasse</td>
+        <td data-lang="de">Kernklasse</td><td data-lang="en">Core class</td>
         <td><code style="font-size:10px">NewtonArmijoSolver</code></td>
         <td><code style="font-size:10px">GSPARSolver</code></td>
         <td><code style="font-size:10px">NewtonArmijoGSPARSolver</code></td>
@@ -225,7 +551,7 @@
         <td><code style="font-size:10px">HomotopySolver</code></td>
       </tr>
       <tr>
-        <td>CLI-Schlüssel</td>
+        <td data-lang="de">CLI-Schlüssel</td><td data-lang="en">CLI key</td>
         <td><code style="font-size:10px">NEWTON_ARMIJO</code></td>
         <td><code style="font-size:10px">NEWTON_SPARSE</code></td>
         <td><code style="font-size:10px">NEWTON_SPARSE_ARMIJO</code></td>
@@ -235,14 +561,14 @@
         <td><code style="font-size:10px">HOMOTOPY</code></td>
       </tr>
       <tr>
-        <td>Lineare Algebra</td>
-        <td>MatrixSimple<br>(dichte LU)</td>
-        <td>GSPAR<br>(Sparse-LU)</td>
-        <td>GSPAR<br>(Sparse-LU)</td>
-        <td>MatrixSimple<br>(dichte LU)</td>
-        <td>MatrixSimple<br>(dichte LU)</td>
-        <td>GSPAR<br>(Sparse-LU)</td>
-        <td>Innerer Solver <sup>8</sup></td>
+        <td data-lang="de">Lineare Algebra</td><td data-lang="en">Linear algebra</td>
+        <td data-lang="de">MatrixSimple<br>(dichte LU)</td><td data-lang="en">MatrixSimple<br>(dense LU)</td>
+        <td data-lang="de">GSPAR<br>(Sparse-LU)</td><td data-lang="en">GSPAR<br>(sparse LU)</td>
+        <td data-lang="de">GSPAR<br>(Sparse-LU)</td><td data-lang="en">GSPAR<br>(sparse LU)</td>
+        <td data-lang="de">MatrixSimple<br>(dichte LU)</td><td data-lang="en">MatrixSimple<br>(dense LU)</td>
+        <td data-lang="de">MatrixSimple<br>(dichte LU)</td><td data-lang="en">MatrixSimple<br>(dense LU)</td>
+        <td data-lang="de">GSPAR<br>(Sparse-LU)</td><td data-lang="en">GSPAR<br>(sparse LU)</td>
+        <td data-lang="de">Innerer Solver <sup>8</sup></td><td data-lang="en">Inner solver <sup>8</sup></td>
       </tr>
 
     </tbody>
@@ -252,10 +578,13 @@
 
 <!-- Testergebnisse -->
 <section id="leistung">
-  <h2>Testergebnisse — SimpleSystem.cas</h2>
+  <h2 data-lang="de">Testergebnisse — SimpleSystem.cas</h2><h2 data-lang="en">Test Results — SimpleSystem.cas</h2>
 
-  <p>
+  <p data-lang="de">
     Gemessen auf SimpleSystem.cas: 12 Gleichungen, 20 Variablen (8 fixiert),
+    CMDSolver v2.5, Java 21, Windows 10.
+  </p><p data-lang="en">
+    Measured on SimpleSystem.cas: 12 equations, 20 variables (8 fixed),
     CMDSolver v2.5, Java 21, Windows 10.
   </p>
 
@@ -265,10 +594,10 @@
       <tr>
         <th>Solver</th>
         <th>Status</th>
-        <th>Iterationen</th>
+        <th data-lang="de">Iterationen</th><th data-lang="en">Iterations</th>
         <th>fsum</th>
-        <th>Zeit (ms)</th>
-        <th>Empfehlung</th>
+        <th data-lang="de">Zeit (ms)</th><th data-lang="en">Time (ms)</th>
+        <th data-lang="de">Empfehlung</th><th data-lang="en">Recommendation</th>
       </tr>
     </thead>
     <tbody>
@@ -278,7 +607,7 @@
         <td class="center">3</td>
         <td class="center"><code>3.16e-11</code></td>
         <td class="center">~42</td>
-        <td>Standard für kleine Systeme</td>
+        <td data-lang="de">Standard für kleine Systeme</td><td data-lang="en">Default for small systems</td>
       </tr>
       <tr>
         <td><code>NEWTON_SPARSE</code></td>
@@ -286,7 +615,7 @@
         <td class="center">3</td>
         <td class="center"><code>3.16e-11</code></td>
         <td class="center">~28</td>
-        <td>Schnellster bei gut konditionierten Systemen</td>
+        <td data-lang="de">Schnellster bei gut konditionierten Systemen</td><td data-lang="en">Fastest on well-conditioned systems</td>
       </tr>
       <tr>
         <td><code>NEWTON_SPARSE_ARMIJO</code></td>
@@ -294,7 +623,7 @@
         <td class="center">3</td>
         <td class="center"><code>3.16e-11</code></td>
         <td class="center">~30</td>
-        <td><strong>Beste Gesamtwahl</strong> ← empfohlen</td>
+        <td data-lang="de"><strong>Beste Gesamtwahl</strong> ← empfohlen</td><td data-lang="en"><strong>Best overall choice</strong> ← recommended</td>
       </tr>
       <tr>
         <td><code>LEVENBERG_MARQUARDT</code></td>
@@ -302,7 +631,7 @@
         <td class="center">36</td>
         <td class="center"><code>8.30e-09</code></td>
         <td class="center">~61</td>
-        <td>Bei schlechter Kondition bevorzugen</td>
+        <td data-lang="de">Bei schlechter Kondition bevorzugen</td><td data-lang="en">Prefer for poor conditioning</td>
       </tr>
       <tr>
         <td><code>BROYDEN</code></td>
@@ -310,7 +639,7 @@
         <td class="center">25</td>
         <td class="center"><code>8.02e-08</code></td>
         <td class="center">~50</td>
-        <td>Gut für Parameterstudien</td>
+        <td data-lang="de">Gut für Parameterstudien</td><td data-lang="en">Good for parameter studies</td>
       </tr>
       <tr>
         <td><code>BROYDEN_SPARSE</code></td>
@@ -318,7 +647,7 @@
         <td class="center">3</td>
         <td class="center"><code>3.16e-11</code></td>
         <td class="center">~9</td>
-        <td>Schnellster Gesamtlauf</td>
+        <td data-lang="de">Schnellster Gesamtlauf</td><td data-lang="en">Fastest overall run</td>
       </tr>
       <tr>
         <td><code>HOMOTOPY</code></td>
@@ -326,80 +655,121 @@
         <td class="center">—</td>
         <td class="center">NaN <sup>9</sup></td>
         <td class="center">~83</td>
-        <td>Nur bei Konvergenzproblemen</td>
+        <td data-lang="de">Nur bei Konvergenzproblemen</td><td data-lang="en">Only on convergence problems</td>
       </tr>
     </tbody>
   </table>
   </div>
 
-  <div class="note amber">
+  <div class="note amber" data-lang="de">
     <strong>Wichtig:</strong> Diese Ergebnisse gelten für ein kleines, gut konditioniertes
     Testsystem. Bei größeren oder schlechter konditionierten Systemen können die
     relativen Stärken der Solver deutlich abweichen.
+  </div><div class="note amber" data-lang="en">
+    <strong>Important:</strong> These results are for a small, well-conditioned
+    test system. On larger or worse-conditioned systems, the relative strengths
+    of the solvers can differ significantly.
   </div>
 </section>
 
 <!-- Anmerkungen -->
 <section id="anmerkungen">
-  <h2>Anmerkungen zu den Bewertungen</h2>
+  <h2 data-lang="de">Anmerkungen zu den Bewertungen</h2><h2 data-lang="en">Notes on the Ratings</h2>
 
   <div class="footnotes">
-    <p><sup>1</sup> <strong>Konvergenzrate:</strong>
+    <p data-lang="de"><sup>1</sup> <strong>Konvergenzrate:</strong>
     Newton-Raphson und seine Varianten konvergieren <em>quadratisch</em> in der Nähe der Lösung
     — der Fehler wird pro Iteration quadriert. LM und Broyden konvergieren superlinear.
-    Homotopie konvergiert abhängig von der Schrittweite des Pfades — typisch linear.</p>
+    Homotopie konvergiert abhängig von der Schrittweite des Pfades — typisch linear.</p><p data-lang="en"><sup>1</sup> <strong>Convergence rate:</strong>
+    Newton-Raphson and its variants converge <em>quadratically</em> near the solution —
+    the error is squared per iteration. LM and Broyden converge superlinearly.
+    Homotopy converges depending on path step size — typically linearly.</p>
 
-    <p><sup>2</sup> <strong>Robustheit bei schlechtem Startvektor:</strong>
+    <p data-lang="de"><sup>2</sup> <strong>Robustheit bei schlechtem Startvektor:</strong>
     Newton-Verfahren haben nur lokale Konvergenzgarantien — der Startvektor muss nahe
     genug an der Lösung liegen. Die Armijo-Liniensuche verbessert den globalen
     Einzugsbereich erheblich. LM ist durch den Dämpfungsparameter λ robuster.
     Homotopie ist am robustesten — sie braucht nur einen Startvektor der das
-    vereinfachte Problem H(x,0)=0 löst (typisch: die Initialwerte aus dem CAS-Modell).</p>
+    vereinfachte Problem H(x,0)=0 löst (typisch: die Initialwerte aus dem CAS-Modell).</p><p data-lang="en"><sup>2</sup> <strong>Robustness with bad starting vector:</strong>
+    Newton methods only have local convergence guarantees — the starting vector must
+    lie close enough to the solution. Armijo line search significantly enlarges the
+    global basin of attraction. LM is more robust thanks to the damping parameter λ.
+    Homotopy is the most robust — it only needs a starting vector that solves the
+    simplified problem H(x,0)=0 (typically the initial values from the CAS model).</p>
 
-    <p><sup>3</sup> <strong>Konditionszahl κ:</strong>
+    <p data-lang="de"><sup>3</sup> <strong>Konditionszahl κ:</strong>
     κ ist das Verhältnis des größten zum kleinsten Singulärwert der Jacobi-Matrix.
     Hohe κ bedeutet fast-singuläre Jacobi — kleine Fehler in F werden zu großen
     Fehlern in Δx verstärkt. LM regularisiert durch λI und ist deshalb robust
     bis κ ~ 10²⁵. Die Homotopie-Schritte sind ebenfalls weniger empfindlich da
-    der Prädiktor-Korrektor-Ansatz kleinere lokale Linearisierungsfehler macht.</p>
+    der Prädiktor-Korrektor-Ansatz kleinere lokale Linearisierungsfehler macht.
+    Seit v2.12 reduziert die Skalierungsoption <code>-SC:EQUILIBRATE</code>
+    (Sinkhorn-Knopp R·J·C) κ adaptiv um typisch 8-10 Größenordnungen bei
+    Systemen mit gemischten Einheiten — orthogonal zur Solver-Wahl.</p><p data-lang="en"><sup>3</sup> <strong>Condition number κ:</strong>
+    κ is the ratio of largest to smallest singular value of the Jacobian.
+    High κ means a near-singular Jacobian — small errors in F amplify into large
+    errors in Δx. LM regularizes via λI and is therefore robust up to κ ~ 10²⁵.
+    Homotopy steps are also less sensitive because the predictor-corrector approach
+    makes smaller local linearization errors.
+    Since v2.12, the scaling option <code>-SC:EQUILIBRATE</code>
+    (Sinkhorn-Knopp R·J·C) adaptively reduces κ by typically 8–10 orders of
+    magnitude on systems with mixed units — orthogonal to solver choice.</p>
 
-    <p><sup>4</sup> <strong>Globale Konvergenz:</strong>
+    <p data-lang="de"><sup>4</sup> <strong>Globale Konvergenz:</strong>
     "Global" bedeutet hier: Konvergenz auch von weit entfernten Startvektoren.
     Nur Homotopie bietet echte globale Konvergenzgarantien (unter regulären Bedingungen).
-    Newton+Armijo hat einen vergrößerten Einzugsbereich gegenüber reinem Newton.</p>
+    Newton+Armijo hat einen vergrößerten Einzugsbereich gegenüber reinem Newton.</p><p data-lang="en"><sup>4</sup> <strong>Global convergence:</strong>
+    "Global" here means: convergence also from far-away starting vectors.
+    Only homotopy offers true global convergence guarantees (under regularity conditions).
+    Newton+Armijo has an enlarged basin of attraction compared to plain Newton.</p>
 
-    <p><sup>5</sup> <strong>Aufwand pro Iteration (nnz = Anzahl Nicht-Null-Einträge der Jacobi):</strong>
+    <p data-lang="de"><sup>5</sup> <strong>Aufwand pro Iteration (nnz = Anzahl Nicht-Null-Einträge der Jacobi):</strong>
     Dichte LU: O(n³). Sparse-LU (GSPAR): O(nnz · log n) bis O(n · nnz) je nach Struktur.
     Broyden-Update: O(n²) — günstiger als Neuaufbau O(n³), aber akkumuliert Approximationsfehler.
-    Homotopie hat mehrere innere Solver-Aufrufe pro Homotopie-Schritt.</p>
+    Homotopie hat mehrere innere Solver-Aufrufe pro Homotopie-Schritt.</p><p data-lang="en"><sup>5</sup> <strong>Cost per iteration (nnz = number of non-zero entries in the Jacobian):</strong>
+    Dense LU: O(n³). Sparse LU (GSPAR): O(nnz · log n) to O(n · nnz) depending on structure.
+    Broyden update: O(n²) — cheaper than full rebuild O(n³), but accumulates approximation error.
+    Homotopy has multiple inner solver calls per homotopy step.</p>
 
-    <p><sup>6</sup> <strong>Speicherbedarf (n = Systemgröße, nnz = Nicht-Null-Einträge):</strong>
+    <p data-lang="de"><sup>6</sup> <strong>Speicherbedarf (n = Systemgröße, nnz = Nicht-Null-Einträge):</strong>
     Dichte Matrix: n² Einträge — bei n=500: 250.000 doubles = 2MB.
     Sparse-Matrix (GSPAR): nur nnz Einträge — bei 5% Besetzung und n=500: ~12.500 doubles = 100KB.
-    Für thermodynamische Systeme ist die Jacobi typischerweise zu 5-15% besetzt.</p>
+    Für thermodynamische Systeme ist die Jacobi typischerweise zu 5-15% besetzt.</p><p data-lang="en"><sup>6</sup> <strong>Memory footprint (n = system size, nnz = non-zero entries):</strong>
+    Dense matrix: n² entries — for n=500: 250,000 doubles = 2 MB.
+    Sparse matrix (GSPAR): only nnz entries — at 5 % fill and n=500: ~12,500 doubles = 100 KB.
+    For thermodynamic systems the Jacobian is typically 5–15 % populated.</p>
 
-    <p><sup>7</sup> <strong>Geeignet für Parameterstudien (BatchRunner):</strong>
+    <p data-lang="de"><sup>7</sup> <strong>Geeignet für Parameterstudien (BatchRunner):</strong>
     Bei Parameterstudien werden viele ähnliche Punkte gelöst. Broyden kann die
     Jacobi vom vorherigen Punkt als Startapproximation verwenden. Newton-Sparse
-    profitiert von schneller Faktorisierung. Homotopie ist zu langsam pro Run.</p>
+    profitiert von schneller Faktorisierung. Homotopie ist zu langsam pro Run.</p><p data-lang="en"><sup>7</sup> <strong>Suitable for parameter studies (BatchRunner):</strong>
+    Parameter studies solve many similar points. Broyden can use the previous
+    point's Jacobian as starting approximation. Newton-Sparse benefits from fast
+    factorization. Homotopy is too slow per run.</p>
 
-    <p><sup>8</sup> <strong>Homotopie — innerer Solver:</strong>
+    <p data-lang="de"><sup>8</sup> <strong>Homotopie — innerer Solver:</strong>
     Der Homotopie-Korrektor verwendet selbst einen Newton-basierten inneren Solver.
     Standard ist <code>NEWTON_ARMIJO</code>. Konfigurierbar via
-    <code>-SH:INNER=LEVENBERG_MARQUARDT</code> für schlecht konditionierte Systeme.</p>
+    <code>-SH:INNER=LEVENBERG_MARQUARDT</code> für schlecht konditionierte Systeme.</p><p data-lang="en"><sup>8</sup> <strong>Homotopy — inner solver:</strong>
+    The homotopy corrector itself uses a Newton-based inner solver.
+    Default is <code>NEWTON_ARMIJO</code>. Configurable via
+    <code>-SH:INNER=LEVENBERG_MARQUARDT</code> for ill-conditioned systems.</p>
 
-    <p><sup>9</sup> <strong>Homotopie fsum = NaN:</strong>
+    <p data-lang="de"><sup>9</sup> <strong>Homotopie fsum = NaN:</strong>
     Der Homotopie-Solver meldet kein fsum über den normalen Ausgabekanal —
     er hat eine eigene interne Konvergenzprüfung über den Pfadfortschritt (t → 1).
-    NaN bedeutet "nicht verfügbar", nicht "Fehler". Status CONVERGED ist maßgeblich.</p>
+    NaN bedeutet "nicht verfügbar", nicht "Fehler". Status CONVERGED ist maßgeblich.</p><p data-lang="en"><sup>9</sup> <strong>Homotopy fsum = NaN:</strong>
+    The homotopy solver does not report fsum on the normal output channel —
+    it has its own internal convergence check based on path progress (t → 1).
+    NaN means "not available", not "error". The CONVERGED status is authoritative.</p>
   </div>
 </section>
 
 <!-- Empfehlung -->
 <section id="empfehlung">
-  <h2>Entscheidungsbaum</h2>
+  <h2 data-lang="de">Entscheidungsbaum</h2><h2 data-lang="en">Decision Tree</h2>
 
-  <div class="flowchart">
+  <div data-lang="de"><div class="flowchart">
   <svg width="100%" viewBox="0 0 700 440" xmlns="http://www.w3.org/2000/svg"
        font-family="IBM Plex Sans, sans-serif" font-size="12">
     <defs>
@@ -486,16 +856,103 @@
     <text x="350" y="425" text-anchor="middle" fill="#3ecf8e" font-size="11">NEWTON_ARMIJO</text>
 
   </svg>
-  </div>
+  </div></div><div data-lang="en"><div class="flowchart">
+  <svg width="100%" viewBox="0 0 700 440" xmlns="http://www.w3.org/2000/svg"
+       font-family="IBM Plex Sans, sans-serif" font-size="12">
+    <defs>
+      <marker id="a" viewBox="0 0 10 10" refX="8" refY="5"
+              markerWidth="6" markerHeight="6" orient="auto">
+        <path d="M2 1L8 5L2 9" fill="none" stroke="#4a5568" stroke-width="1.5"/>
+      </marker>
+    </defs>
+
+    <!-- Start -->
+    <rect x="250" y="10" width="200" height="38" rx="19"
+          fill="#1a2535" stroke="#4a9eff" stroke-width="1.5"/>
+    <text x="350" y="34" text-anchor="middle" fill="#4a9eff" font-weight="600">Solve model</text>
+
+    <line x1="350" y1="48" x2="350" y2="76" stroke="#4a5568" stroke-width="1" marker-end="url(#a)"/>
+
+    <!-- κ > 10¹² ? -->
+    <polygon points="350,78 480,104 350,130 220,104"
+             fill="#1a1e25" stroke="#a78bfa" stroke-width="1.5"/>
+    <text x="350" y="108" text-anchor="middle" fill="#a78bfa" font-size="11">κ &gt; 10¹²?</text>
+
+    <!-- Ja → LM -->
+    <line x1="480" y1="104" x2="580" y2="104" stroke="#4a5568" stroke-width="1" marker-end="url(#a)"/>
+    <text x="526" y="96" text-anchor="middle" fill="#4a5568" font-size="10">yes</text>
+    <rect x="582" y="84" width="110" height="40" rx="6"
+          fill="#1a2010" stroke="#3ecf8e" stroke-width="1.5"/>
+    <text x="637" y="108" text-anchor="middle" fill="#3ecf8e" font-size="11">LM</text>
+
+    <!-- Nein → Startvektor -->
+    <line x1="350" y1="130" x2="350" y2="158" stroke="#4a5568" stroke-width="1" marker-end="url(#a)"/>
+    <text x="360" y="150" fill="#4a5568" font-size="10">no</text>
+
+    <!-- Guter Start? -->
+    <polygon points="350,160 480,186 350,212 220,186"
+             fill="#1a1e25" stroke="#a78bfa" stroke-width="1.5"/>
+    <text x="350" y="190" text-anchor="middle" fill="#a78bfa" font-size="11">Good starting vector?</text>
+
+    <!-- Nein → Homotopie -->
+    <line x1="220" y1="186" x2="120" y2="186" stroke="#4a5568" stroke-width="1" marker-end="url(#a)"/>
+    <text x="170" y="178" text-anchor="middle" fill="#4a5568" font-size="10">no</text>
+    <rect x="10" y="166" width="110" height="40" rx="6"
+          fill="#1a2010" stroke="#3ecf8e" stroke-width="1.5"/>
+    <text x="65" y="190" text-anchor="middle" fill="#3ecf8e" font-size="11">HOMOTOPY</text>
+
+    <!-- Ja → Systemgröße -->
+    <line x1="350" y1="212" x2="350" y2="240" stroke="#4a5568" stroke-width="1" marker-end="url(#a)"/>
+    <text x="360" y="232" fill="#4a5568" font-size="10">yes</text>
+
+    <!-- n > 200? -->
+    <polygon points="350,242 470,268 350,294 230,268"
+             fill="#1a1e25" stroke="#a78bfa" stroke-width="1.5"/>
+    <text x="350" y="272" text-anchor="middle" fill="#a78bfa" font-size="11">n &gt; 200?</text>
+
+    <!-- Ja → Sparse -->
+    <line x1="470" y1="268" x2="570" y2="268" stroke="#4a5568" stroke-width="1" marker-end="url(#a)"/>
+    <text x="516" y="260" text-anchor="middle" fill="#4a5568" font-size="10">yes</text>
+    <rect x="572" y="248" width="120" height="40" rx="6"
+          fill="#1a2010" stroke="#3ecf8e" stroke-width="1.5"/>
+    <text x="632" y="268" text-anchor="middle" fill="#3ecf8e" font-size="10">NEWTON_SPARSE</text>
+    <text x="632" y="282" text-anchor="middle" fill="#3ecf8e" font-size="10">_ARMIJO ★</text>
+
+    <!-- Nein → Parameter study? -->
+    <line x1="350" y1="294" x2="350" y2="322" stroke="#4a5568" stroke-width="1" marker-end="url(#a)"/>
+    <text x="360" y="314" fill="#4a5568" font-size="10">no</text>
+
+    <!-- Parameter study? -->
+    <polygon points="350,324 470,350 350,376 230,350"
+             fill="#1a1e25" stroke="#a78bfa" stroke-width="1.5"/>
+    <text x="350" y="354" text-anchor="middle" fill="#a78bfa" font-size="11">Parameter study?</text>
+
+    <!-- Ja → Broyden Sparse -->
+    <line x1="470" y1="350" x2="570" y2="350" stroke="#4a5568" stroke-width="1" marker-end="url(#a)"/>
+    <text x="516" y="342" text-anchor="middle" fill="#4a5568" font-size="10">yes</text>
+    <rect x="572" y="330" width="120" height="40" rx="6"
+          fill="#1a2010" stroke="#3ecf8e" stroke-width="1.5"/>
+    <text x="632" y="350" text-anchor="middle" fill="#3ecf8e" font-size="10">BROYDEN</text>
+    <text x="632" y="364" text-anchor="middle" fill="#3ecf8e" font-size="10">_SPARSE</text>
+
+    <!-- Nein → Newton Armijo -->
+    <line x1="350" y1="376" x2="350" y2="404" stroke="#4a5568" stroke-width="1" marker-end="url(#a)"/>
+    <text x="360" y="396" fill="#4a5568" font-size="10">no</text>
+    <rect x="250" y="406" width="200" height="30" rx="6"
+          fill="#1a2010" stroke="#3ecf8e" stroke-width="1.5"/>
+    <text x="350" y="425" text-anchor="middle" fill="#3ecf8e" font-size="11">NEWTON_ARMIJO</text>
+
+  </svg>
+  </div></div>
 </section>
 
 </main>
 
 <footer>
-  <span>CMDSolver Docs · Solver Vergleich · v2.5</span>
+  <span data-lang="de">CMDSolver Docs · Solver Vergleich · v2.5</span><span data-lang="en">CMDSolver Docs · Solver Comparison · v2.5</span>
   <span>
-    <a href="math_overview.html">← Mathematischer Überblick</a> &nbsp;|&nbsp;
-    <a href="solver_newton_armijo.html">Newton-Armijo →</a>
+    <a href="math_overview.html" data-lang="de">← Mathematischer Überblick</a><a href="math_overview.html" data-lang="en">← Mathematical Overview</a> &nbsp;|&nbsp;
+    <a href="solver_newton_armijo.html" data-lang="de">Newton-Armijo →</a><a href="solver_newton_armijo.html" data-lang="en">Newton-Armijo →</a>
   </span>
 </footer>
 

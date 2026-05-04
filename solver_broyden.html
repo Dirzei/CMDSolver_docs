@@ -4,110 +4,413 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>CMDSolver Docs — Broyden Quasi-Newton</title>
-<link rel="stylesheet" href="docs.css">
+<style>
+/* CMDSolver Documentation — Shared Stylesheet */
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;1,400&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap');
+
+:root {
+  --bg:      #0d0f12;
+  --bg2:     #13161b;
+  --bg3:     #1a1e25;
+  --bg4:     #20252f;
+  --border:  #252a33;
+  --border2: #2e3540;
+  --text:    #c8cdd6;
+  --text2:   #7a8496;
+  --text3:   #4a5568;
+  --accent:  #4a9eff;
+  --ok:      #3ecf8e;
+  --warn:    #f0a030;
+  --err:     #ff5c5c;
+  --purple:  #a78bfa;
+  --teal:    #2dd4bf;
+  --mono:    'IBM Plex Mono', monospace;
+  --sans:    'IBM Plex Sans', sans-serif;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: var(--sans);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 13.5px;
+  line-height: 1.75;
+}
+
+/* ── Header ── */
+.doc-header {
+  border-bottom: 1px solid var(--border);
+  padding: 1.2rem 3rem;
+  display: flex; align-items: center;
+  justify-content: space-between; flex-wrap: wrap; gap: 1rem;
+}
+
+.breadcrumb {
+  font-family: var(--mono); font-size: 11px; color: var(--text3);
+  letter-spacing: .08em; text-transform: uppercase;
+  display: flex; align-items: center; gap: .5rem;
+}
+.breadcrumb a { color: var(--accent); text-decoration: none; }
+.breadcrumb span { color: var(--text3); }
+
+.doc-badge {
+  font-family: var(--mono); font-size: 11px;
+  padding: 3px 10px; border-radius: 4px;
+}
+.doc-badge.solver {
+  background: rgba(74,158,255,.1); border: 1px solid rgba(74,158,255,.25);
+  color: var(--accent);
+}
+.doc-badge.overview {
+  background: rgba(167,139,250,.1); border: 1px solid rgba(167,139,250,.25);
+  color: var(--purple);
+}
+.doc-badge.comparison {
+  background: rgba(62,207,142,.1); border: 1px solid rgba(62,207,142,.25);
+  color: var(--ok);
+}
+
+/* ── Hero ── */
+.hero {
+  padding: 2.5rem 3rem 2rem;
+  border-bottom: 1px solid var(--border);
+  background: linear-gradient(135deg, var(--bg) 0%, #0f1520 100%);
+}
+.hero-sub {
+  font-family: var(--mono); font-size: 11px; color: var(--text3);
+  letter-spacing: .15em; text-transform: uppercase; margin-bottom: .5rem;
+}
+h1 {
+  font-size: 28px; font-weight: 600; color: #e8ecf4;
+  letter-spacing: -.03em; margin-bottom: .5rem; line-height: 1.2;
+}
+.tagline {
+  font-size: 14px; color: var(--text2); margin-bottom: 1.5rem;
+  max-width: 680px;
+}
+.hero-stats { display: flex; gap: 2rem; flex-wrap: wrap; }
+.stat { display: flex; flex-direction: column; gap: .2rem; }
+.stat-val {
+  font-family: var(--mono); font-size: 18px; font-weight: 500; color: var(--ok);
+}
+.stat-lbl {
+  font-size: 11px; color: var(--text3);
+  text-transform: uppercase; letter-spacing: .08em;
+}
+
+/* ── Nav ── */
+nav {
+  position: sticky; top: 0; z-index: 10;
+  background: rgba(13,15,18,.95); backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--border);
+  padding: .6rem 3rem;
+  display: flex; gap: 1.5rem; flex-wrap: wrap;
+}
+nav a {
+  font-family: var(--mono); font-size: 11px; color: var(--text3);
+  text-decoration: none; letter-spacing: .08em;
+  text-transform: uppercase; transition: color .15s;
+}
+nav a:hover { color: var(--accent); }
+
+/* ── Main ── */
+main { padding: 2rem 3rem 4rem; max-width: 1040px; }
+
+section { margin-bottom: 3.5rem; scroll-margin-top: 3rem; }
+
+section > h2 {
+  font-size: 12px; font-family: var(--mono);
+  letter-spacing: .12em; text-transform: uppercase;
+  color: var(--text3); margin-bottom: 1.4rem;
+  padding-bottom: .5rem; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: .6rem;
+}
+section > h2::before {
+  content: ''; display: inline-block;
+  width: 8px; height: 8px; border-radius: 50%; background: var(--accent);
+}
+
+h3 { font-size: 14px; font-weight: 500; color: #e8ecf4; margin: 1.6rem 0 .6rem; }
+h4 { font-size: 13px; font-weight: 500; color: var(--text2); margin: 1.2rem 0 .4rem; }
+
+p { color: var(--text); margin-bottom: .9rem; max-width: 780px; }
+
+/* ── Math ── */
+.math-block {
+  background: var(--bg3); border: 1px solid var(--border);
+  border-left: 3px solid var(--purple);
+  border-radius: 6px; padding: 1.2rem 1.5rem;
+  margin: 1rem 0 1.2rem; font-family: var(--mono);
+  font-size: 13px; line-height: 2.1; white-space: pre;
+}
+.math-block .eq  { color: #e8ecf4; }
+.math-block .cmt { color: var(--text3); font-style: italic; }
+.math-block .hi  { color: var(--teal); }
+.math-block .hi2 { color: var(--warn); }
+
+/* ── Notes ── */
+.note {
+  border-radius: 6px; padding: .85rem 1.1rem;
+  font-size: 13px; line-height: 1.7; margin-bottom: 1.2rem;
+}
+.note.blue   { background: rgba(74,158,255,.06);  border-left: 3px solid var(--accent); }
+.note.green  { background: rgba(62,207,142,.06);  border-left: 3px solid var(--ok); }
+.note.amber  { background: rgba(240,160,48,.06);  border-left: 3px solid var(--warn); }
+.note.red    { background: rgba(255,92,92,.06);   border-left: 3px solid var(--err); }
+.note.purple { background: rgba(167,139,250,.06); border-left: 3px solid var(--purple); }
+.note strong { color: #e8ecf4; }
+
+/* ── Code ── */
+code {
+  font-family: var(--mono); font-size: 11.5px;
+  background: rgba(255,255,255,.05); padding: 1px 5px;
+  border-radius: 3px; color: #a8c8f0;
+}
+pre {
+  font-family: var(--mono); font-size: 12px;
+  background: var(--bg3); border: 1px solid var(--border);
+  border-radius: 8px; padding: 1rem 1.2rem;
+  overflow-x: auto; line-height: 1.7; margin-bottom: 1rem; color: #c8cdd6;
+}
+.kw  { color: var(--purple); }
+.cmt { color: var(--text3); font-style: italic; }
+.fn  { color: var(--teal); }
+.num { color: var(--warn); }
+.str { color: var(--ok); }
+
+/* ── Tables ── */
+.tbl-wrap {
+  overflow-x: auto; border-radius: 8px;
+  border: 1px solid var(--border); margin-bottom: 1.5rem;
+}
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+thead th {
+  background: var(--bg3); padding: 9px 14px; text-align: left;
+  font-weight: 500; font-size: 11px; letter-spacing: .06em;
+  text-transform: uppercase; color: var(--text2);
+  border-bottom: 1px solid var(--border2); white-space: nowrap;
+}
+tbody tr { border-bottom: 1px solid var(--border); transition: background .1s; }
+tbody tr:last-child { border-bottom: none; }
+tbody tr:hover { background: var(--bg3); }
+td { padding: 9px 14px; vertical-align: top; line-height: 1.6; }
+td.center { text-align: center; }
+
+/* ── Badges ── */
+.badge {
+  display: inline-block; font-size: 11px; padding: 2px 9px;
+  border-radius: 12px; font-family: var(--mono); white-space: nowrap;
+}
+.b-ok   { background: rgba(62,207,142,.1);  color: var(--ok);     border: 1px solid rgba(62,207,142,.25); }
+.b-warn { background: rgba(240,160,48,.1);  color: var(--warn);   border: 1px solid rgba(240,160,48,.25); }
+.b-err  { background: rgba(255,92,92,.1);   color: var(--err);    border: 1px solid rgba(255,92,92,.25); }
+.b-info { background: rgba(74,158,255,.1);  color: var(--accent); border: 1px solid rgba(74,158,255,.25); }
+.b-na   { background: rgba(74,84,96,.1);    color: var(--text3);  border: 1px solid var(--border2); }
+
+/* ── Star rating ── */
+.stars { color: var(--warn); letter-spacing: -.05em; }
+.stars.dim { color: var(--border2); }
+
+/* ── File list ── */
+.file-list { list-style: none; }
+.file-list li {
+  display: flex; gap: 1rem; align-items: flex-start;
+  padding: .7rem 1rem; background: var(--bg2);
+  border: 1px solid var(--border); border-radius: 4px; margin-bottom: .4rem;
+}
+.file-icon {
+  font-family: var(--mono); font-size: 11px; color: var(--accent);
+  white-space: nowrap; margin-top: 2px; min-width: 50px;
+}
+.file-desc { font-size: 13px; color: var(--text2); }
+.file-desc strong { color: var(--text); display: block; margin-bottom: .2rem; }
+
+/* ── Flowchart ── */
+.flowchart {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 10px; padding: 1.5rem; margin: 1rem 0 1.5rem;
+  overflow-x: auto;
+}
+
+/* ── Footer ── */
+footer {
+  border-top: 1px solid var(--border); padding: 1.5rem 3rem;
+  font-family: var(--mono); font-size: 11px; color: var(--text3);
+  display: flex; justify-content: space-between; flex-wrap: wrap; gap: .5rem;
+}
+footer a { color: var(--accent); text-decoration: none; }
+
+/* ── Footnotes ── */
+.footnotes {
+  margin-top: 2rem; padding-top: 1.5rem;
+  border-top: 1px solid var(--border);
+  font-size: 12px; color: var(--text2);
+}
+.footnotes p { max-width: none; margin-bottom: .5rem; }
+sup { font-size: 10px; color: var(--accent); }
+
+/* Default: alle Sprachelemente sichtbar (kein JS-Flash) */
+/* Mit lang-Klasse auf body: nur die aktive Sprache sichtbar */
+
+/* Nur wenn body eine Sprachklasse hat, werden Elemente ausgeblendet */
+/* Sprach-Sichtbarkeit via class auf body */
+</style>
+<link rel="stylesheet" href="i18n.css">
 </head>
 <body>
+<script>
+(function(){
+  var stored = '';
+  try { stored = localStorage.getItem('cmdlang') || ''; } catch(e){}
+  var lang = stored || 'de';
 
+  function apply(l) {
+    lang = l;
+    try { localStorage.setItem('cmdlang', l); } catch(e){}
+    document.documentElement.lang = l;
+    var body = document.body;
+    body.classList.remove('lang-de','lang-en');
+    body.classList.add('lang-' + l);
+    document.querySelectorAll('.lang-btn').forEach(function(b){
+      b.classList.toggle('active', b.dataset.lang === l);
+    });
+  }
+
+  // Body-Klasse sofort setzen, damit data-lang-Elemente direkt korrekt
+  // sichtbar sind (kein Flash mit unsichtbarem Header-Inhalt).
+  apply(lang);
+  document.addEventListener('DOMContentLoaded', function(){
+    apply(lang); // erneut, damit jetzt auch die Buttons gestyled werden
+    document.querySelectorAll('.lang-btn').forEach(function(b){
+      b.addEventListener('click', function(){ apply(b.dataset.lang); });
+    });
+    // Sticky-Header Schatten via IntersectionObserver
+    var sentinel = document.querySelector('.header-sentinel');
+    var header   = document.querySelector('.doc-header');
+    if (sentinel && header && 'IntersectionObserver' in window) {
+      new IntersectionObserver(function(entries){
+        header.classList.toggle('scrolled', !entries[0].isIntersecting);
+      }).observe(sentinel);
+    }
+  });
+})();
+</script>
+
+
+
+
+<div class="header-sentinel"></div>
 <div class="doc-header">
   <div class="breadcrumb">
     <a href="index.html">CMDSolver Docs</a>
-    <span>›</span><span>Solver</span>
-    <span>›</span><span>Broyden</span>
+    ›
+    ›
   </div>
-  <span class="doc-badge solver">SolverType.BROYDEN</span>
-</div>
+  <div class="doc-header-right"><div class="lang-switch"><button class="lang-btn" data-lang="de">DE</button><button class="lang-btn" data-lang="en">EN</button></div><span class="doc-badge solver">SolverType.BROYDEN</span></div></div>
 
 <div class="hero">
-  <div class="hero-sub">Solver 5 von 7</div>
-  <h1>Broyden<br>Quasi-Newton</h1>
-  <p class="tagline">
-    Quasi-Newton-Verfahren mit Rang-1-Update der Jacobi-Approximation.
-    Günstiger pro Iteration als vollständiger Jacobi-Neuaufbau —
-    besonders vorteilhaft bei Parameterstudien.
-  </p>
+  <div class="hero-sub"><span data-lang="de">Solver 5 von 7</span><span data-lang="en">Solver 5 of 7</span></div>
+  <h1 data-lang="de">Broyden<br>Quasi-Newton</h1><h1 data-lang="en">Broyden<br>Quasi-Newton</h1>
+  <p class="tagline" data-lang="de">Quasi-Newton-Verfahren mit Rang-1-Update der Jacobi-Approximation. Günstiger pro Iteration als vollständiger Jacobi-Neuaufbau — besonders vorteilhaft bei Parameterstudien.</p>
+  <p class="tagline" data-lang="en">Quasi-Newton method with rank-1 update of the Jacobian approximation. Cheaper per iteration than full Jacobian rebuild — especially advantageous for parameter studies.</p>
   <div class="hero-stats">
-    <div class="stat"><span class="stat-val">25</span><span class="stat-lbl">Iter (SimpleSystem)</span></div>
+    <div class="stat"><span class="stat-val">25</span><span class="stat-lbl" data-lang="de">Iter (SimpleSystem)</span><span class="stat-lbl" data-lang="en">Iter (SimpleSystem)</span></div>
     <div class="stat"><span class="stat-val">8.02e-08</span><span class="stat-lbl">fsum</span></div>
-    <div class="stat"><span class="stat-val">~50ms</span><span class="stat-lbl">Laufzeit</span></div>
-    <div class="stat"><span class="stat-val">Rang-1</span><span class="stat-lbl">Update</span></div>
+    <div class="stat"><span class="stat-val">~50ms</span><span class="stat-lbl" data-lang="de">Laufzeit</span><span class="stat-lbl" data-lang="en">Runtime</span></div>
+    <div class="stat"><span class="stat-val">Rang-1</span><span class="stat-lbl" data-lang="de">Update</span><span class="stat-lbl" data-lang="en">Update</span></div>
   </div>
 </div>
 
 <nav>
-  <a href="#theorie">Theorie</a>
-  <a href="#pseudocode">Pseudocode</a>
-  <a href="#dateien">Dateien</a>
-  <a href="#parameter">Parameter</a>
-  <a href="#verhalten">Verhalten</a>
-  <a href="#grenzen">Grenzen</a>
+  <a href="#theorie" data-lang="de">Theorie</a><a href="#theorie" data-lang="en">Theory</a>
+  <a href="#pseudocode" data-lang="de">Pseudocode</a><a href="#pseudocode" data-lang="en">Pseudocode</a>
+  <a href="#dateien" data-lang="de">Dateien</a><a href="#dateien" data-lang="en">Files</a>
+  <a href="#parameter" data-lang="de">Parameter</a><a href="#parameter" data-lang="en">Parameters</a>
+  <a href="#verhalten" data-lang="de">Verhalten</a><a href="#verhalten" data-lang="en">Behavior</a>
+  <a href="#grenzen" data-lang="de">Grenzen</a><a href="#grenzen" data-lang="en">Limits</a>
 </nav>
 
 <main>
 
 <section id="theorie">
-  <h2>Theoretischer Kontext</h2>
+  <h2 data-lang="de">Theoretischer Kontext</h2><h2 data-lang="en">Theoretical Context</h2>
 
-  <h3>Grundidee — allgemein verständlich</h3>
-  <p>
+  <h3 data-lang="de">Grundidee — allgemein verständlich</h3><h3 data-lang="en">Core idea — in plain terms</h3>
+  <p data-lang="de">
     Bei Newton-Verfahren wird in jeder Iteration die vollständige Jacobi-Matrix
     neu berechnet — das ist teuer. Broyden fragt: "Können wir die Jacobi aus dem
     vorherigen Schritt <em>anpassen</em> statt sie neu zu berechnen?"
+  </p><p data-lang="en">
+    In Newton methods the full Jacobian is recomputed every iteration — that's
+    expensive. Broyden asks: "Can we <em>adjust</em> the Jacobian from the previous
+    step instead of rebuilding it?"
   </p>
-  <p>
+  <p data-lang="de">
     Die Antwort: Ja — durch einen <strong>Rang-1-Update</strong>. Man berechnet
     wie sich F zwischen zwei Punkten verändert hat und korrigiert die
     Jacobi-Approximation minimal so dass sie mit dieser Beobachtung konsistent ist.
     Das kostet O(n²) statt O(n³) für einen vollständigen Neuaufbau.
+  </p><p data-lang="en">
+    The answer: yes — via a <strong>rank-1 update</strong>. We compute how F
+    changed between two points and minimally correct the Jacobian approximation
+    so it remains consistent with that observation. That costs O(n²) instead
+    of O(n³) for a full rebuild.
   </p>
 
   <div class="math-block">
-    <div class="eq"><span class="hi">Broyden-Update (Rang-1):</span></div>
+    <div class="eq"><span class="hi" data-lang="de">Broyden-Update (Rang-1):</span><span class="hi" data-lang="en">Broyden update (rank-1):</span></div>
     <div class="eq">  Jₖ₊₁ = Jₖ + (Δf − Jₖ·Δx) · ΔxᵀT / ||Δx||²</div>
     <div class="eq"></div>
-    <div class="eq"><span class="hi">wobei:</span></div>
-    <div class="eq">  Δx = xₖ₊₁ − xₖ     <span class="cmt">// Schritt</span></div>
-    <div class="eq">  Δf = F(xₖ₊₁) − F(xₖ) <span class="cmt">// Residuumsänderung</span></div>
+    <div class="eq"><span class="hi" data-lang="de">wobei:</span><span class="hi" data-lang="en">where:</span></div>
+    <div class="eq">  Δx = xₖ₊₁ − xₖ     <span class="cmt" data-lang="de">// Schritt</span><span class="cmt" data-lang="en">// step</span></div>
+    <div class="eq">  Δf = F(xₖ₊₁) − F(xₖ) <span class="cmt" data-lang="de">// Residuumsänderung</span><span class="cmt" data-lang="en">// residual change</span></div>
     <div class="eq"></div>
-    <div class="eq"><span class="hi">Sekanten-Bedingung:</span>  Jₖ₊₁ · Δx = Δf</div>
-    <div class="eq"><span class="cmt">// Die neue Jacobi ist konsistent mit dem letzten Schritt</span></div>
+    <div class="eq"><span class="hi" data-lang="de">Sekanten-Bedingung:</span><span class="hi" data-lang="en">Secant condition:</span>  Jₖ₊₁ · Δx = Δf</div>
+    <div class="eq"><span class="cmt" data-lang="de">// Die neue Jacobi ist konsistent mit dem letzten Schritt</span><span class="cmt" data-lang="en">// The new Jacobian is consistent with the last step</span></div>
   </div>
 
-  <h3>Reset-Mechanismus</h3>
-  <p>
+  <h3 data-lang="de">Reset-Mechanismus</h3><h3 data-lang="en">Reset mechanism</h3>
+  <p data-lang="de">
     Broyden akkumuliert Approximationsfehler über die Iterationen. CMDSolver
     implementiert daher einen automatischen Reset: Nach <code>resetInterval</code>
     Iterationen oder wenn die Konditionszahl κ einen Schwellwert überschreitet,
     wird die Jacobi vollständig neu berechnet. Das verhindert Divergenz durch
     akkumulierte Fehler.
+  </p><p data-lang="en">
+    Broyden accumulates approximation error over iterations. CMDSolver therefore
+    implements an automatic reset: after <code>resetInterval</code> iterations,
+    or when the condition number κ exceeds a threshold, the Jacobian is fully
+    rebuilt. This prevents divergence due to accumulated error.
   </p>
 </section>
 
 <section id="pseudocode">
-  <h2>Pseudocode</h2>
+  <h2 data-lang="de">Pseudocode</h2><h2 data-lang="en">Pseudocode</h2>
 <pre><span class="kw">function</span> <span class="fn">broyden_solve</span>(F, x₀, tol, maxIter, resetInterval):
     x ← InitGuessApplier(x₀)
-    J ← buildJacobian(F, x)    <span class="cmt">// vollständiger Aufbau beim Start</span>
+    J ← buildJacobian(F, x)    <span class="cmt" data-lang="de">// vollständiger Aufbau beim Start</span><span class="cmt" data-lang="en">// full build at start</span>
     Jinv ← inverse(J)
 
     <span class="kw">for</span> k = 0 <span class="kw">to</span> maxIter:
         f ← F(x)
 
-        <span class="cmt">// ── Newton-Schritt mit approximierter Jacobi ──</span>
+        <span class="cmt" data-lang="de">// ── Newton-Schritt mit approximierter Jacobi ──</span><span class="cmt" data-lang="en">// ── Newton step with approximated Jacobian ──</span>
         Δx ← −Jinv · f
 
-        <span class="cmt">// ── Armijo-Liniensuche ──</span>
+        <span class="cmt" data-lang="de">// ── Armijo-Liniensuche ──</span><span class="cmt" data-lang="en">// ── Armijo line search ──</span>
         α ← armijo_search(x, Δx, F)
 
         x_new ← x + α · Δx
         f_new ← F(x_new)
 
-        <span class="cmt">// ── Broyden Rang-1-Update ──</span>
+        <span class="cmt" data-lang="de">// ── Broyden Rang-1-Update ──</span><span class="cmt" data-lang="en">// ── Broyden rank-1 update ──</span>
         <span class="kw">if</span> k % resetInterval != 0 <span class="kw">and</span> κ(J) &lt; κ_reset:
             Δf ← f_new − f
-            J ← J + (Δf − J·Δx) · Δxᵀ / ||Δx||²  <span class="cmt">// O(n²)</span>
+            J ← J + (Δf − J·Δx) · Δxᵀ / ||Δx||²  <span class="cmt" data-lang="de">// O(n²)</span><span class="cmt" data-lang="en">// O(n²)</span>
             Jinv ← update_inverse(Jinv, Δx, Δf)
         <span class="kw">else</span>:
-            J ← buildJacobian(F, x_new)             <span class="cmt">// vollständiger Reset</span>
+            J ← buildJacobian(F, x_new)             <span class="cmt" data-lang="de">// vollständiger Reset</span><span class="cmt" data-lang="en">// full reset</span>
             Jinv ← inverse(J)
 
         x ← x_new
@@ -119,78 +422,90 @@
 </section>
 
 <section id="dateien">
-  <h2>Wichtige Dateien</h2>
+  <h2 data-lang="de">Wichtige Dateien</h2><h2 data-lang="en">Key Files</h2>
   <ul class="file-list">
     <li>
-      <span class="file-icon">KERN</span>
+      <span class="file-icon" data-lang="de">KERN</span><span class="file-icon" data-lang="en">CORE</span>
       <div class="file-desc">
-        <strong>BroydenSolver.java</strong>
+        <span data-lang="de"><strong>BroydenSolver.java</strong>
         Implementiert Rang-1-Update, Reset-Mechanismus, Armijo-Liniensuche
         und Checkpoint-System für Warm-Start bei Parameterstudien.
-        <br><code>apps/eqnParser/solver/BroydenSolver.java</code>
+        <br><code>apps/eqnParser/solver/BroydenSolver.java</code></span><span data-lang="en"><strong>BroydenSolver.java</strong>
+        Implements rank-1 update, reset mechanism, Armijo line search and
+        checkpoint system for warm-start in parameter studies.
+        <br><code>apps/eqnParser/solver/BroydenSolver.java</code></span>
       </div>
     </li>
     <li>
-      <span class="file-icon">BASIS</span>
+      <span class="file-icon" data-lang="de">BASIS</span><span class="file-icon" data-lang="en">BASE</span>
       <div class="file-desc">
-        <strong>AbstractSolver.java</strong>
+        <span data-lang="de"><strong>AbstractSolver.java</strong>
         Basisklasse — Jacobi-Aufbau, Iteration, Konvergenzprüfung.
-        <br><code>apps/eqnParser/solver/AbstractSolver.java</code>
+        <br><code>apps/eqnParser/solver/AbstractSolver.java</code></span><span data-lang="en"><strong>AbstractSolver.java</strong>
+        Base class — Jacobian build, iteration, convergence check.
+        <br><code>apps/eqnParser/solver/AbstractSolver.java</code></span>
       </div>
     </li>
   </ul>
 </section>
 
 <section id="parameter">
-  <h2>Parameter</h2>
+  <h2 data-lang="de">Parameter</h2><h2 data-lang="en">Parameters</h2>
   <pre>java CASSolver -I:model.cas -S:BROYDEN</pre>
   <div class="tbl-wrap">
   <table>
-    <thead><tr><th>Parameter</th><th>Default</th><th>Beschreibung</th></tr></thead>
+    <thead><tr><th>Parameter</th><th>Default</th><th data-lang="de">Beschreibung</th><th data-lang="en">Description</th></tr></thead>
     <tbody>
-      <tr><td><code>tolerance</code></td><td><code>1e-7</code></td><td>Konvergenzschwelle</td></tr>
-      <tr><td><code>maxIter</code></td><td><code>100</code></td><td>Maximale Iterationen</td></tr>
-      <tr><td><code>broydenResetInterval</code></td><td><code>25</code></td><td>Vollständiger Jacobi-Neuaufbau alle n Iterationen</td></tr>
-      <tr><td><code>broydenKappaReset</code></td><td><code>1e10</code></td><td>κ-Schwellwert für erzwungenen Reset</td></tr>
+      <tr><td><code>tolerance</code></td><td><code>1e-7</code></td><td data-lang="de">Konvergenzschwelle</td><td data-lang="en">Convergence threshold</td></tr>
+      <tr><td><code>maxIter</code></td><td><code>100</code></td><td data-lang="de">Maximale Iterationen</td><td data-lang="en">Maximum iterations</td></tr>
+      <tr><td><code>broydenResetInterval</code></td><td><code>25</code></td><td data-lang="de">Vollständiger Jacobi-Neuaufbau alle n Iterationen</td><td data-lang="en">Full Jacobian rebuild every n iterations</td></tr>
+      <tr><td><code>broydenKappaReset</code></td><td><code>1e10</code></td><td data-lang="de">κ-Schwellwert für erzwungenen Reset</td><td data-lang="en">κ threshold for forced reset</td></tr>
     </tbody>
   </table>
   </div>
 </section>
 
 <section id="verhalten">
-  <h2>Konvergenzverhalten</h2>
+  <h2 data-lang="de">Konvergenzverhalten</h2><h2 data-lang="en">Convergence Behavior</h2>
   <div class="tbl-wrap">
   <table>
-    <thead><tr><th>Situation</th><th>Verhalten</th><th>Empfehlung</th></tr></thead>
+    <thead><tr><th data-lang="de">Situation</th><th data-lang="en">Situation</th><th data-lang="de">Verhalten</th><th data-lang="en">Behavior</th><th data-lang="de">Empfehlung</th><th data-lang="en">Recommendation</th></tr></thead>
     <tbody>
-      <tr><td>Parameterstudien (viele ähnliche Punkte)</td><td><span class="badge b-ok">✅ Sehr effizient</span></td><td>Jacobi vom Vorpunkt als Start</td></tr>
-      <tr><td>Gut konditioniertes System</td><td><span class="badge b-warn">⚠️ Mehr Iterationen als Newton</span></td><td>Superlinear statt quadratisch</td></tr>
-      <tr><td>Schlecht konditioniert</td><td><span class="badge b-err">❌ Reset nötig</span></td><td>→ BROYDEN_SPARSE oder LM</td></tr>
+      <tr><td data-lang="de">Parameterstudien (viele ähnliche Punkte)</td><td data-lang="en">Parameter studies (many similar points)</td><td><span class="badge b-ok" data-lang="de">✅ Sehr effizient</span><span class="badge b-ok" data-lang="en">✅ Very efficient</span></td><td data-lang="de">Jacobi vom Vorpunkt als Start</td><td data-lang="en">Jacobian from previous point as start</td></tr>
+      <tr><td data-lang="de">Gut konditioniertes System</td><td data-lang="en">Well-conditioned system</td><td><span class="badge b-warn" data-lang="de">⚠️ Mehr Iterationen als Newton</span><span class="badge b-warn" data-lang="en">⚠️ More iterations than Newton</span></td><td data-lang="de">Superlinear statt quadratisch</td><td data-lang="en">Superlinear instead of quadratic</td></tr>
+      <tr><td data-lang="de">Schlecht konditioniert</td><td data-lang="en">Ill-conditioned</td><td><span class="badge b-err" data-lang="de">❌ Reset nötig</span><span class="badge b-err" data-lang="en">❌ Reset required</span></td><td data-lang="de">→ BROYDEN_SPARSE oder LM</td><td data-lang="en">→ BROYDEN_SPARSE or LM</td></tr>
     </tbody>
   </table>
   </div>
 </section>
 
 <section id="grenzen">
-  <h2>Bekannte Grenzen</h2>
-  <div class="note amber">
+  <h2 data-lang="de">Bekannte Grenzen</h2><h2 data-lang="en">Known Limitations</h2>
+  <div class="note amber" data-lang="de">
     <strong>Akkumulierte Fehler:</strong> Die Jacobi-Approximation degradiert über
     viele Iterationen. Der Reset-Mechanismus begrenzt das, kann es aber nicht
     vollständig vermeiden. Bei sehr nichtlinearen Systemen häufiger Reset empfohlen.
+  </div><div class="note amber" data-lang="en">
+    <strong>Accumulated error:</strong> the Jacobian approximation degrades over
+    many iterations. The reset mechanism limits this but cannot fully prevent
+    it. For strongly nonlinear systems, more frequent resets are recommended.
   </div>
-  <div class="note amber">
+  <div class="note amber" data-lang="de">
     <strong>Superlineare Konvergenz:</strong> Broyden konvergiert superlinear statt
     quadratisch — mehr Iterationen als Newton bei gleicher Genauigkeit.
+  </div><div class="note amber" data-lang="en">
+    <strong>Superlinear convergence:</strong> Broyden converges superlinearly,
+    not quadratically — more iterations than Newton at the same accuracy.
   </div>
 </section>
 
 </main>
 
 <footer>
-  <span>CMDSolver Docs · Broyden Quasi-Newton · v2.5</span>
+  <span data-lang="de">CMDSolver Docs · Broyden Quasi-Newton · v2.5</span><span data-lang="en">CMDSolver Docs · Broyden Quasi-Newton · v2.5</span>
   <span>
-    <a href="solver_lm.html">← Levenberg-Marquardt</a> &nbsp;|&nbsp;
-    <a href="solver_broyden_sparse.html">Broyden-Sparse →</a>
+    <a href="solver_lm.html" data-lang="de">← Levenberg-Marquardt</a><a href="solver_lm.html" data-lang="en">← Levenberg-Marquardt</a> &nbsp;|&nbsp;
+    <a href="solver_broyden_sparse.html" data-lang="de">Broyden-Sparse →</a><a href="solver_broyden_sparse.html" data-lang="en">Broyden-Sparse →</a>
   </span>
 </footer>
 </body>

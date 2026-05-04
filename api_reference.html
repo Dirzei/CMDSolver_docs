@@ -4,9 +4,262 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>CMDSolver Docs — API-Referenz</title>
-<link rel="stylesheet" href="docs.css">
 <style>
-  .api-class {
+/* CMDSolver Documentation — Shared Stylesheet */
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;1,400&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap');
+
+:root {
+  --bg:      #0d0f12;
+  --bg2:     #13161b;
+  --bg3:     #1a1e25;
+  --bg4:     #20252f;
+  --border:  #252a33;
+  --border2: #2e3540;
+  --text:    #c8cdd6;
+  --text2:   #7a8496;
+  --text3:   #4a5568;
+  --accent:  #4a9eff;
+  --ok:      #3ecf8e;
+  --warn:    #f0a030;
+  --err:     #ff5c5c;
+  --purple:  #a78bfa;
+  --teal:    #2dd4bf;
+  --mono:    'IBM Plex Mono', monospace;
+  --sans:    'IBM Plex Sans', sans-serif;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: var(--sans);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 13.5px;
+  line-height: 1.75;
+}
+
+/* ── Header ── */
+.doc-header {
+  border-bottom: 1px solid var(--border);
+  padding: 1.2rem 3rem;
+  display: flex; align-items: center;
+  justify-content: space-between; flex-wrap: wrap; gap: 1rem;
+}
+
+.breadcrumb {
+  font-family: var(--mono); font-size: 11px; color: var(--text3);
+  letter-spacing: .08em; text-transform: uppercase;
+  display: flex; align-items: center; gap: .5rem;
+}
+.breadcrumb a { color: var(--accent); text-decoration: none; }
+.breadcrumb span { color: var(--text3); }
+
+.doc-badge {
+  font-family: var(--mono); font-size: 11px;
+  padding: 3px 10px; border-radius: 4px;
+}
+.doc-badge.solver {
+  background: rgba(74,158,255,.1); border: 1px solid rgba(74,158,255,.25);
+  color: var(--accent);
+}
+.doc-badge.overview {
+  background: rgba(167,139,250,.1); border: 1px solid rgba(167,139,250,.25);
+  color: var(--purple);
+}
+.doc-badge.comparison {
+  background: rgba(62,207,142,.1); border: 1px solid rgba(62,207,142,.25);
+  color: var(--ok);
+}
+
+/* ── Hero ── */
+.hero {
+  padding: 2.5rem 3rem 2rem;
+  border-bottom: 1px solid var(--border);
+  background: linear-gradient(135deg, var(--bg) 0%, #0f1520 100%);
+}
+.hero-sub {
+  font-family: var(--mono); font-size: 11px; color: var(--text3);
+  letter-spacing: .15em; text-transform: uppercase; margin-bottom: .5rem;
+}
+h1 {
+  font-size: 28px; font-weight: 600; color: #e8ecf4;
+  letter-spacing: -.03em; margin-bottom: .5rem; line-height: 1.2;
+}
+.tagline {
+  font-size: 14px; color: var(--text2); margin-bottom: 1.5rem;
+  max-width: 680px;
+}
+.hero-stats { display: flex; gap: 2rem; flex-wrap: wrap; }
+.stat { display: flex; flex-direction: column; gap: .2rem; }
+.stat-val {
+  font-family: var(--mono); font-size: 18px; font-weight: 500; color: var(--ok);
+}
+.stat-lbl {
+  font-size: 11px; color: var(--text3);
+  text-transform: uppercase; letter-spacing: .08em;
+}
+
+/* ── Nav ── */
+nav {
+  position: sticky; top: 0; z-index: 10;
+  background: rgba(13,15,18,.95); backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--border);
+  padding: .6rem 3rem;
+  display: flex; gap: 1.5rem; flex-wrap: wrap;
+}
+nav a {
+  font-family: var(--mono); font-size: 11px; color: var(--text3);
+  text-decoration: none; letter-spacing: .08em;
+  text-transform: uppercase; transition: color .15s;
+}
+nav a:hover { color: var(--accent); }
+
+/* ── Main ── */
+main { padding: 2rem 3rem 4rem; max-width: 1040px; }
+
+section { margin-bottom: 3.5rem; scroll-margin-top: 3rem; }
+
+section > h2 {
+  font-size: 12px; font-family: var(--mono);
+  letter-spacing: .12em; text-transform: uppercase;
+  color: var(--text3); margin-bottom: 1.4rem;
+  padding-bottom: .5rem; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: .6rem;
+}
+section > h2::before {
+  content: ''; display: inline-block;
+  width: 8px; height: 8px; border-radius: 50%; background: var(--accent);
+}
+
+h3 { font-size: 14px; font-weight: 500; color: #e8ecf4; margin: 1.6rem 0 .6rem; }
+h4 { font-size: 13px; font-weight: 500; color: var(--text2); margin: 1.2rem 0 .4rem; }
+
+p { color: var(--text); margin-bottom: .9rem; max-width: 780px; }
+
+/* ── Math ── */
+.math-block {
+  background: var(--bg3); border: 1px solid var(--border);
+  border-left: 3px solid var(--purple);
+  border-radius: 6px; padding: 1.2rem 1.5rem;
+  margin: 1rem 0 1.2rem; font-family: var(--mono);
+  font-size: 13px; line-height: 2.1; white-space: pre;
+}
+.math-block .eq  { color: #e8ecf4; }
+.math-block .cmt { color: var(--text3); font-style: italic; }
+.math-block .hi  { color: var(--teal); }
+.math-block .hi2 { color: var(--warn); }
+
+/* ── Notes ── */
+.note {
+  border-radius: 6px; padding: .85rem 1.1rem;
+  font-size: 13px; line-height: 1.7; margin-bottom: 1.2rem;
+}
+.note.blue   { background: rgba(74,158,255,.06);  border-left: 3px solid var(--accent); }
+.note.green  { background: rgba(62,207,142,.06);  border-left: 3px solid var(--ok); }
+.note.amber  { background: rgba(240,160,48,.06);  border-left: 3px solid var(--warn); }
+.note.red    { background: rgba(255,92,92,.06);   border-left: 3px solid var(--err); }
+.note.purple { background: rgba(167,139,250,.06); border-left: 3px solid var(--purple); }
+.note strong { color: #e8ecf4; }
+
+/* ── Code ── */
+code {
+  font-family: var(--mono); font-size: 11.5px;
+  background: rgba(255,255,255,.05); padding: 1px 5px;
+  border-radius: 3px; color: #a8c8f0;
+}
+pre {
+  font-family: var(--mono); font-size: 12px;
+  background: var(--bg3); border: 1px solid var(--border);
+  border-radius: 8px; padding: 1rem 1.2rem;
+  overflow-x: auto; line-height: 1.7; margin-bottom: 1rem; color: #c8cdd6;
+}
+.kw  { color: var(--purple); }
+.cmt { color: var(--text3); font-style: italic; }
+.fn  { color: var(--teal); }
+.num { color: var(--warn); }
+.str { color: var(--ok); }
+
+/* ── Tables ── */
+.tbl-wrap {
+  overflow-x: auto; border-radius: 8px;
+  border: 1px solid var(--border); margin-bottom: 1.5rem;
+}
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+thead th {
+  background: var(--bg3); padding: 9px 14px; text-align: left;
+  font-weight: 500; font-size: 11px; letter-spacing: .06em;
+  text-transform: uppercase; color: var(--text2);
+  border-bottom: 1px solid var(--border2); white-space: nowrap;
+}
+tbody tr { border-bottom: 1px solid var(--border); transition: background .1s; }
+tbody tr:last-child { border-bottom: none; }
+tbody tr:hover { background: var(--bg3); }
+td { padding: 9px 14px; vertical-align: top; line-height: 1.6; }
+td.center { text-align: center; }
+
+/* ── Badges ── */
+.badge {
+  display: inline-block; font-size: 11px; padding: 2px 9px;
+  border-radius: 12px; font-family: var(--mono); white-space: nowrap;
+}
+.b-ok   { background: rgba(62,207,142,.1);  color: var(--ok);     border: 1px solid rgba(62,207,142,.25); }
+.b-warn { background: rgba(240,160,48,.1);  color: var(--warn);   border: 1px solid rgba(240,160,48,.25); }
+.b-err  { background: rgba(255,92,92,.1);   color: var(--err);    border: 1px solid rgba(255,92,92,.25); }
+.b-info { background: rgba(74,158,255,.1);  color: var(--accent); border: 1px solid rgba(74,158,255,.25); }
+.b-na   { background: rgba(74,84,96,.1);    color: var(--text3);  border: 1px solid var(--border2); }
+
+/* ── Star rating ── */
+.stars { color: var(--warn); letter-spacing: -.05em; }
+.stars.dim { color: var(--border2); }
+
+/* ── File list ── */
+.file-list { list-style: none; }
+.file-list li {
+  display: flex; gap: 1rem; align-items: flex-start;
+  padding: .7rem 1rem; background: var(--bg2);
+  border: 1px solid var(--border); border-radius: 4px; margin-bottom: .4rem;
+}
+.file-icon {
+  font-family: var(--mono); font-size: 11px; color: var(--accent);
+  white-space: nowrap; margin-top: 2px; min-width: 50px;
+}
+.file-desc { font-size: 13px; color: var(--text2); }
+.file-desc strong { color: var(--text); display: block; margin-bottom: .2rem; }
+
+/* ── Flowchart ── */
+.flowchart {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 10px; padding: 1.5rem; margin: 1rem 0 1.5rem;
+  overflow-x: auto;
+}
+
+/* ── Footer ── */
+footer {
+  border-top: 1px solid var(--border); padding: 1.5rem 3rem;
+  font-family: var(--mono); font-size: 11px; color: var(--text3);
+  display: flex; justify-content: space-between; flex-wrap: wrap; gap: .5rem;
+}
+footer a { color: var(--accent); text-decoration: none; }
+
+/* ── Footnotes ── */
+.footnotes {
+  margin-top: 2rem; padding-top: 1.5rem;
+  border-top: 1px solid var(--border);
+  font-size: 12px; color: var(--text2);
+}
+.footnotes p { max-width: none; margin-bottom: .5rem; }
+sup { font-size: 10px; color: var(--accent); }
+
+/* Default: alle Sprachelemente sichtbar (kein JS-Flash) */
+/* Mit lang-Klasse auf body: nur die aktive Sprache sichtbar */
+
+/* Nur wenn body eine Sprachklasse hat, werden Elemente ausgeblendet */
+/* Sprach-Sichtbarkeit via class auf body */
+
+
+/* ── Seitenspezifische Klassen ────────────────────────
+   (aus alter api_reference.html wiederhergestellt) */
+.api-class {
     background: var(--bg2); border: 1px solid var(--border);
     border-radius: 10px; overflow: hidden; margin-bottom: 2.5rem;
   }
@@ -73,55 +326,101 @@
   .enum-val { color: var(--teal); }
   .enum-cmt { color: var(--text3); font-style: italic; }
 </style>
+<link rel="stylesheet" href="i18n.css">
 </head>
 <body>
+<script>
+(function(){
+  var stored = '';
+  try { stored = localStorage.getItem('cmdlang') || ''; } catch(e){}
+  var lang = stored || 'de';
 
+  function apply(l) {
+    lang = l;
+    try { localStorage.setItem('cmdlang', l); } catch(e){}
+    document.documentElement.lang = l;
+    var body = document.body;
+    body.classList.remove('lang-de','lang-en');
+    body.classList.add('lang-' + l);
+    document.querySelectorAll('.lang-btn').forEach(function(b){
+      b.classList.toggle('active', b.dataset.lang === l);
+    });
+  }
+
+  // Body-Klasse sofort setzen, damit data-lang-Elemente direkt korrekt
+  // sichtbar sind (kein Flash mit unsichtbarem Header-Inhalt).
+  apply(lang);
+  document.addEventListener('DOMContentLoaded', function(){
+    apply(lang); // erneut, damit jetzt auch die Buttons gestyled werden
+    document.querySelectorAll('.lang-btn').forEach(function(b){
+      b.addEventListener('click', function(){ apply(b.dataset.lang); });
+    });
+    // Sticky-Header Schatten via IntersectionObserver
+    var sentinel = document.querySelector('.header-sentinel');
+    var header   = document.querySelector('.doc-header');
+    if (sentinel && header && 'IntersectionObserver' in window) {
+      new IntersectionObserver(function(entries){
+        header.classList.toggle('scrolled', !entries[0].isIntersecting);
+      }).observe(sentinel);
+    }
+  });
+})();
+</script>
+
+
+
+
+<div class="header-sentinel"></div>
 <div class="doc-header">
   <div class="breadcrumb">
     <a href="index.html">CMDSolver Docs</a>
-    <span>›</span><span>API-Referenz</span>
+    ›
   </div>
-  <span class="doc-badge overview">Referenz</span>
-</div>
+  <div class="doc-header-right"><div class="lang-switch"><button class="lang-btn" data-lang="de">DE</button><button class="lang-btn" data-lang="en">EN</button></div><span class="doc-badge overview">Referenz</span></div></div>
 
 <div class="hero">
-  <div class="hero-sub">API-Referenz</div>
-  <h1>Programmatische API<br>Vollständige Referenz</h1>
-  <p class="tagline">
-    Alle public Methoden von SolverAPI, SolverResult, SolverConfig.Builder,
-    ParseError und SolverType — für die Einbettung von CMDSolver in eigene Anwendungen.
-  </p>
-</div>
+  <div class="hero-sub"><span data-lang="de">API Referenz</span><span data-lang="en">API Reference</span></div>
+  <h1 data-lang="de">Programmatische API<br>Vollständige Referenz</h1><h1 data-lang="en">Programmatic API<br>Complete Reference</h1>
+  <p class="tagline" data-lang="de">Alle public Methoden von SolverAPI, SolverResult, SolverConfig.Builder, ParseError und SolverType — für die Einbettung von CMDSolver in eigene Anwendungen.</p>
+  <p class="tagline" data-lang="en">All public methods of SolverAPI, SolverResult, SolverConfig.Builder, ParseError and SolverType — for embedding CMDSolver into your own applications.</p>
+  </div>
 
 <nav>
-  <a href="#solverapi">SolverAPI</a>
-  <a href="#solverresult">SolverResult</a>
-  <a href="#solverconfig">SolverConfig</a>
-  <a href="#parseerror">ParseError</a>
-  <a href="#solvertype">SolverType</a>
-  <a href="#homotopyconfig">HomotopyConfig</a>
+  <a href="#solverapi" data-lang="de">SolverAPI</a><a href="#solverapi" data-lang="en">SolverAPI</a>
+  <a href="#solverresult" data-lang="de">SolverResult</a><a href="#solverresult" data-lang="en">SolverResult</a>
+  <a href="#solverconfig" data-lang="de">SolverConfig</a><a href="#solverconfig" data-lang="en">SolverConfig</a>
+  <a href="#parseerror" data-lang="de">ParseError</a><a href="#parseerror" data-lang="en">ParseError</a>
+  <a href="#solvertype" data-lang="de">SolverType</a><a href="#solvertype" data-lang="en">SolverType</a>
+  <a href="#homotopyconfig" data-lang="de">HomotopyConfig</a><a href="#homotopyconfig" data-lang="en">HomotopyConfig</a>
 </nav>
 
 <main>
 
-<div class="note blue">
+<div class="note blue" data-lang="de">
   <strong>Method-Chaining:</strong> Alle <code>SolverAPI</code>-Setter geben
   <code>this</code> zurück und können daher verkettet werden.
   <span class="method-chain">↩ this</span> zeigt diese Methoden an.
+</div><div class="note blue" data-lang="en">
+  <strong>Method chaining:</strong> all <code>SolverAPI</code> setters return
+  <code>this</code> and can therefore be chained.
+  <span class="method-chain">↩ this</span> marks these methods.
 </div>
 
 <!-- ── SolverAPI ── -->
 <section id="solverapi">
-  <h2>SolverAPI</h2>
+  <h2 data-lang="de">SolverAPI</h2><h2 data-lang="en">SolverAPI</h2>
 
   <div class="api-class">
     <div class="api-class-header">
       <span class="api-class-name">SolverAPI</span>
       <span class="api-class-pkg">cmd.SolverAPI</span>
     </div>
-    <div class="api-class-desc">
+    <div class="api-class-desc" data-lang="de">
       Programmatischer Einstiegspunkt für CMDSolver ohne CLI. Kapselt Laden, Konfiguration
       und Ausführung in einer fluenten API. Thread-safety: eine Instanz pro Thread.
+    </div><div class="api-class-desc" data-lang="en">
+      Programmatic entry point for CMDSolver without CLI. Encapsulates loading, configuration,
+      and execution in a fluent API. Thread safety: one instance per thread.
     </div>
 
     <!-- Konstruktor -->
@@ -129,7 +428,8 @@
       <div class="method-sig">
         <span class="ret">SolverAPI</span> <span class="name">SolverAPI</span>()
       </div>
-      <div class="method-desc">Erzeugt eine neue SolverAPI-Instanz mit Standard-Konfiguration
+      <div class="method-desc" data-lang="de">Erzeugt eine neue SolverAPI-Instanz mit Standard-Konfiguration
+      (Newton-Armijo, tol=1e-7, maxIter=100).</div><div class="method-desc" data-lang="en">Creates a new SolverAPI instance with default configuration
       (Newton-Armijo, tol=1e-7, maxIter=100).</div>
     </div>
 
@@ -140,8 +440,8 @@
         <span class="throws">throws IOException</span>
         <span class="method-chain">↩ this</span>
       </div>
-      <div class="method-desc">Lädt und parst eine CAS-Datei vom Dateisystem. Muss vor <code>solve()</code> aufgerufen werden.</div>
-      <div class="method-return">Gibt: <span>diese Instanz für Method-Chaining</span></div>
+      <div class="method-desc" data-lang="de">Lädt und parst eine CAS-Datei vom Dateisystem. Muss vor <code>solve()</code> aufgerufen werden.</div><div class="method-desc" data-lang="en">Loads and parses a CAS file from the file system. Must be called before <code>solve()</code>.</div>
+      <div class="method-return" data-lang="de">Gibt: <span>diese Instanz für Method-Chaining</span></div><div class="method-return" data-lang="en">Returns: <span>this instance for method chaining</span></div>
       <div class="method-example"><span class="kw">new</span> SolverAPI().loadModel(<span class="str">"model.cas"</span>).solve();</div>
     </div>
 
@@ -151,7 +451,7 @@
         <span class="ret">SolverAPI</span> <span class="name">loadModelFromString</span>(<span class="param-type">String</span> <span class="param-name">content</span>, <span class="param-type">long</span> <span class="param-name">refVal</span>)
         <span class="method-chain">↩ this</span>
       </div>
-      <div class="method-desc">Lädt das CAS-Modell aus einem String statt aus einer Datei. Nützlich für dynamisch generierte Modelle oder Unit-Tests. <code>refVal</code> typisch: <code>content.length()</code>.</div>
+      <div class="method-desc" data-lang="de">Lädt das CAS-Modell aus einem String statt aus einer Datei. Nützlich für dynamisch generierte Modelle oder Unit-Tests. <code>refVal</code> typisch: <code>content.length()</code>.</div><div class="method-desc" data-lang="en">Loads the CAS model from a string instead of a file. Useful for dynamically generated models or unit tests. <code>refVal</code> is typically <code>content.length()</code>.</div>
       <div class="method-example">api.loadModelFromString(casContent, casContent.length());</div>
     </div>
 
@@ -162,8 +462,9 @@
         <span class="throws">throws IOException</span>
         <span class="method-chain">↩ this</span>
       </div>
-      <div class="method-desc">Lädt eine <code>-U:</code>-Datei mit Variablen-Overrides (Startwerte, Bounds, Status).
-      Äquivalent zu <code>-U:</code> auf der CLI.</div>
+      <div class="method-desc" data-lang="de">Lädt eine <code>-U:</code>-Datei mit Variablen-Overrides (Startwerte, Bounds, Status).
+      Äquivalent zu <code>-U:</code> auf der CLI.</div><div class="method-desc" data-lang="en">Loads a <code>-U:</code> file with variable overrides (starting values, bounds, status).
+      Equivalent to <code>-U:</code> on the CLI.</div>
     </div>
 
     <!-- setVariableValue -->
@@ -172,7 +473,7 @@
         <span class="ret">SolverAPI</span> <span class="name">setVariableValue</span>(<span class="param-type">String</span> <span class="param-name">name</span>, <span class="param-type">double</span> <span class="param-name">value</span>)
         <span class="method-chain">↩ this</span>
       </div>
-      <div class="method-desc">Setzt den Startwert einer freien Variablen. Der Status (Free/Fixed) wird nicht geändert. Name ist case-insensitiv.</div>
+      <div class="method-desc" data-lang="de">Setzt den Startwert einer freien Variablen. Der Status (Free/Fixed) wird nicht geändert. Name ist case-insensitiv.</div><div class="method-desc" data-lang="en">Sets the starting value of a free variable. The status (Free/Fixed) is not changed. Name is case-insensitive.</div>
       <div class="method-example">api.setVariableValue(<span class="str">"PARTM.F060.TT"</span>, <span class="num">800.0</span>);</div>
     </div>
 
@@ -182,8 +483,8 @@
         <span class="ret">SolverAPI</span> <span class="name">setVariableFixed</span>(<span class="param-type">String</span> <span class="param-name">name</span>, <span class="param-type">double</span> <span class="param-name">value</span>)
         <span class="method-chain">↩ this</span>
       </div>
-      <div class="method-desc">Fixiert eine Variable auf den angegebenen Wert — ändert Status auf Fixed und setzt den Wert. Damit wird die Variable zur Randbedingung.</div>
-      <div class="method-example">api.setVariableFixed(<span class="str">"AMB.PS"</span>, <span class="num">98136.535</span>); <span class="cmt">// Umgebungsdruck fixieren</span></div>
+      <div class="method-desc" data-lang="de">Fixiert eine Variable auf den angegebenen Wert — ändert Status auf Fixed und setzt den Wert. Damit wird die Variable zur Randbedingung.</div><div class="method-desc" data-lang="en">Fixes a variable to the given value — changes its status to Fixed and assigns the value. This turns the variable into a boundary condition.</div>
+      <div class="method-example">api.setVariableFixed(<span class="str">"AMB.PS"</span>, <span class="num">98136.535</span>); <span class="cmt" data-lang="de">// Umgebungsdruck fixieren</span><span class="cmt" data-lang="en">// Fix the ambient pressure</span></div>
     </div>
 
     <!-- setSolverType -->
@@ -192,8 +493,9 @@
         <span class="ret">SolverAPI</span> <span class="name">setSolverType</span>(<span class="param-type">SolverType</span> <span class="param-name">type</span>)
         <span class="method-chain">↩ this</span>
       </div>
-      <div class="method-desc">Wählt den Solver-Algorithmus. Standard: <code>NEWTON_ARMIJO</code>.
-      Empfohlen: <code>NEWTON_SPARSE_ARMIJO</code> für die meisten Systeme.</div>
+      <div class="method-desc" data-lang="de">Wählt den Solver-Algorithmus. Standard: <code>NEWTON_ARMIJO</code>.
+      Empfohlen: <code>NEWTON_SPARSE_ARMIJO</code> für die meisten Systeme.</div><div class="method-desc" data-lang="en">Selects the solver algorithm. Default: <code>NEWTON_ARMIJO</code>.
+      Recommended: <code>NEWTON_SPARSE_ARMIJO</code> for most systems.</div>
       <div class="method-example">api.setSolverType(SolverType.NEWTON_SPARSE_ARMIJO);</div>
     </div>
 
@@ -203,7 +505,7 @@
         <span class="ret">SolverAPI</span> <span class="name">setTolerance</span>(<span class="param-type">double</span> <span class="param-name">tolerance</span>)
         <span class="method-chain">↩ this</span>
       </div>
-      <div class="method-desc">Setzt die absolute Konvergenzschwelle ||F(x)|| &lt; tolerance. Standard: <code>1e-7</code>.</div>
+      <div class="method-desc" data-lang="de">Setzt die absolute Konvergenzschwelle ||F(x)|| &lt; tolerance. Standard: <code>1e-7</code>.</div><div class="method-desc" data-lang="en">Sets the absolute convergence threshold ||F(x)|| &lt; tolerance. Default: <code>1e-7</code>.</div>
     </div>
 
     <!-- setToleranceRelative — neu v2.10 -->
@@ -212,9 +514,12 @@
         <span class="ret">SolverAPI</span> <span class="name">setToleranceRelative</span>(<span class="param-type">double</span> <span class="param-name">toleranceRelative</span>)
         <span class="method-chain">↩ this</span>
       </div>
-      <div class="method-desc">
+      <div class="method-desc" data-lang="de">
         Relatives Abbruchkriterium (neu in v2.10). Konvergenz wenn <code>fsum/fsum_initial &lt; toleranceRelative</code>.
         Verhindert Dominanz großer Gleichungen (Pa neben kg/s). Standard: <code>0</code> (deaktiviert).
+      </div><div class="method-desc" data-lang="en">
+        Relative termination criterion (new in v2.10). Convergence when <code>fsum/fsum_initial &lt; toleranceRelative</code>.
+        Prevents dominance by large equations (Pa next to kg/s). Default: <code>0</code> (disabled).
       </div>
       <div class="method-example">api.<span class="fn">setToleranceRelative</span>(<span class="num">1e-4</span>); <span class="cmt">// 10.000× Verbesserung als Kriterium</span></div>
     </div>
@@ -225,7 +530,7 @@
         <span class="ret">SolverAPI</span> <span class="name">setMaxIterations</span>(<span class="param-type">int</span> <span class="param-name">maxIter</span>)
         <span class="method-chain">↩ this</span>
       </div>
-      <div class="method-desc">Maximale Iterationen vor Abbruch. Standard: <code>100</code>. Bei LM oder Homotopie ggf. auf 200+ erhöhen.</div>
+      <div class="method-desc" data-lang="de">Maximale Iterationen vor Abbruch. Standard: <code>100</code>. Bei LM oder Homotopie ggf. auf 200+ erhöhen.</div><div class="method-desc" data-lang="en">Maximum iterations before abort. Default: <code>100</code>. For LM or homotopy, raise to 200+ if needed.</div>
     </div>
 
     <!-- setScaling -->
@@ -234,7 +539,7 @@
         <span class="ret">SolverAPI</span> <span class="name">setScaling</span>(<span class="param-type">ScalingStrategy</span> <span class="param-name">strategy</span>)
         <span class="method-chain">↩ this</span>
       </div>
-      <div class="method-desc">Setzt die Skalierungsstrategie. <code>NONE</code> (Standard), <code>DIAGONAL</code>, <code>UNIT_INTERVAL</code>. Aktuell nur <code>NONE</code> aktiv — andere sind vorbereitet.</div>
+      <div class="method-desc" data-lang="de">Setzt die Skalierungsstrategie. <code>NONE</code> (Standard), <code>DIAGONAL</code>, <code>UNIT_INTERVAL</code>. Aktuell nur <code>NONE</code> aktiv — andere sind vorbereitet.</div><div class="method-desc" data-lang="en">Sets the scaling strategy. <code>NONE</code> (default), <code>DIAGONAL</code>, <code>UNIT_INTERVAL</code>. Currently only <code>NONE</code> is active — others are prepared.</div>
     </div>
 
     <!-- setResidualNormalization -->
@@ -243,7 +548,7 @@
         <span class="ret">SolverAPI</span> <span class="name">setResidualNormalization</span>(<span class="param-type">boolean</span> <span class="param-name">enabled</span>)
         <span class="method-chain">↩ this</span>
       </div>
-      <div class="method-desc">Aktiviert Residuen-Normierung: fsum = Σ|Fᵢ(x)|/|Fᵢ(x₀)|. Hilfreich bei Systemen mit sehr unterschiedlichen Gleichungsgrößen.</div>
+      <div class="method-desc" data-lang="de">Aktiviert Residuen-Normierung: fsum = Σ|Fᵢ(x)|/|Fᵢ(x₀)|. Hilfreich bei Systemen mit sehr unterschiedlichen Gleichungsgrößen.</div><div class="method-desc" data-lang="en">Enables residual normalization: fsum = Σ|Fᵢ(x)|/|Fᵢ(x₀)|. Helpful for systems with widely varying equation magnitudes.</div>
     </div>
 
     <!-- setDiagnoseMode -->
@@ -252,7 +557,7 @@
         <span class="ret">SolverAPI</span> <span class="name">setDiagnoseMode</span>(<span class="param-type">boolean</span> <span class="param-name">enabled</span>)
         <span class="method-chain">↩ this</span>
       </div>
-      <div class="method-desc">Aktiviert Diagnose-Modus: <code>InitialValueAnalyzer</code> optimiert Startwerte vor dem Solve. Äquivalent zu <code>-DI</code>. Empfohlen bei schlechten Startwerten.</div>
+      <div class="method-desc" data-lang="de">Aktiviert Diagnose-Modus: <code>InitialValueAnalyzer</code> optimiert Startwerte vor dem Solve. Äquivalent zu <code>-DI</code>. Empfohlen bei schlechten Startwerten.</div><div class="method-desc" data-lang="en">Enables diagnostic mode: <code>InitialValueAnalyzer</code> optimizes starting values before the solve. Equivalent to <code>-DI</code>. Recommended when starting values are poor.</div>
     </div>
 
     <!-- setHomotopyConfig -->
@@ -261,7 +566,7 @@
         <span class="ret">SolverAPI</span> <span class="name">setHomotopyConfig</span>(<span class="param-type">HomotopyConfig</span> <span class="param-name">config</span>)
         <span class="method-chain">↩ this</span>
       </div>
-      <div class="method-desc">Setzt Homotopie-Konfiguration — nur relevant wenn <code>setSolverType(HOMOTOPY)</code>. Vorgefertigte Konfigurationen: <code>HomotopyConfig.defaultConfig()</code>, <code>HomotopyConfig.criticalConfig()</code>.</div>
+      <div class="method-desc" data-lang="de">Setzt Homotopie-Konfiguration — nur relevant wenn <code>setSolverType(HOMOTOPY)</code>. Vorgefertigte Konfigurationen: <code>HomotopyConfig.defaultConfig()</code>, <code>HomotopyConfig.criticalConfig()</code>.</div><div class="method-desc" data-lang="en">Sets homotopy configuration — only relevant when <code>setSolverType(HOMOTOPY)</code>. Predefined configurations: <code>HomotopyConfig.defaultConfig()</code>, <code>HomotopyConfig.criticalConfig()</code>.</div>
       <div class="method-example">api.setSolverType(SolverType.HOMOTOPY)
    .setHomotopyConfig(HomotopyConfig.criticalConfig()); <span class="cmt">// für κ > 10¹²</span></div>
     </div>
@@ -272,7 +577,7 @@
         <span class="ret">SolverAPI</span> <span class="name">setSolverConfig</span>(<span class="param-type">SolverConfig</span> <span class="param-name">config</span>)
         <span class="method-chain">↩ this</span>
       </div>
-      <div class="method-desc">Setzt eine vollständige <code>SolverConfig</code> — überschreibt alle vorherigen setSolverType/setTolerance/etc. Aufrufe. Für maximale Kontrolle.</div>
+      <div class="method-desc" data-lang="de">Setzt eine vollständige <code>SolverConfig</code> — überschreibt alle vorherigen setSolverType/setTolerance/etc. Aufrufe. Für maximale Kontrolle.</div><div class="method-desc" data-lang="en">Sets a complete <code>SolverConfig</code> — overrides any prior setSolverType/setTolerance/etc. calls. For maximum control.</div>
     </div>
 
     <!-- solve -->
@@ -280,7 +585,7 @@
       <div class="method-sig">
         <span class="ret">SolverResult</span> <span class="name">solve</span>()
       </div>
-      <div class="method-desc">Führt den Solve-Prozess aus. Gibt immer ein <code>SolverResult</code> zurück — auch bei Fehler oder Nicht-Konvergenz. Nie <code>null</code>. Gibt nie eine Exception wenn <code>loadModel()</code> vorher erfolgreich war.</div>
+      <div class="method-desc" data-lang="de">Führt den Solve-Prozess aus. Gibt immer ein <code>SolverResult</code> zurück — auch bei Fehler oder Nicht-Konvergenz. Nie <code>null</code>. Gibt nie eine Exception wenn <code>loadModel()</code> vorher erfolgreich war.</div><div class="method-desc" data-lang="en">Runs the solve. Always returns a <code>SolverResult</code> — even on failure or non-convergence. Never <code>null</code>. Never throws if <code>loadModel()</code> succeeded earlier.</div>
       <div class="method-return">Gibt: <span>SolverResult mit vollständigem Lösungsvektor oder Fehlerstatus</span></div>
     </div>
 
@@ -289,69 +594,73 @@
 
 <!-- ── SolverResult ── -->
 <section id="solverresult">
-  <h2>SolverResult</h2>
+  <h2 data-lang="de">SolverResult</h2><h2 data-lang="en">SolverResult</h2>
 
   <div class="api-class">
     <div class="api-class-header">
       <span class="api-class-name">SolverResult</span>
       <span class="api-class-pkg">cmd.SolverResult — final, nicht instanziierbar</span>
     </div>
-    <div class="api-class-desc">
+    <div class="api-class-desc" data-lang="de">
       Unveränderliches Ergebnisobjekt von <code>SolverAPI.solve()</code>.
       Enthält Konvergenzstatus, Lösungsvektor, ParseErrors und Ausgabemethoden.
+    </div><div class="api-class-desc" data-lang="en">
+      Immutable result object from <code>SolverAPI.solve()</code>.
+      Contains convergence status, solution vector, ParseErrors, and output methods.
     </div>
 
     <div class="method">
       <div class="method-sig"><span class="ret">boolean</span> <span class="name">isConverged</span>()</div>
-      <div class="method-desc">Gibt <code>true</code> zurück wenn ||F(x)|| &lt; tolerance.</div>
+      <div class="method-desc" data-lang="de">Gibt <code>true</code> zurück wenn ||F(x)|| &lt; tolerance.</div><div class="method-desc" data-lang="en">Returns <code>true</code> if ||F(x)|| &lt; tolerance.</div>
     </div>
 
     <div class="method">
       <div class="method-sig"><span class="ret">int</span> <span class="name">getIterations</span>()</div>
-      <div class="method-desc">Anzahl Solver-Iterationen. <code>-1</code> wenn nicht verfügbar (Homotopie).</div>
+      <div class="method-desc" data-lang="de">Anzahl Solver-Iterationen. <code>-1</code> wenn nicht verfügbar (Homotopie).</div><div class="method-desc" data-lang="en">Number of solver iterations. <code>-1</code> if unavailable (Homotopy).</div>
     </div>
 
     <div class="method">
       <div class="method-sig"><span class="ret">double</span> <span class="name">getFinalResidual</span>()</div>
-      <div class="method-desc">Finales ||F(x)|| nach letztem Iterationsschritt. NaN wenn nicht verfügbar.</div>
+      <div class="method-desc" data-lang="de">Finales ||F(x)|| nach letztem Iterationsschritt. NaN wenn nicht verfügbar.</div><div class="method-desc" data-lang="en">Final ||F(x)|| after the last iteration step. NaN if unavailable.</div>
     </div>
 
     <div class="method">
       <div class="method-sig"><span class="ret">String</span> <span class="name">getErrorMessage</span>()</div>
-      <div class="method-desc">Fehlermeldung wenn nicht konvergiert. <code>null</code> bei Erfolg.</div>
+      <div class="method-desc" data-lang="de">Fehlermeldung wenn nicht konvergiert. <code>null</code> bei Erfolg.</div><div class="method-desc" data-lang="en">Error message when not converged. <code>null</code> on success.</div>
     </div>
 
     <div class="method">
       <div class="method-sig"><span class="ret">double</span> <span class="name">getValue</span>(<span class="param-type">String</span> <span class="param-name">variableName</span>)</div>
-      <div class="method-desc">Gelöster Wert einer Variablen. Name ist case-insensitiv.
-      Gibt <code>Double.NaN</code> wenn Variable nicht vorhanden oder kein Ergebnis.</div>
+      <div class="method-desc" data-lang="de">Gelöster Wert einer Variablen. Name ist case-insensitiv.
+      Gibt <code>Double.NaN</code> wenn Variable nicht vorhanden oder kein Ergebnis.</div><div class="method-desc" data-lang="en">Solved value of a variable. Name is case-insensitive.
+      Returns <code>Double.NaN</code> if the variable is missing or no result is available.</div>
       <div class="method-example">double pt = result.getValue(<span class="str">"PARTM.F060.PT"</span>);
 <span class="kw">if</span> (Double.isNaN(pt)) { <span class="cmt">/* Variable nicht gefunden */</span> }</div>
     </div>
 
     <div class="method">
       <div class="method-sig"><span class="ret">boolean</span> <span class="name">hasValue</span>(<span class="param-type">String</span> <span class="param-name">variableName</span>)</div>
-      <div class="method-desc">Prüft ob eine Variable im Lösungsvektor vorhanden ist.</div>
+      <div class="method-desc" data-lang="de">Prüft ob eine Variable im Lösungsvektor vorhanden ist.</div><div class="method-desc" data-lang="en">Checks whether a variable is present in the solution vector.</div>
     </div>
 
     <div class="method">
       <div class="method-sig"><span class="ret">Map&lt;String, Double&gt;</span> <span class="name">getAllValues</span>()</div>
-      <div class="method-desc">Alle gelösten Variablenwerte als unveränderliche Map. Schlüssel sind Großbuchstaben-Variablennamen. Leere Map wenn kein Ergebnis.</div>
+      <div class="method-desc" data-lang="de">Alle gelösten Variablenwerte als unveränderliche Map. Schlüssel sind Großbuchstaben-Variablennamen. Leere Map wenn kein Ergebnis.</div><div class="method-desc" data-lang="en">All solved variable values as an immutable map. Keys are uppercase variable names. Empty map if no result.</div>
     </div>
 
     <div class="method">
       <div class="method-sig"><span class="ret">boolean</span> <span class="name">hasParseErrors</span>()</div>
-      <div class="method-desc">Gibt <code>true</code> wenn fatale ParseErrors beim CAS-Parsing aufgetreten sind.</div>
+      <div class="method-desc" data-lang="de">Gibt <code>true</code> wenn fatale ParseErrors beim CAS-Parsing aufgetreten sind.</div><div class="method-desc" data-lang="en">Returns <code>true</code> if fatal ParseErrors occurred during CAS parsing.</div>
     </div>
 
     <div class="method">
       <div class="method-sig"><span class="ret">List&lt;ParseError&gt;</span> <span class="name">getParseErrors</span>()</div>
-      <div class="method-desc">Alle ParseErrors (ERROR/WARNING/INFO) aus dem Parser-Lauf. Leere Liste wenn keine.</div>
+      <div class="method-desc" data-lang="de">Alle ParseErrors (ERROR/WARNING/INFO) aus dem Parser-Lauf. Leere Liste wenn keine.</div><div class="method-desc" data-lang="en">All ParseErrors (ERROR/WARNING/INFO) from the parser run. Empty list if none.</div>
     </div>
 
     <div class="method">
       <div class="method-sig"><span class="ret">String</span> <span class="name">formatAsString</span>()</div>
-      <div class="method-desc">Vollständiger Lösungsvektor als formatierter String — alle Variablen mit Wert, Bounds, Einheit und Status.</div>
+      <div class="method-desc" data-lang="de">Vollständiger Lösungsvektor als formatierter String — alle Variablen mit Wert, Bounds, Einheit und Status.</div><div class="method-desc" data-lang="en">Complete solution vector as a formatted string — all variables with value, bounds, unit, and status.</div>
     </div>
 
     <div class="method">
@@ -359,7 +668,7 @@
         <span class="ret">void</span> <span class="name">writeToFile</span>(<span class="param-type">String</span> <span class="param-name">filePath</span>)
         <span class="throws">throws IOException</span>
       </div>
-      <div class="method-desc">Schreibt den Lösungsvektor in eine Datei (Semikolon-getrenntes Format).</div>
+      <div class="method-desc" data-lang="de">Schreibt den Lösungsvektor in eine Datei (Semikolon-getrenntes Format).</div><div class="method-desc" data-lang="en">Writes the solution vector to a file (semicolon-separated format).</div>
     </div>
 
     <div class="method">
@@ -367,7 +676,7 @@
         <span class="ret">void</span> <span class="name">writeToWriter</span>(<span class="param-type">Writer</span> <span class="param-name">writer</span>)
         <span class="throws">throws IOException</span>
       </div>
-      <div class="method-desc">Schreibt den Lösungsvektor in einen beliebigen <code>Writer</code> — für GUI-Integration via <code>StringWriter</code> oder direkt in <code>JTextArea</code>.</div>
+      <div class="method-desc" data-lang="de">Schreibt den Lösungsvektor in einen beliebigen <code>Writer</code> — für GUI-Integration via <code>StringWriter</code> oder direkt in <code>JTextArea</code>.</div><div class="method-desc" data-lang="en">Writes the solution vector to any <code>Writer</code> — for GUI integration via <code>StringWriter</code> or directly into <code>JTextArea</code>.</div>
       <div class="method-example">StringWriter sw = <span class="kw">new</span> StringWriter();
 result.writeToWriter(sw);
 textArea.setText(sw.toString());</div>
@@ -378,62 +687,66 @@ textArea.setText(sw.toString());</div>
 
 <!-- ── SolverConfig ── -->
 <section id="solverconfig">
-  <h2>SolverConfig.Builder</h2>
+  <h2 data-lang="de">SolverConfig.Builder</h2><h2 data-lang="en">SolverConfig.Builder</h2>
 
   <div class="api-class">
     <div class="api-class-header">
       <span class="api-class-name">SolverConfig.Builder</span>
       <span class="api-class-pkg">apps.eqnParser.solver.SolverConfig.Builder</span>
     </div>
-    <div class="api-class-desc">
+    <div class="api-class-desc" data-lang="de">
       Builder-Pattern für vollständige Solver-Konfiguration.
       Für einfache Fälle genügt <code>SolverAPI.setSolverType() / setTolerance()</code>.
       Builder bietet Zugang zu allen internen Parametern.
+    </div><div class="api-class-desc" data-lang="en">
+      Builder pattern for complete solver configuration.
+      For simple cases, <code>SolverAPI.setSolverType() / setTolerance()</code> is sufficient.
+      The builder provides access to all internal parameters.
     </div>
 
     <div class="method">
       <div class="method-sig"><span class="ret">Builder</span> <span class="name">solverType</span>(<span class="param-type">SolverType</span> <span class="param-name">v</span>)</div>
-      <div class="method-desc">Solver-Algorithmus. Standard: <code>NEWTON_ARMIJO</code>.</div>
+      <div class="method-desc" data-lang="de">Solver-Algorithmus. Standard: <code>NEWTON_ARMIJO</code>.</div><div class="method-desc" data-lang="en">Solver algorithm. Default: <code>NEWTON_ARMIJO</code>.</div>
     </div>
     <div class="method">
       <div class="method-sig"><span class="ret">Builder</span> <span class="name">maxIter</span>(<span class="param-type">int</span> <span class="param-name">v</span>)</div>
-      <div class="method-desc">Maximale Iterationen. Standard: <code>100</code>.</div>
+      <div class="method-desc" data-lang="de">Maximale Iterationen. Standard: <code>100</code>.</div><div class="method-desc" data-lang="en">Maximum iterations. Default: <code>100</code>.</div>
     </div>
     <div class="method">
       <div class="method-sig"><span class="ret">Builder</span> <span class="name">tolerance</span>(<span class="param-type">double</span> <span class="param-name">v</span>)</div>
-      <div class="method-desc">Konvergenzschwelle. Standard: <code>1e-7</code>.</div>
+      <div class="method-desc" data-lang="de">Konvergenzschwelle. Standard: <code>1e-7</code>.</div><div class="method-desc" data-lang="en">Convergence threshold. Default: <code>1e-7</code>.</div>
     </div>
     <div class="method">
       <div class="method-sig"><span class="ret">Builder</span> <span class="name">armijoAlphaInit</span>(<span class="param-type">double</span> <span class="param-name">v</span>)</div>
-      <div class="method-desc">Initialer Schrittweiten-Faktor für Armijo-Backtracking. Standard: <code>1.0</code>.</div>
+      <div class="method-desc" data-lang="de">Initialer Schrittweiten-Faktor für Armijo-Backtracking. Standard: <code>1.0</code>.</div><div class="method-desc" data-lang="en">Initial step-size factor for Armijo backtracking. Default: <code>1.0</code>.</div>
     </div>
     <div class="method">
       <div class="method-sig"><span class="ret">Builder</span> <span class="name">armijoAlphaMin</span>(<span class="param-type">double</span> <span class="param-name">v</span>)</div>
-      <div class="method-desc">Minimales α vor Abbruch der Liniensuche. Standard: <code>1e-4</code>.</div>
+      <div class="method-desc" data-lang="de">Minimales α vor Abbruch der Liniensuche. Standard: <code>1e-4</code>.</div><div class="method-desc" data-lang="en">Minimum α before line search aborts. Default: <code>1e-4</code>.</div>
     </div>
     <div class="method">
       <div class="method-sig"><span class="ret">Builder</span> <span class="name">armijoRho</span>(<span class="param-type">double</span> <span class="param-name">v</span>)</div>
-      <div class="method-desc">Reduktionsfaktor pro Backtracking-Schritt. Standard: <code>0.5</code>.</div>
+      <div class="method-desc" data-lang="de">Reduktionsfaktor pro Backtracking-Schritt. Standard: <code>0.5</code>.</div><div class="method-desc" data-lang="en">Reduction factor per backtracking step. Default: <code>0.5</code>.</div>
     </div>
     <div class="method">
       <div class="method-sig"><span class="ret">Builder</span> <span class="name">lmMuInit</span>(<span class="param-type">double</span> <span class="param-name">v</span>)</div>
-      <div class="method-desc">Initialer LM-Dämpfungsparameter. Standard: <code>1e-6</code>.</div>
+      <div class="method-desc" data-lang="de">Initialer LM-Dämpfungsparameter. Standard: <code>1e-6</code>.</div><div class="method-desc" data-lang="en">Initial LM damping parameter. Default: <code>1e-6</code>.</div>
     </div>
     <div class="method">
       <div class="method-sig"><span class="ret">Builder</span> <span class="name">lmNuUp</span>(<span class="param-type">double</span> <span class="param-name">v</span>) / <span class="name">lmNuDown</span>(<span class="param-type">double</span> <span class="param-name">v</span>)</div>
-      <div class="method-desc">μ-Erhöhungsfaktor (Standard: 2.0) und Reduktionsfaktor (Standard: 5.0) für LM.</div>
+      <div class="method-desc" data-lang="de">μ-Erhöhungsfaktor (Standard: 2.0) und Reduktionsfaktor (Standard: 5.0) für LM.</div><div class="method-desc" data-lang="en">μ increase factor (default: 2.0) and reduction factor (default: 5.0) for LM.</div>
     </div>
     <div class="method">
       <div class="method-sig"><span class="ret">Builder</span> <span class="name">broydenResetInterval</span>(<span class="param-type">int</span> <span class="param-name">v</span>)</div>
-      <div class="method-desc">Jacobi-Reset-Intervall für Broyden. Standard: <code>25</code>.</div>
+      <div class="method-desc" data-lang="de">Jacobi-Reset-Intervall für Broyden. Standard: <code>25</code>.</div><div class="method-desc" data-lang="en">Jacobian reset interval for Broyden. Default: <code>25</code>.</div>
     </div>
     <div class="method">
       <div class="method-sig"><span class="ret">Builder</span> <span class="name">residualNormalization</span>(<span class="param-type">boolean</span> <span class="param-name">v</span>)</div>
-      <div class="method-desc">N3-Residuen-Normierung aktivieren. Standard: <code>false</code>.</div>
+      <div class="method-desc" data-lang="de">N3-Residuen-Normierung aktivieren. Standard: <code>false</code>.</div><div class="method-desc" data-lang="en">Enable N3 residual normalization. Default: <code>false</code>.</div>
     </div>
     <div class="method">
       <div class="method-sig"><span class="ret">SolverConfig</span> <span class="name">build</span>()</div>
-      <div class="method-desc">Erzeugt eine unveränderliche <code>SolverConfig</code>-Instanz.</div>
+      <div class="method-desc" data-lang="de">Erzeugt eine unveränderliche <code>SolverConfig</code>-Instanz.</div><div class="method-desc" data-lang="en">Creates an immutable <code>SolverConfig</code> instance.</div>
       <div class="method-example">SolverConfig cfg = <span class="kw">new</span> SolverConfig.Builder()
     .solverType(SolverType.LEVENBERG_MARQUARDT)
     .maxIter(<span class="num">200</span>)
@@ -446,16 +759,19 @@ api.setSolverConfig(cfg);</div>
 
 <!-- ── ParseError ── -->
 <section id="parseerror">
-  <h2>ParseError</h2>
+  <h2 data-lang="de">ParseError</h2><h2 data-lang="en">ParseError</h2>
 
   <div class="api-class">
     <div class="api-class-header">
       <span class="api-class-name">ParseError</span>
       <span class="api-class-pkg">apps.eqnParser.ParseError</span>
     </div>
-    <div class="api-class-desc">
+    <div class="api-class-desc" data-lang="de">
       Typisierter Parser-Fehler mit Severity, Zeilennummer und Kontext.
       Erzeugt von <code>EqnSysReader</code>, abgerufen via <code>SolverResult.getParseErrors()</code>.
+    </div><div class="api-class-desc" data-lang="en">
+      Typed parser error with severity, line number, and context.
+      Produced by <code>EqnSysReader</code>, retrieved via <code>SolverResult.getParseErrors()</code>.
     </div>
 
     <div class="method">
@@ -464,19 +780,19 @@ api.setSolverConfig(cfg);</div>
     </div>
     <div class="method">
       <div class="method-sig"><span class="ret">int</span> <span class="name">getLineNumber</span>()</div>
-      <div class="method-desc">Zeilennummer in der CAS-Datei wo der Fehler aufgetreten ist. <code>-1</code> wenn nicht bekannt.</div>
+      <div class="method-desc" data-lang="de">Zeilennummer in der CAS-Datei wo der Fehler aufgetreten ist. <code>-1</code> wenn nicht bekannt.</div><div class="method-desc" data-lang="en">Line number in the CAS file where the error occurred. <code>-1</code> if unknown.</div>
     </div>
     <div class="method">
       <div class="method-sig"><span class="ret">String</span> <span class="name">getMessage</span>()</div>
-      <div class="method-desc">Fehlerbeschreibung.</div>
+      <div class="method-desc" data-lang="de">Fehlerbeschreibung.</div><div class="method-desc" data-lang="en">Error description.</div>
     </div>
     <div class="method">
       <div class="method-sig"><span class="ret">String</span> <span class="name">getContext</span>()</div>
-      <div class="method-desc">Zeilen-Inhalt oder Kontext-String zur Fehlerlokalisierung. Kann <code>null</code> sein.</div>
+      <div class="method-desc" data-lang="de">Zeilen-Inhalt oder Kontext-String zur Fehlerlokalisierung. Kann <code>null</code> sein.</div><div class="method-desc" data-lang="en">Line content or context string for error localization. May be <code>null</code>.</div>
     </div>
     <div class="method">
       <div class="method-sig"><span class="ret">String</span> <span class="name">format</span>()</div>
-      <div class="method-desc">Formatierter String: <code>[ERROR] Line 47: Beschreibung — Kontext</code></div>
+      <div class="method-desc" data-lang="de">Formatierter String: <code>[ERROR] Line 47: Beschreibung — Kontext</code></div><div class="method-desc" data-lang="en">Formatted string: <code>[ERROR] Line 47: description — context</code></div>
       <div class="method-example"><span class="kw">for</span> (ParseError e : result.getParseErrors()) {
     System.err.println(e.format());
 }</div>
@@ -486,14 +802,14 @@ api.setSolverConfig(cfg);</div>
 
 <!-- ── SolverType ── -->
 <section id="solvertype">
-  <h2>SolverType — Enum</h2>
+  <h2 data-lang="de">SolverType — Enum</h2><h2 data-lang="en">SolverType — Enum</h2>
 
   <div class="api-class">
     <div class="api-class-header">
       <span class="api-class-name">SolverType</span>
       <span class="api-class-pkg">apps.eqnParser.solver.SolverType</span>
     </div>
-    <div class="api-class-desc">Aufzählung aller verfügbaren Solver-Algorithmen.</div>
+    <div class="api-class-desc" data-lang="de">Aufzählung aller verfügbaren Solver-Algorithmen.</div><div class="api-class-desc" data-lang="en">Enumeration of all available solver algorithms.</div>
 
     <div class="method">
       <div class="enum-block">
@@ -509,36 +825,39 @@ api.setSolverConfig(cfg);</div>
 
     <div class="method">
       <div class="method-sig"><span class="ret">String</span> <span class="name">getDescription</span>()</div>
-      <div class="method-desc">Beschreibungstext des Solvers für Log-Ausgaben.</div>
+      <div class="method-desc" data-lang="de">Beschreibungstext des Solvers für Log-Ausgaben.</div><div class="method-desc" data-lang="en">Descriptive text of the solver for log output.</div>
     </div>
     <div class="method">
       <div class="method-sig"><span class="ret">static SolverType</span> <span class="name">fromString</span>(<span class="param-type">String</span> <span class="param-name">name</span>)</div>
-      <div class="method-desc">Parst einen SolverType aus einem String. Case-insensitiv. Gibt <code>NEWTON_ARMIJO</code> als Fallback wenn unbekannt.</div>
+      <div class="method-desc" data-lang="de">Parst einen SolverType aus einem String. Case-insensitiv. Gibt <code>NEWTON_ARMIJO</code> als Fallback wenn unbekannt.</div><div class="method-desc" data-lang="en">Parses a SolverType from a string. Case-insensitive. Returns <code>NEWTON_ARMIJO</code> as fallback if unknown.</div>
     </div>
   </div>
 </section>
 
 <!-- ── HomotopyConfig ── -->
 <section id="homotopyconfig">
-  <h2>HomotopyConfig</h2>
+  <h2 data-lang="de">HomotopyConfig</h2><h2 data-lang="en">HomotopyConfig</h2>
 
   <div class="api-class">
     <div class="api-class-header">
       <span class="api-class-name">HomotopyConfig</span>
       <span class="api-class-pkg">apps.eqnParser.solver.HomotopyConfig</span>
     </div>
-    <div class="api-class-desc">
+    <div class="api-class-desc" data-lang="de">
       Konfiguration für den Homotopie-Solver. Vorgefertigte Konfigurationen
       decken die häufigsten Anwendungsfälle ab.
+    </div><div class="api-class-desc" data-lang="en">
+      Configuration for the homotopy solver. Predefined configurations
+      cover the most common use cases.
     </div>
 
     <div class="method">
       <div class="method-sig"><span class="ret">static HomotopyConfig</span> <span class="name">defaultConfig</span>()</div>
-      <div class="method-desc">Standard: 10 Schritte, ds=0.1, innerer Solver: NEWTON_ARMIJO.</div>
+      <div class="method-desc" data-lang="de">Standard: 10 Schritte, ds=0.1, innerer Solver: NEWTON_ARMIJO.</div><div class="method-desc" data-lang="en">Default: 10 steps, ds=0.1, inner solver: NEWTON_ARMIJO.</div>
     </div>
     <div class="method">
       <div class="method-sig"><span class="ret">static HomotopyConfig</span> <span class="name">criticalConfig</span>()</div>
-      <div class="method-desc">Für schwierige Systeme (κ > 10¹², Ma-Übergänge): 50 Schritte, ds=0.02, dsMax=0.1, iterTarget=3.</div>
+      <div class="method-desc" data-lang="de">Für schwierige Systeme (κ > 10¹², Ma-Übergänge): 50 Schritte, ds=0.02, dsMax=0.1, iterTarget=3.</div><div class="method-desc" data-lang="en">For challenging systems (κ > 10¹², Ma transitions): 50 steps, ds=0.02, dsMax=0.1, iterTarget=3.</div>
       <div class="method-example"><span class="cmt">// Für NozzleSystem oder stark nichtlineare Modelle:</span>
 api.setSolverType(SolverType.HOMOTOPY)
    .setHomotopyConfig(HomotopyConfig.criticalConfig())
@@ -546,8 +865,10 @@ api.setSolverType(SolverType.HOMOTOPY)
     </div>
     <div class="method">
       <div class="method-sig"><span class="ret">HomotopyConfig.Builder</span> <span class="name">builder</span>()</div>
-      <div class="method-desc">Erzeugt einen Builder für individuelle Konfiguration.
+      <div class="method-desc" data-lang="de">Erzeugt einen Builder für individuelle Konfiguration.
       Methoden: <code>steps(int)</code>, <code>dsInit(double)</code>, <code>dsMax(double)</code>,
+      <code>innerSolverConfig(SolverConfig)</code>, <code>iterTarget(int)</code>.</div><div class="method-desc" data-lang="en">Creates a builder for custom configuration.
+      Methods: <code>steps(int)</code>, <code>dsInit(double)</code>, <code>dsMax(double)</code>,
       <code>innerSolverConfig(SolverConfig)</code>, <code>iterTarget(int)</code>.</div>
     </div>
   </div>
@@ -556,7 +877,7 @@ api.setSolverType(SolverType.HOMOTOPY)
 </main>
 
 <footer>
-  <span>CMDSolver Docs · API-Referenz · v2.5</span>
+  <span data-lang="de">CMDSolver Docs · API-Referenz · v2.5</span><span data-lang="en">CMDSolver Docs · API Reference · v2.5</span>
   <span>
     <a href="getting_started.html">← Getting Started</a> &nbsp;|&nbsp;
     <a href="examples.html">Beispiele →</a>

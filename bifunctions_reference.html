@@ -4,9 +4,262 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>CMDSolver Docs — BIfunctions Referenz</title>
-<link rel="stylesheet" href="docs.css">
 <style>
-  .func-card {
+/* CMDSolver Documentation — Shared Stylesheet */
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;1,400&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap');
+
+:root {
+  --bg:      #0d0f12;
+  --bg2:     #13161b;
+  --bg3:     #1a1e25;
+  --bg4:     #20252f;
+  --border:  #252a33;
+  --border2: #2e3540;
+  --text:    #c8cdd6;
+  --text2:   #7a8496;
+  --text3:   #4a5568;
+  --accent:  #4a9eff;
+  --ok:      #3ecf8e;
+  --warn:    #f0a030;
+  --err:     #ff5c5c;
+  --purple:  #a78bfa;
+  --teal:    #2dd4bf;
+  --mono:    'IBM Plex Mono', monospace;
+  --sans:    'IBM Plex Sans', sans-serif;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: var(--sans);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 13.5px;
+  line-height: 1.75;
+}
+
+/* ── Header ── */
+.doc-header {
+  border-bottom: 1px solid var(--border);
+  padding: 1.2rem 3rem;
+  display: flex; align-items: center;
+  justify-content: space-between; flex-wrap: wrap; gap: 1rem;
+}
+
+.breadcrumb {
+  font-family: var(--mono); font-size: 11px; color: var(--text3);
+  letter-spacing: .08em; text-transform: uppercase;
+  display: flex; align-items: center; gap: .5rem;
+}
+.breadcrumb a { color: var(--accent); text-decoration: none; }
+.breadcrumb span { color: var(--text3); }
+
+.doc-badge {
+  font-family: var(--mono); font-size: 11px;
+  padding: 3px 10px; border-radius: 4px;
+}
+.doc-badge.solver {
+  background: rgba(74,158,255,.1); border: 1px solid rgba(74,158,255,.25);
+  color: var(--accent);
+}
+.doc-badge.overview {
+  background: rgba(167,139,250,.1); border: 1px solid rgba(167,139,250,.25);
+  color: var(--purple);
+}
+.doc-badge.comparison {
+  background: rgba(62,207,142,.1); border: 1px solid rgba(62,207,142,.25);
+  color: var(--ok);
+}
+
+/* ── Hero ── */
+.hero {
+  padding: 2.5rem 3rem 2rem;
+  border-bottom: 1px solid var(--border);
+  background: linear-gradient(135deg, var(--bg) 0%, #0f1520 100%);
+}
+.hero-sub {
+  font-family: var(--mono); font-size: 11px; color: var(--text3);
+  letter-spacing: .15em; text-transform: uppercase; margin-bottom: .5rem;
+}
+h1 {
+  font-size: 28px; font-weight: 600; color: #e8ecf4;
+  letter-spacing: -.03em; margin-bottom: .5rem; line-height: 1.2;
+}
+.tagline {
+  font-size: 14px; color: var(--text2); margin-bottom: 1.5rem;
+  max-width: 680px;
+}
+.hero-stats { display: flex; gap: 2rem; flex-wrap: wrap; }
+.stat { display: flex; flex-direction: column; gap: .2rem; }
+.stat-val {
+  font-family: var(--mono); font-size: 18px; font-weight: 500; color: var(--ok);
+}
+.stat-lbl {
+  font-size: 11px; color: var(--text3);
+  text-transform: uppercase; letter-spacing: .08em;
+}
+
+/* ── Nav ── */
+nav {
+  position: sticky; top: 0; z-index: 10;
+  background: rgba(13,15,18,.95); backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--border);
+  padding: .6rem 3rem;
+  display: flex; gap: 1.5rem; flex-wrap: wrap;
+}
+nav a {
+  font-family: var(--mono); font-size: 11px; color: var(--text3);
+  text-decoration: none; letter-spacing: .08em;
+  text-transform: uppercase; transition: color .15s;
+}
+nav a:hover { color: var(--accent); }
+
+/* ── Main ── */
+main { padding: 2rem 3rem 4rem; max-width: 1040px; }
+
+section { margin-bottom: 3.5rem; scroll-margin-top: 3rem; }
+
+section > h2 {
+  font-size: 12px; font-family: var(--mono);
+  letter-spacing: .12em; text-transform: uppercase;
+  color: var(--text3); margin-bottom: 1.4rem;
+  padding-bottom: .5rem; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: .6rem;
+}
+section > h2::before {
+  content: ''; display: inline-block;
+  width: 8px; height: 8px; border-radius: 50%; background: var(--accent);
+}
+
+h3 { font-size: 14px; font-weight: 500; color: #e8ecf4; margin: 1.6rem 0 .6rem; }
+h4 { font-size: 13px; font-weight: 500; color: var(--text2); margin: 1.2rem 0 .4rem; }
+
+p { color: var(--text); margin-bottom: .9rem; max-width: 780px; }
+
+/* ── Math ── */
+.math-block {
+  background: var(--bg3); border: 1px solid var(--border);
+  border-left: 3px solid var(--purple);
+  border-radius: 6px; padding: 1.2rem 1.5rem;
+  margin: 1rem 0 1.2rem; font-family: var(--mono);
+  font-size: 13px; line-height: 2.1; white-space: pre;
+}
+.math-block .eq  { color: #e8ecf4; }
+.math-block .cmt { color: var(--text3); font-style: italic; }
+.math-block .hi  { color: var(--teal); }
+.math-block .hi2 { color: var(--warn); }
+
+/* ── Notes ── */
+.note {
+  border-radius: 6px; padding: .85rem 1.1rem;
+  font-size: 13px; line-height: 1.7; margin-bottom: 1.2rem;
+}
+.note.blue   { background: rgba(74,158,255,.06);  border-left: 3px solid var(--accent); }
+.note.green  { background: rgba(62,207,142,.06);  border-left: 3px solid var(--ok); }
+.note.amber  { background: rgba(240,160,48,.06);  border-left: 3px solid var(--warn); }
+.note.red    { background: rgba(255,92,92,.06);   border-left: 3px solid var(--err); }
+.note.purple { background: rgba(167,139,250,.06); border-left: 3px solid var(--purple); }
+.note strong { color: #e8ecf4; }
+
+/* ── Code ── */
+code {
+  font-family: var(--mono); font-size: 11.5px;
+  background: rgba(255,255,255,.05); padding: 1px 5px;
+  border-radius: 3px; color: #a8c8f0;
+}
+pre {
+  font-family: var(--mono); font-size: 12px;
+  background: var(--bg3); border: 1px solid var(--border);
+  border-radius: 8px; padding: 1rem 1.2rem;
+  overflow-x: auto; line-height: 1.7; margin-bottom: 1rem; color: #c8cdd6;
+}
+.kw  { color: var(--purple); }
+.cmt { color: var(--text3); font-style: italic; }
+.fn  { color: var(--teal); }
+.num { color: var(--warn); }
+.str { color: var(--ok); }
+
+/* ── Tables ── */
+.tbl-wrap {
+  overflow-x: auto; border-radius: 8px;
+  border: 1px solid var(--border); margin-bottom: 1.5rem;
+}
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+thead th {
+  background: var(--bg3); padding: 9px 14px; text-align: left;
+  font-weight: 500; font-size: 11px; letter-spacing: .06em;
+  text-transform: uppercase; color: var(--text2);
+  border-bottom: 1px solid var(--border2); white-space: nowrap;
+}
+tbody tr { border-bottom: 1px solid var(--border); transition: background .1s; }
+tbody tr:last-child { border-bottom: none; }
+tbody tr:hover { background: var(--bg3); }
+td { padding: 9px 14px; vertical-align: top; line-height: 1.6; }
+td.center { text-align: center; }
+
+/* ── Badges ── */
+.badge {
+  display: inline-block; font-size: 11px; padding: 2px 9px;
+  border-radius: 12px; font-family: var(--mono); white-space: nowrap;
+}
+.b-ok   { background: rgba(62,207,142,.1);  color: var(--ok);     border: 1px solid rgba(62,207,142,.25); }
+.b-warn { background: rgba(240,160,48,.1);  color: var(--warn);   border: 1px solid rgba(240,160,48,.25); }
+.b-err  { background: rgba(255,92,92,.1);   color: var(--err);    border: 1px solid rgba(255,92,92,.25); }
+.b-info { background: rgba(74,158,255,.1);  color: var(--accent); border: 1px solid rgba(74,158,255,.25); }
+.b-na   { background: rgba(74,84,96,.1);    color: var(--text3);  border: 1px solid var(--border2); }
+
+/* ── Star rating ── */
+.stars { color: var(--warn); letter-spacing: -.05em; }
+.stars.dim { color: var(--border2); }
+
+/* ── File list ── */
+.file-list { list-style: none; }
+.file-list li {
+  display: flex; gap: 1rem; align-items: flex-start;
+  padding: .7rem 1rem; background: var(--bg2);
+  border: 1px solid var(--border); border-radius: 4px; margin-bottom: .4rem;
+}
+.file-icon {
+  font-family: var(--mono); font-size: 11px; color: var(--accent);
+  white-space: nowrap; margin-top: 2px; min-width: 50px;
+}
+.file-desc { font-size: 13px; color: var(--text2); }
+.file-desc strong { color: var(--text); display: block; margin-bottom: .2rem; }
+
+/* ── Flowchart ── */
+.flowchart {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 10px; padding: 1.5rem; margin: 1rem 0 1.5rem;
+  overflow-x: auto;
+}
+
+/* ── Footer ── */
+footer {
+  border-top: 1px solid var(--border); padding: 1.5rem 3rem;
+  font-family: var(--mono); font-size: 11px; color: var(--text3);
+  display: flex; justify-content: space-between; flex-wrap: wrap; gap: .5rem;
+}
+footer a { color: var(--accent); text-decoration: none; }
+
+/* ── Footnotes ── */
+.footnotes {
+  margin-top: 2rem; padding-top: 1.5rem;
+  border-top: 1px solid var(--border);
+  font-size: 12px; color: var(--text2);
+}
+.footnotes p { max-width: none; margin-bottom: .5rem; }
+sup { font-size: 10px; color: var(--accent); }
+
+/* Default: alle Sprachelemente sichtbar (kein JS-Flash) */
+/* Mit lang-Klasse auf body: nur die aktive Sprache sichtbar */
+
+/* Nur wenn body eine Sprachklasse hat, werden Elemente ausgeblendet */
+/* Sprach-Sichtbarkeit via class auf body */
+
+
+/* ── Seitenspezifische Klassen ────────────────────────
+   (aus alter bifunctions_reference.html wiederhergestellt) */
+.func-card {
     background: var(--bg2); border: 1px solid var(--border);
     border-radius: 8px; padding: 1.2rem 1.4rem;
     margin-bottom: 1rem;
@@ -32,24 +285,63 @@
     line-height: 2; white-space: pre;
   }
 </style>
+<link rel="stylesheet" href="i18n.css">
 </head>
 <body>
+<script>
+(function(){
+  var stored = '';
+  try { stored = localStorage.getItem('cmdlang') || ''; } catch(e){}
+  var lang = stored || 'de';
 
+  function apply(l) {
+    lang = l;
+    try { localStorage.setItem('cmdlang', l); } catch(e){}
+    document.documentElement.lang = l;
+    var body = document.body;
+    body.classList.remove('lang-de','lang-en');
+    body.classList.add('lang-' + l);
+    document.querySelectorAll('.lang-btn').forEach(function(b){
+      b.classList.toggle('active', b.dataset.lang === l);
+    });
+  }
+
+  // Body-Klasse sofort setzen, damit data-lang-Elemente direkt korrekt
+  // sichtbar sind (kein Flash mit unsichtbarem Header-Inhalt).
+  apply(lang);
+  document.addEventListener('DOMContentLoaded', function(){
+    apply(lang); // erneut, damit jetzt auch die Buttons gestyled werden
+    document.querySelectorAll('.lang-btn').forEach(function(b){
+      b.addEventListener('click', function(){ apply(b.dataset.lang); });
+    });
+    // Sticky-Header Schatten via IntersectionObserver
+    var sentinel = document.querySelector('.header-sentinel');
+    var header   = document.querySelector('.doc-header');
+    if (sentinel && header && 'IntersectionObserver' in window) {
+      new IntersectionObserver(function(entries){
+        header.classList.toggle('scrolled', !entries[0].isIntersecting);
+      }).observe(sentinel);
+    }
+  });
+})();
+</script>
+
+
+
+
+<div class="header-sentinel"></div>
 <div class="doc-header">
   <div class="breadcrumb">
     <a href="index.html">CMDSolver Docs</a>
-    <span>›</span><span>BIfunctions</span>
+    ›
   </div>
-  <span class="doc-badge overview">Referenz</span>
-</div>
+  <div class="doc-header-right"><div class="lang-switch"><button class="lang-btn" data-lang="de">DE</button><button class="lang-btn" data-lang="en">EN</button></div><span class="doc-badge overview">Referenz</span></div></div>
 
 <div class="hero">
-  <div class="hero-sub">Kapitel 5</div>
-  <h1>BIfunctions<br>Thermodynamische Built-in Funktionen</h1>
-  <p class="tagline">
-    Überblick über die thermodynamischen Berechnungsfunktionen in CMDSolver —
-    physikalischer Hintergrund, Gleichungen, Ableitungsmethodik und CAS-Verwendung.
-  </p>
+  <div class="hero-sub"><span data-lang="de">BIfunction Referenz</span><span data-lang="en">BIfunction Reference</span></div>
+  <h1 data-lang="de">BIfunctions<br>Thermodynamische Built-in Funktionen</h1><h1 data-lang="en">BIfunctions<br>Thermodynamic Built-in Functions</h1>
+  <p class="tagline" data-lang="de">Überblick über die thermodynamischen Berechnungsfunktionen in CMDSolver — physikalischer Hintergrund, Gleichungen, Ableitungsmethodik und CAS-Verwendung.</p>
+  <p class="tagline" data-lang="en">Overview of CMDSolver's thermodynamic computation functions — physical background, equations, derivation methodology, and CAS usage.</p>
   <div class="hero-stats">
     <div class="stat"><span class="stat-val">18</span><span class="stat-lbl">Funktionen</span></div>
     <div class="stat"><span class="stat-val">O(h⁴)</span><span class="stat-lbl">Ableitungsgenauigkeit</span></div>
@@ -59,95 +351,112 @@
 </div>
 
 <nav>
-  <a href="#architektur">Architektur</a>
-  <a href="#ableitung">Ableitungsmethodik</a>
-  <a href="#schall">Schallgeschwindigkeit</a>
-  <a href="#enthalpie">Enthalpie & cp</a>
-  <a href="#atmosphaere">Atmosphäre</a>
-  <a href="#stroemung">Strömung</a>
-  <a href="#verwendung">CAS-Verwendung</a>
+  <a href="#architektur" data-lang="de">Architektur</a><a href="#architektur" data-lang="en">Architecture</a>
+  <a href="#ableitung" data-lang="de">Ableitungsmethodik</a><a href="#ableitung" data-lang="en">Differentiation</a>
+  <a href="#schall" data-lang="de">Schallgeschwindigkeit</a><a href="#schall" data-lang="en">Speed of Sound</a>
+  <a href="#enthalpie" data-lang="de">Enthalpie & cp</a><a href="#enthalpie" data-lang="en">Enthalpy & cp</a>
+  <a href="#atmosphaere" data-lang="de">Atmosphäre</a><a href="#atmosphaere" data-lang="en">Atmosphere</a>
+  <a href="#stroemung" data-lang="de">Strömung</a><a href="#stroemung" data-lang="en">Flow</a>
+  <a href="#verwendung" data-lang="de">CAS-Verwendung</a><a href="#verwendung" data-lang="en">CAS Usage</a>
 </nav>
 
 <main>
 
 <!-- Architektur -->
 <section id="architektur">
-  <h2>Architektur der Built-in Funktionen</h2>
+  <h2 data-lang="de">Architektur der Built-in Funktionen</h2><h2 data-lang="en">Architecture of Built-in Functions</h2>
 
-  <p>
+  <p data-lang="de">
     Jede thermodynamische Funktion <code>func(args)</code> in BIfunctions hat
     <strong>drei Signaturen</strong> die zusammen das Interface für den Solver bilden:
+  </p><p data-lang="en">
+    Every thermodynamic function <code>func(args)</code> in BIfunctions has
+    <strong>three signatures</strong> that together form the solver interface:
   </p>
 
   <div class="math-block">
-    <div class="eq"><span class="hi">Signatur 1 — Residuum:</span></div>
+    <div class="eq"><span class="hi" data-lang="de">Signatur 1 — Residuum:</span><span class="hi" data-lang="en">Signature 1 — residual:</span></div>
     <div class="eq">  <span class="fn">dFunc</span>(output, inputs...) = output − func(inputs)</div>
-    <div class="eq"><span class="cmt">  // Gibt 0 wenn output korrekt berechnet wurde</span></div>
-    <div class="eq"><span class="cmt">  // Wird als Gleichungsresiduum F(x) = 0 verwendet</span></div>
+    <div class="eq"><span class="cmt" data-lang="de">  // Gibt 0 wenn output korrekt berechnet wurde</span><span class="cmt" data-lang="en">  // Returns 0 when output is correctly computed</span></div>
+    <div class="eq"><span class="cmt" data-lang="de">  // Wird als Gleichungsresiduum F(x) = 0 verwendet</span><span class="cmt" data-lang="en">  // Used as equation residual F(x) = 0</span></div>
     <div class="eq"></div>
-    <div class="eq"><span class="hi">Signatur 2 — List-Form:</span></div>
+    <div class="eq"><span class="hi" data-lang="de">Signatur 2 — List-Form:</span><span class="hi" data-lang="en">Signature 2 — list form:</span></div>
     <div class="eq">  <span class="fn">dFunc</span>(List&lt;Double&gt; values)</div>
-    <div class="eq"><span class="cmt">  // Wrapper für EqnData-Aufruf via Reflection</span></div>
+    <div class="eq"><span class="cmt" data-lang="de">  // Wrapper für EqnData-Aufruf via Reflection</span><span class="cmt" data-lang="en">  // Wrapper for EqnData invocation via reflection</span></div>
     <div class="eq"></div>
-    <div class="eq"><span class="hi">Signatur 3 — Partielle Ableitung:</span></div>
+    <div class="eq"><span class="hi" data-lang="de">Signatur 3 — Partielle Ableitung:</span><span class="hi" data-lang="en">Signature 3 — partial derivative:</span></div>
     <div class="eq">  <span class="fn">funcDeriv</span>(variables, values, partial)</div>
-    <div class="eq"><span class="cmt">  // Numerische Ableitung ∂(dFunc)/∂x_partial</span></div>
-    <div class="eq"><span class="cmt">  // Verwendet 5-Punkte-Formel, O(h⁴) Genauigkeit</span></div>
+    <div class="eq"><span class="cmt" data-lang="de">  // Numerische Ableitung ∂(dFunc)/∂x_partial</span><span class="cmt" data-lang="en">  // Numerical derivative ∂(dFunc)/∂x_partial</span></div>
+    <div class="eq"><span class="cmt" data-lang="de">  // Verwendet 5-Punkte-Formel, O(h⁴) Genauigkeit</span><span class="cmt" data-lang="en">  // Uses 5-point formula, O(h⁴) accuracy</span></div>
   </div>
 
-  <div class="note blue">
+  <div class="note blue" data-lang="de">
     <strong>Warum diese Struktur?</strong> Der Solver braucht für jede Gleichung
     zwei Dinge: das Residuum F(x) und die Ableitungen ∂F/∂xᵢ für die Jacobi-Matrix.
     Für Built-in Funktionen kann CASprzak nicht symbolisch differenzieren —
     daher numerische Ableitungen via <code>funcDeriv</code>.
+  </div><div class="note blue" data-lang="en">
+    <strong>Why this structure?</strong> The solver needs two things per
+    equation: the residual F(x) and the derivatives ∂F/∂xᵢ for the Jacobian.
+    For built-in functions, CASprzak cannot differentiate symbolically —
+    hence numerical derivatives via <code>funcDeriv</code>.
   </div>
 
-  <h3>Beispiel — cpOfTNOZ</h3>
-  <pre><span class="cmt">// Residuum: cp - cpOfTNOZ(T, WGR, FAR) = 0</span>
+  <h3 data-lang="de">Beispiel — cpOfTNOZ</h3><h3 data-lang="en">Example — cpOfTNOZ</h3>
+  <pre><span class="cmt" data-lang="de">// Residuum: cp - cpOfTNOZ(T, WGR, FAR) = 0</span><span class="cmt" data-lang="en">// Residual: cp - cpOfTNOZ(T, WGR, FAR) = 0</span>
 <span class="kw">public static double</span> <span class="fn">dCpOfTNOZ</span>(<span class="kw">double</span> cp, <span class="kw">double</span> temp, <span class="kw">double</span> wgr, <span class="kw">double</span> far) {
     <span class="kw">return</span> cp - cpOfTNOZ(temp, wgr, far);
 }
 
-<span class="cmt">// In der CAS-Datei:</span>
+<span class="cmt" data-lang="de">// In der CAS-Datei:</span><span class="cmt" data-lang="en">// In the CAS file:</span>
 <span class="str">CALL(NOZ.CP) = pCPOFTNOZ(NOZ.TT, NOZ.WGR, NOZ.FAR);</span></pre>
 </section>
 
 <!-- Ableitungsmethodik -->
 <section id="ableitung">
-  <h2>Ableitungsmethodik — 5-Punkte-Formel</h2>
+  <h2 data-lang="de">Ableitungsmethodik — 5-Punkte-Formel</h2><h2 data-lang="en">Differentiation — 5-Point Formula</h2>
 
-  <p>
+  <p data-lang="de">
     Alle partiellen Ableitungen der Built-in Funktionen werden <strong>numerisch</strong>
     berechnet — nicht symbolisch wie bei normalen CAS-Gleichungen. Dies ist nötig
     weil die thermodynamischen Polynome zu komplex für automatische Differentiation sind.
+  </p><p data-lang="en">
+    All partial derivatives of built-in functions are computed
+    <strong>numerically</strong> — not symbolically like normal CAS equations.
+    This is necessary because the thermodynamic polynomials are too complex for
+    automatic differentiation.
   </p>
 
   <div class="math-block">
-    <div class="eq"><span class="hi">5-Punkte-Formel (O(h⁴) Genauigkeit):</span></div>
+    <div class="eq"><span class="hi" data-lang="de">5-Punkte-Formel (O(h⁴) Genauigkeit):</span><span class="hi" data-lang="en">5-point formula (O(h⁴) accuracy):</span></div>
     <div class="eq">  df/dx ≈ [f(x−2h) − 8·f(x−h) + 8·f(x+h) − f(x+2h)] / (12h)</div>
     <div class="eq"></div>
-    <div class="eq"><span class="hi">Adaptive Schrittweite:</span></div>
+    <div class="eq"><span class="hi" data-lang="de">Adaptive Schrittweite:</span><span class="hi" data-lang="en">Adaptive step size:</span></div>
     <div class="eq">  h = adaptiveH(x) = max(|x| · 1e-5, 1e-8)</div>
-    <div class="eq"><span class="cmt">  // Relativ zur Variablengröße — vermeidet Auslöschung</span></div>
-    <div class="eq"><span class="cmt">  // Bei x = 200000 Pa: h ≈ 2 Pa  (sinnvolle Schrittweite)</span></div>
-    <div class="eq"><span class="cmt">  // Bei x = 0.001:    h ≈ 1e-8   (absolute Untergrenze)</span></div>
+    <div class="eq"><span class="cmt" data-lang="de">  // Relativ zur Variablengröße — vermeidet Auslöschung</span><span class="cmt" data-lang="en">  // Relative to variable magnitude — avoids cancellation</span></div>
+    <div class="eq"><span class="cmt" data-lang="de">  // Bei x = 200000 Pa: h ≈ 2 Pa  (sinnvolle Schrittweite)</span><span class="cmt" data-lang="en">  // For x = 200000 Pa: h ≈ 2 Pa  (sensible step)</span></div>
+    <div class="eq"><span class="cmt" data-lang="de">  // Bei x = 0.001:    h ≈ 1e-8   (absolute Untergrenze)</span><span class="cmt" data-lang="en">  // For x = 0.001:    h ≈ 1e-8   (absolute lower bound)</span></div>
   </div>
 
-  <div class="note green">
+  <div class="note green" data-lang="de">
     <strong>Genauigkeit:</strong> Die 5-Punkte-Formel hat einen Fehler von O(h⁴) —
     bei h=1e-5·x ist der Ableitungsfehler typisch unter 1e-10 relativ.
     Das ist ausreichend für Newton-Konvergenz bis fsum ~ 1e-9.
+  </div><div class="note green" data-lang="en">
+    <strong>Accuracy:</strong> the 5-point formula has an error of O(h⁴) —
+    at h=1e-5·x the derivative error is typically below 1e-10 relative.
+    Sufficient for Newton convergence down to fsum ~ 1e-9.
   </div>
 
-  <h3>Vergleich: symbolisch vs. numerisch</h3>
+  <h3 data-lang="de">Vergleich: symbolisch vs. numerisch</h3><h3 data-lang="en">Comparison: symbolic vs. numerical</h3>
   <div class="tbl-wrap">
   <table>
-    <thead><tr><th>Aspekt</th><th>Symbolisch (CASprzak)</th><th>Numerisch (BIfunctions)</th></tr></thead>
+    <thead><tr><th data-lang="de">Aspekt</th><th data-lang="en">Aspect</th><th data-lang="de">Symbolisch (CASprzak)</th><th data-lang="en">Symbolic (CASprzak)</th><th data-lang="de">Numerisch (BIfunctions)</th><th data-lang="en">Numerical (BIfunctions)</th></tr></thead>
     <tbody>
-      <tr><td>Genauigkeit</td><td>Exakt (Maschinengenauigkeit)</td><td>O(h⁴) ≈ 1e-15 relativ</td></tr>
-      <tr><td>Geschwindigkeit</td><td>Schnell (direkte Auswertung)</td><td>4 Funktionsauswertungen pro Ableitung</td></tr>
-      <tr><td>Anwendbar auf</td><td>Algebraische Ausdrücke</td><td>Beliebige stetige Funktionen</td></tr>
-      <tr><td>Verwendung in CMDSolver</td><td>Alle normalen Gleichungen</td><td>Nur CALL-Gleichungen (BIfunctions)</td></tr>
+      <tr><td data-lang="de">Genauigkeit</td><td data-lang="en">Accuracy</td><td data-lang="de">Exakt (Maschinengenauigkeit)</td><td data-lang="en">Exact (machine precision)</td><td data-lang="de">O(h⁴) ≈ 1e-15 relativ</td><td data-lang="en">O(h⁴) ≈ 1e-15 relative</td></tr>
+      <tr><td data-lang="de">Geschwindigkeit</td><td data-lang="en">Speed</td><td data-lang="de">Schnell (direkte Auswertung)</td><td data-lang="en">Fast (direct evaluation)</td><td data-lang="de">4 Funktionsauswertungen pro Ableitung</td><td data-lang="en">4 function evaluations per derivative</td></tr>
+      <tr><td data-lang="de">Anwendbar auf</td><td data-lang="en">Applicable to</td><td data-lang="de">Algebraische Ausdrücke</td><td data-lang="en">Algebraic expressions</td><td data-lang="de">Beliebige stetige Funktionen</td><td data-lang="en">Arbitrary continuous functions</td></tr>
+      <tr><td data-lang="de">Verwendung in CMDSolver</td><td data-lang="en">Use in CMDSolver</td><td data-lang="de">Alle normalen Gleichungen</td><td data-lang="en">All ordinary equations</td><td data-lang="de">Nur CALL-Gleichungen (BIfunctions)</td><td data-lang="en">CALL equations only (BIfunctions)</td></tr>
     </tbody>
   </table>
   </div>
@@ -155,284 +464,349 @@
 
 <!-- Schallgeschwindigkeit -->
 <section id="schall">
-  <h2>Schallgeschwindigkeits-Funktionen</h2>
+  <h2 data-lang="de">Schallgeschwindigkeits-Funktionen</h2><h2 data-lang="en">Speed-of-Sound Functions</h2>
 
-  <p>
+  <p data-lang="de">
     Die Schallgeschwindigkeit in Luft/Abgas hängt von Temperatur, Druck und
     Gaszusammensetzung ab. CMDSolver verwendet JANAF-Polynome für die
     thermodynamischen Eigenschaften als Basis.
+  </p><p data-lang="en">
+    The speed of sound in air/exhaust depends on temperature, pressure, and
+    gas composition. CMDSolver uses JANAF polynomials as the basis for
+    thermodynamic properties.
   </p>
 
   <div class="math-block">
-    <div class="eq"><span class="hi">Schallgeschwindigkeit (allgemein):</span></div>
+    <div class="eq"><span class="hi" data-lang="de">Schallgeschwindigkeit (allgemein):</span><span class="hi" data-lang="en">Speed of sound (general):</span></div>
     <div class="eq">  a = √(κ · R · T)</div>
-    <div class="eq"><span class="cmt">  // κ = cp/cv = Isentropenexponent</span></div>
-    <div class="eq"><span class="cmt">  // R = spezifische Gaskonstante [J/kgK]</span></div>
-    <div class="eq"><span class="cmt">  // T = Temperatur [K]</span></div>
+    <div class="eq"><span class="cmt" data-lang="de">  // κ = cp/cv = Isentropenexponent</span><span class="cmt" data-lang="en">  // κ = cp/cv = isentropic exponent</span></div>
+    <div class="eq"><span class="cmt" data-lang="de">  // R = spezifische Gaskonstante [J/kgK]</span><span class="cmt" data-lang="en">  // R = specific gas constant [J/kgK]</span></div>
+    <div class="eq"><span class="cmt" data-lang="de">  // T = Temperatur [K]</span><span class="cmt" data-lang="en">  // T = temperature [K]</span></div>
     <div class="eq"></div>
-    <div class="eq"><span class="hi">JANAF-basierte Berechnung:</span></div>
-    <div class="eq">  cp(T) = Σ aᵢ · Tⁱ   (Polynom in T)</div>
+    <div class="eq"><span class="hi" data-lang="de">JANAF-basierte Berechnung:</span><span class="hi" data-lang="en">JANAF-based computation:</span></div>
+    <div class="eq" data-lang="de">  cp(T) = Σ aᵢ · Tⁱ   (Polynom in T)</div><div class="eq" data-lang="en">  cp(T) = Σ aᵢ · Tⁱ   (polynomial in T)</div>
     <div class="eq">  κ(T) = cp(T) / (cp(T) − R)</div>
-    <div class="eq">  a(T, p, Zusammensetzung) = √(κ · R · T)</div>
+    <div class="eq" data-lang="de">  a(T, p, Zusammensetzung) = √(κ · R · T)</div><div class="eq" data-lang="en">  a(T, p, composition) = √(κ · R · T)</div>
   </div>
 
   <div class="func-card">
     <div class="func-sig">softdryJANAF(soft, temp, pt, fN2, fO2, fAr, fCO2, fNe, fHe, fCH4, fKr, fH2, fN2O, fXe)</div>
-    <div class="func-desc">
+    <div class="func-desc" data-lang="de">
       Schallgeschwindigkeit <strong>trockener Luft</strong> basierend auf JANAF-Thermodynamik.
       Berücksichtigt die vollständige Gaszusammensetzung (N₂, O₂, Ar, CO₂, Ne, He, CH₄, Kr, H₂, N₂O, Xe).
+    </div><div class="func-desc" data-lang="en">
+      Speed of sound for <strong>dry air</strong>, based on JANAF thermodynamics.
+      Accounts for the full gas composition (N₂, O₂, Ar, CO₂, Ne, He, CH₄, Kr, H₂, N₂O, Xe).
     </div>
     <div class="func-args">
-      <div><dt>soft</dt><dd>Ausgabevariable: Schallgeschwindigkeit [m/s]</dd></div>
-      <div><dt>temp</dt><dd>Temperatur [K]</dd></div>
-      <div><dt>pt</dt><dd>Totaldruck [Pa]</dd></div>
-      <div><dt>fN2..fXe</dt><dd>Molenbrüche der Gaskomponenten [−]</dd></div>
+      <div><dt>soft</dt><dd data-lang="de">Ausgabevariable: Schallgeschwindigkeit [m/s]</dd><dd data-lang="en">Output variable: speed of sound [m/s]</dd></div>
+      <div><dt>temp</dt><dd data-lang="de">Temperatur [K]</dd><dd data-lang="en">Temperature [K]</dd></div>
+      <div><dt>pt</dt><dd data-lang="de">Totaldruck [Pa]</dd><dd data-lang="en">Total pressure [Pa]</dd></div>
+      <div><dt>fN2..fXe</dt><dd data-lang="de">Molenbrüche der Gaskomponenten [−]</dd><dd data-lang="en">Mole fractions of gas components [−]</dd></div>
     </div>
   </div>
 
   <div class="func-card">
     <div class="func-sig">softwetJANAF(..., fH2O)</div>
-    <div class="func-desc">
+    <div class="func-desc" data-lang="de">
       Schallgeschwindigkeit <strong>feuchter Luft</strong> — wie softdryJANAF
       plus Wasseranteil fH2O. Relevant für Einlaufbedingungen mit Luftfeuchtigkeit.
+    </div><div class="func-desc" data-lang="en">
+      Speed of sound for <strong>moist air</strong> — like softdryJANAF
+      plus water fraction fH2O. Relevant for inlet conditions with humidity.
     </div>
   </div>
 
   <div class="func-card">
     <div class="func-sig">softhotJANAF(..., fH2O)</div>
-    <div class="func-desc">
+    <div class="func-desc" data-lang="de">
       Schallgeschwindigkeit <strong>heißer Abgase</strong> (nach Verbrennung).
       Verwendet separate JANAF-Koeffizienten für den Hochtemperaturbereich (T > 1000K).
+    </div><div class="func-desc" data-lang="en">
+      Speed of sound for <strong>hot exhaust gases</strong> (post-combustion).
+      Uses separate JANAF coefficients for the high-temperature regime (T > 1000K).
     </div>
   </div>
 </section>
 
 <!-- Enthalpie und cp -->
 <section id="enthalpie">
-  <h2>Enthalpie- und cp-Funktionen</h2>
+  <h2 data-lang="de">Enthalpie- und cp-Funktionen</h2><h2 data-lang="en">Enthalpy and cp Functions</h2>
 
-  <h3>JANAF-Polynome</h3>
-  <p>
+  <h3 data-lang="de">JANAF-Polynome</h3><h3 data-lang="en">JANAF polynomials</h3>
+  <p data-lang="de">
     JANAF (Joint Army-Navy-Air Force) Thermochemische Tabellen liefern
     Polynomkoeffizienten für thermodynamische Eigenschaften von Gasen in
     Abhängigkeit von der Temperatur. CMDSolver verwendet diese für cp(T) und h(T).
+  </p><p data-lang="en">
+    JANAF (Joint Army-Navy-Air Force) Thermochemical Tables provide polynomial
+    coefficients for the temperature-dependent thermodynamic properties of
+    gases. CMDSolver uses these for cp(T) and h(T).
   </p>
 
   <div class="math-block">
-    <div class="eq"><span class="hi">JANAF cp-Polynom:</span></div>
+    <div class="eq"><span class="hi" data-lang="de">JANAF cp-Polynom:</span><span class="hi" data-lang="en">JANAF cp polynomial:</span></div>
     <div class="eq">  cp(T) = R · (a₁ + a₂·T + a₃·T² + a₄·T³ + a₅·T⁴)</div>
     <div class="eq"></div>
-    <div class="eq"><span class="hi">JANAF Enthalpie:</span></div>
+    <div class="eq"><span class="hi" data-lang="de">JANAF Enthalpie:</span><span class="hi" data-lang="en">JANAF enthalpy:</span></div>
     <div class="eq">  h(T) = R · (a₁·T + a₂·T²/2 + a₃·T³/3 + a₄·T⁴/4 + a₅·T⁵/5 + a₆)</div>
-    <div class="eq"><span class="cmt">  // a₆ = Integrationskonstante (Bildungsenthalpie)</span></div>
+    <div class="eq"><span class="cmt" data-lang="de">  // a₆ = Integrationskonstante (Bildungsenthalpie)</span><span class="cmt" data-lang="en">  // a₆ = integration constant (enthalpy of formation)</span></div>
     <div class="eq"></div>
-    <div class="eq"><span class="hi">Gemischung (mehrere Gaskomponenten):</span></div>
-    <div class="eq">  cp_mix(T) = Σᵢ fᵢ · cpᵢ(T)   (massengewichtetes Mittel)</div>
+    <div class="eq"><span class="hi" data-lang="de">Gemischung (mehrere Gaskomponenten):</span><span class="hi" data-lang="en">Mixing (multiple gas components):</span></div>
+    <div class="eq" data-lang="de">  cp_mix(T) = Σᵢ fᵢ · cpᵢ(T)   (massengewichtetes Mittel)</div><div class="eq" data-lang="en">  cp_mix(T) = Σᵢ fᵢ · cpᵢ(T)   (mass-weighted average)</div>
   </div>
 
   <div class="func-card">
     <div class="func-sig">cpofTJANAF(cpoft, temp, fN2, fO2, fAr, fCO2, fNe, fHe, fCH4, fKr, fH2, fN2O, fXe, fH2O)</div>
-    <div class="func-desc">
+    <div class="func-desc" data-lang="de">
       Spezifische Wärmekapazität cp bei gegebener Temperatur und Gaszusammensetzung
       (einschließlich Wasser). JANAF-Polynome, gültig für T = 200K bis 6000K.
+    </div><div class="func-desc" data-lang="en">
+      Specific heat capacity cp for given temperature and gas composition
+      (including water). JANAF polynomials, valid for T = 200K to 6000K.
     </div>
     <div class="func-args">
-      <div><dt>cpoft</dt><dd>Ausgabe: cp [J/kgK]</dd></div>
+      <div><dt>cpoft</dt><dd data-lang="de">Ausgabe: cp [J/kgK]</dd><dd data-lang="en">Output: cp [J/kgK]</dd></div>
       <div><dt>temp</dt><dd>Temperatur [K]</dd></div>
-      <div><dt>fN2..fH2O</dt><dd>Molenbrüche [−]</dd></div>
+      <div><dt>fN2..fH2O</dt><dd data-lang="de">Molenbrüche [−]</dd><dd data-lang="en">Mole fractions [−]</dd></div>
     </div>
   </div>
 
   <div class="func-card">
     <div class="func-sig">CpOfT(temp, wgr, far)</div>
-    <div class="func-desc">
+    <div class="func-desc" data-lang="de">
       cp für Triebwerksanwendungen — vereinfachtes Polynom mit Wassergehalt (wgr)
       und Kraftstoff-Luft-Verhältnis (far). Schneller als vollständiges JANAF,
       optimiert für den Temperaturbereich 200K–1500K.
+    </div><div class="func-desc" data-lang="en">
+      cp for engine applications — simplified polynomial with water content (wgr)
+      and fuel-air ratio (far). Faster than full JANAF, optimized for the
+      temperature range 200K–1500K.
     </div>
     <div class="func-args">
       <div><dt>temp</dt><dd>Temperatur [K]</dd></div>
-      <div><dt>wgr</dt><dd>Water-Gas-Ratio [−]</dd></div>
-      <div><dt>far</dt><dd>Fuel-Air-Ratio [−]</dd></div>
+      <div><dt>wgr</dt><dd data-lang="de">Water-Gas-Ratio [−]</dd><dd data-lang="en">Water-gas ratio [−]</dd></div>
+      <div><dt>far</dt><dd data-lang="de">Fuel-Air-Ratio [−]</dd><dd data-lang="en">Fuel-air ratio [−]</dd></div>
     </div>
   </div>
 
   <div class="func-card">
     <div class="func-sig">CpOfTNOZ(temp, wgr, far)</div>
-    <div class="func-desc">
+    <div class="func-desc" data-lang="de">
       cp für Düsenanwendungen — separates Polynom optimiert für die Bedingungen
       in Schubdüsen (hohe Temperaturen, Verbrennungsprodukte). Unterschiedliche
       Polynomkoeffizienten oberhalb und unterhalb 1000K.
+    </div><div class="func-desc" data-lang="en">
+      cp for nozzle applications — separate polynomial optimized for thrust-nozzle
+      conditions (high temperatures, combustion products). Different polynomial
+      coefficients above and below 1000K.
     </div>
   </div>
 
   <div class="func-card">
     <div class="func-sig">htofTJANAF(htoft, temp, fN2, fO2, ...)</div>
-    <div class="func-desc">
+    <div class="func-desc" data-lang="de">
       Spezifische Enthalpie h(T) für feuchte Luft/Abgasgemisch via JANAF-Integration.
       Referenztemperatur: 0K (absolute Enthalpie).
+    </div><div class="func-desc" data-lang="en">
+      Specific enthalpy h(T) for moist air / exhaust mixture via JANAF integration.
+      Reference temperature: 0K (absolute enthalpy).
     </div>
   </div>
 
   <div class="func-card">
     <div class="func-sig">htwetofT(htevap, temp, fH2O)</div>
-    <div class="func-desc">
+    <div class="func-desc" data-lang="de">
       Enthalpie feuchter Luft einschließlich Verdampfungsenthalpie des Wassers.
       Berücksichtigt den Phasenübergang Wasser ↔ Wasserdampf.
+    </div><div class="func-desc" data-lang="en">
+      Enthalpy of moist air including the enthalpy of vaporization of water.
+      Accounts for the water ↔ water-vapor phase transition.
     </div>
   </div>
 
   <div class="func-card">
     <div class="func-sig">htFuelofTJANAF(htoft, temp, tref, fC, fH)</div>
-    <div class="func-desc">
+    <div class="func-desc" data-lang="de">
       Kraftstoff-Enthalpie als Funktion von Temperatur, Referenztemperatur
       und Kraftstoffzusammensetzung (Kohlenstoff- fC und Wasserstoffanteil fH).
       Basiert auf JANAF-Daten für Kohlenwasserstoffe.
+    </div><div class="func-desc" data-lang="en">
+      Fuel enthalpy as a function of temperature, reference temperature, and
+      fuel composition (carbon fraction fC and hydrogen fraction fH).
+      Based on JANAF data for hydrocarbons.
     </div>
   </div>
 
   <div class="func-card">
     <div class="func-sig">sevapofT(sevap, temp, fH2O)</div>
-    <div class="func-desc">
+    <div class="func-desc" data-lang="de">
       Sättigungsdampfdruck als Funktion von Temperatur und Wasseranteil.
       Verwendet die Antoine-Gleichung für H₂O:
+    </div><div class="func-desc" data-lang="en">
+      Saturation vapor pressure as a function of temperature and water fraction.
+      Uses the Antoine equation for H₂O:
     </div>
     <div class="math-block" style="margin-top:.6rem">
-      <div class="eq">p_sat(T) = exp(A − B/(C + T))   [Antoine-Gleichung]</div>
-      <div class="eq"><span class="cmt">// Koeffizienten A, B, C aus NIST-Datenbank</span></div>
+      <div class="eq" data-lang="de">p_sat(T) = exp(A − B/(C + T))   [Antoine-Gleichung]</div><div class="eq" data-lang="en">p_sat(T) = exp(A − B/(C + T))   [Antoine equation]</div>
+      <div class="eq"><span class="cmt" data-lang="de">// Koeffizienten A, B, C aus NIST-Datenbank</span><span class="cmt" data-lang="en">// Coefficients A, B, C from the NIST database</span></div>
     </div>
   </div>
 </section>
 
 <!-- Atmosphäre -->
 <section id="atmosphaere">
-  <h2>Atmosphärenmodell — ISA</h2>
+  <h2 data-lang="de">Atmosphärenmodell — ISA</h2><h2 data-lang="en">Atmosphere Model — ISA</h2>
 
-  <p>
+  <p data-lang="de">
     Das International Standard Atmosphere (ISA) Modell beschreibt Temperatur
     und Druck als Funktion der Höhe. CMDSolver implementiert das vollständige
     ISA-Modell bis 80km Höhe mit 9 Schichten.
+  </p><p data-lang="en">
+    The International Standard Atmosphere (ISA) model describes temperature
+    and pressure as a function of altitude. CMDSolver implements the full ISA
+    model up to 80 km altitude with 9 layers.
   </p>
 
   <div class="math-block">
-    <div class="eq"><span class="hi">ISA Temperaturprofil (schichtenweise):</span></div>
+    <div class="eq"><span class="hi" data-lang="de">ISA Temperaturprofil (schichtenweise):</span><span class="hi" data-lang="en">ISA temperature profile (layer-wise):</span></div>
     <div class="eq">  T(h) = Tⱼ + βⱼ · (h − hⱼ)   [K]</div>
     <div class="eq"></div>
-    <div class="eq"><span class="hi">ISA Druckprofil:</span></div>
-    <div class="eq">  In Gradientschichten (βⱼ ≠ 0):</div>
+    <div class="eq"><span class="hi" data-lang="de">ISA Druckprofil:</span><span class="hi" data-lang="en">ISA pressure profile:</span></div>
+    <div class="eq" data-lang="de">  In Gradientschichten (βⱼ ≠ 0):</div><div class="eq" data-lang="en">  In gradient layers (βⱼ ≠ 0):</div>
     <div class="eq">    p(h) = pⱼ · (T(h)/Tⱼ)^(−g/(R·βⱼ))</div>
-    <div class="eq">  In Isothermschichten (βⱼ = 0):</div>
+    <div class="eq" data-lang="de">  In Isothermschichten (βⱼ = 0):</div><div class="eq" data-lang="en">  In isothermal layers (βⱼ = 0):</div>
     <div class="eq">    p(h) = pⱼ · exp(−g·(h−hⱼ)/(R·Tⱼ))</div>
     <div class="eq"></div>
-    <div class="eq"><span class="hi">ISA + ΔTISA (Temperaturabweichung vom Standard):</span></div>
+    <div class="eq"><span class="hi" data-lang="de">ISA + ΔTISA (Temperaturabweichung vom Standard):</span><span class="hi" data-lang="en">ISA + ΔTISA (deviation from standard):</span></div>
     <div class="eq">  T_eff(h) = T_ISA(h) + ΔTISA</div>
   </div>
 
   <div class="tbl-wrap">
   <table>
-    <thead><tr><th>Schicht</th><th>Höhe [km]</th><th>β [K/km]</th><th>Bezeichnung</th></tr></thead>
+    <thead><tr><th data-lang="de">Schicht</th><th data-lang="en">Layer</th><th data-lang="de">Höhe [km]</th><th data-lang="en">Altitude [km]</th><th>β [K/km]</th><th data-lang="de">Bezeichnung</th><th data-lang="en">Name</th></tr></thead>
     <tbody>
-      <tr><td>0</td><td>0 – 11</td><td>−6.5</td><td>Troposphäre</td></tr>
-      <tr><td>1</td><td>11 – 20</td><td>0.0</td><td>Untere Stratosphäre (isotherm)</td></tr>
-      <tr><td>2</td><td>20 – 32</td><td>+1.0</td><td>Mittlere Stratosphäre</td></tr>
-      <tr><td>3</td><td>32 – 47</td><td>+2.8</td><td>Obere Stratosphäre</td></tr>
-      <tr><td>4</td><td>47 – 51</td><td>0.0</td><td>Stratopause (isotherm)</td></tr>
-      <tr><td>5</td><td>51 – 71</td><td>−2.8</td><td>Untere Mesosphäre</td></tr>
-      <tr><td>6</td><td>71 – 80</td><td>−2.0</td><td>Obere Mesosphäre</td></tr>
+      <tr><td>0</td><td>0 – 11</td><td>−6.5</td><td data-lang="de">Troposphäre</td><td data-lang="en">Troposphere</td></tr>
+      <tr><td>1</td><td>11 – 20</td><td>0.0</td><td data-lang="de">Untere Stratosphäre (isotherm)</td><td data-lang="en">Lower stratosphere (isothermal)</td></tr>
+      <tr><td>2</td><td>20 – 32</td><td>+1.0</td><td data-lang="de">Mittlere Stratosphäre</td><td data-lang="en">Middle stratosphere</td></tr>
+      <tr><td>3</td><td>32 – 47</td><td>+2.8</td><td data-lang="de">Obere Stratosphäre</td><td data-lang="en">Upper stratosphere</td></tr>
+      <tr><td>4</td><td>47 – 51</td><td>0.0</td><td data-lang="de">Stratopause (isotherm)</td><td data-lang="en">Stratopause (isothermal)</td></tr>
+      <tr><td>5</td><td>51 – 71</td><td>−2.8</td><td data-lang="de">Untere Mesosphäre</td><td data-lang="en">Lower mesosphere</td></tr>
+      <tr><td>6</td><td>71 – 80</td><td>−2.0</td><td data-lang="de">Obere Mesosphäre</td><td data-lang="en">Upper mesosphere</td></tr>
     </tbody>
   </table>
   </div>
 
   <div class="func-card">
     <div class="func-sig">TsofAlt(tsofalt, altitude, dTISA)</div>
-    <div class="func-desc">
+    <div class="func-desc" data-lang="de">
       ISA-Temperatur als Funktion der Höhe. Berücksichtigt alle 9 ISA-Schichten.
+    </div><div class="func-desc" data-lang="en">
+      ISA temperature as a function of altitude. Covers all 9 ISA layers.
     </div>
     <div class="func-args">
-      <div><dt>tsofalt</dt><dd>Ausgabe: Temperatur [K]</dd></div>
-      <div><dt>altitude</dt><dd>Flughöhe [m]</dd></div>
-      <div><dt>dTISA</dt><dd>Temperaturabweichung vom ISA-Standard [K] (0 = ISA-Standard)</dd></div>
+      <div><dt>tsofalt</dt><dd data-lang="de">Ausgabe: Temperatur [K]</dd><dd data-lang="en">Output: temperature [K]</dd></div>
+      <div><dt>altitude</dt><dd data-lang="de">Flughöhe [m]</dd><dd data-lang="en">Flight altitude [m]</dd></div>
+      <div><dt>dTISA</dt><dd data-lang="de">Temperaturabweichung vom ISA-Standard [K] (0 = ISA-Standard)</dd><dd data-lang="en">Temperature offset from ISA standard [K] (0 = ISA standard)</dd></div>
     </div>
   </div>
 
   <div class="func-card">
     <div class="func-sig">psofAlt(psofalt, altitude, dTISA, rgas)</div>
-    <div class="func-desc">
+    <div class="func-desc" data-lang="de">
       ISA-Druck als Funktion der Höhe und Temperaturabweichung.
       Verwendet die barometrische Höhenformel schichtenweise.
+    </div><div class="func-desc" data-lang="en">
+      ISA pressure as a function of altitude and temperature offset.
+      Uses the barometric formula layer by layer.
     </div>
     <div class="func-args">
-      <div><dt>psofalt</dt><dd>Ausgabe: Druck [Pa]</dd></div>
-      <div><dt>altitude</dt><dd>Flughöhe [m]</dd></div>
-      <div><dt>dTISA</dt><dd>Temperaturabweichung [K]</dd></div>
-      <div><dt>rgas</dt><dd>Spezifische Gaskonstante [J/kgK] (Luft: 287.058)</dd></div>
+      <div><dt>psofalt</dt><dd data-lang="de">Ausgabe: Druck [Pa]</dd><dd data-lang="en">Output: pressure [Pa]</dd></div>
+      <div><dt>altitude</dt><dd data-lang="de">Flughöhe [m]</dd><dd data-lang="en">Flight altitude [m]</dd></div>
+      <div><dt>dTISA</dt><dd data-lang="de">Temperaturabweichung [K]</dd><dd data-lang="en">Temperature offset [K]</dd></div>
+      <div><dt>rgas</dt><dd data-lang="de">Spezifische Gaskonstante [J/kgK] (Luft: 287.058)</dd><dd data-lang="en">Specific gas constant [J/kgK] (air: 287.058)</dd></div>
     </div>
   </div>
 
   <div class="func-card">
     <div class="func-sig">relHum(rh, altitude, dTISA)</div>
-    <div class="func-desc">
+    <div class="func-desc" data-lang="de">
       Relative Luftfeuchtigkeit als Funktion der Höhe — standardmäßiges
       Atmosphärenprofil für Feuchtemodelle.
+    </div><div class="func-desc" data-lang="en">
+      Relative humidity as a function of altitude — standard atmospheric
+      profile for humidity models.
     </div>
   </div>
 </section>
 
 <!-- Strömung -->
 <section id="stroemung">
-  <h2>Strömungsmechanische Funktionen</h2>
+  <h2 data-lang="de">Strömungsmechanische Funktionen</h2><h2 data-lang="en">Flow-mechanics Functions</h2>
 
   <div class="func-card">
     <div class="func-sig">MofCondiRatio(m, arat, kappa)</div>
-    <div class="func-desc">
+    <div class="func-desc" data-lang="de">
       Machzahl aus dem Flächenverhältnis A/A* (Kanaldivergenz-Verhältnis).
       Löst die isentrope Durchflussgleichung numerisch.
+    </div><div class="func-desc" data-lang="en">
+      Mach number from the area ratio A/A* (channel divergence ratio).
+      Solves the isentropic flow equation numerically.
     </div>
     <div class="math-block" style="margin-top:.6rem">
-      <div class="eq"><span class="hi">Isentrope Durchflussgleichung:</span></div>
+      <div class="eq"><span class="hi" data-lang="de">Isentrope Durchflussgleichung:</span><span class="hi" data-lang="en">Isentropic flow equation:</span></div>
       <div class="eq">  A/A* = (1/Ma) · [(2/(κ+1)) · (1 + (κ−1)/2 · Ma²)]^((κ+1)/(2(κ−1)))</div>
-      <div class="eq"><span class="cmt">  // Wird nach Ma aufgelöst (numerisch, da transzendent)</span></div>
+      <div class="eq"><span class="cmt" data-lang="de">  // Wird nach Ma aufgelöst (numerisch, da transzendent)</span><span class="cmt" data-lang="en">  // Solved for Ma (numerically, since transcendental)</span></div>
     </div>
     <div class="func-args">
-      <div><dt>m</dt><dd>Ausgabe: Machzahl [−]</dd></div>
-      <div><dt>arat</dt><dd>Flächenverhältnis A/A* [−]</dd></div>
-      <div><dt>kappa</dt><dd>Isentropenexponent κ = cp/cv [−]</dd></div>
+      <div><dt>m</dt><dd data-lang="de">Ausgabe: Machzahl [−]</dd><dd data-lang="en">Output: Mach number [−]</dd></div>
+      <div><dt>arat</dt><dd data-lang="de">Flächenverhältnis A/A* [−]</dd><dd data-lang="en">Area ratio A/A* [−]</dd></div>
+      <div><dt>kappa</dt><dd data-lang="de">Isentropenexponent κ = cp/cv [−]</dd><dd data-lang="en">Isentropic exponent κ = cp/cv [−]</dd></div>
     </div>
   </div>
 
-  <div class="note blue">
+  <div class="note blue" data-lang="de">
     <strong>Bedeutung für Düsenmodelle:</strong> MofCondiRatio ist zentral für
     alle konvergent-divergenten Düsenberechnungen (Laval-Düse). Das Flächenverhältnis
     bestimmt eindeutig die Machzahl — bis auf die Zweideutigkeit subsonic/supersonic
     die durch die Randbedingungen aufgelöst wird.
+  </div><div class="note blue" data-lang="en">
+    <strong>Significance for nozzle models:</strong> MofCondiRatio is central
+    to all convergent-divergent nozzle calculations (Laval nozzle). The area
+    ratio uniquely determines the Mach number — up to the subsonic/supersonic
+    ambiguity, which is resolved by the boundary conditions.
   </div>
 </section>
 
 <!-- CAS-Verwendung -->
 <section id="verwendung">
-  <h2>CAS-Verwendung — PROCEDURE und CALL</h2>
+  <h2 data-lang="de">CAS-Verwendung — PROCEDURE und CALL</h2><h2 data-lang="en">CAS Usage — PROCEDURE and CALL</h2>
 
-  <p>
+  <p data-lang="de">
     Built-in Funktionen werden über das PROCEDURE/CALL-System eingebunden.
     Jede Funktion braucht eine Prozedurendeklaration die den BIfunction-Namen
     mit einer CAS-Prozedur verknüpft.
+  </p><p data-lang="en">
+    Built-in functions are integrated via the PROCEDURE/CALL system. Each
+    function needs a procedure declaration that ties the BIfunction name to a
+    CAS procedure.
   </p>
 
   <div class="tbl-wrap">
   <table>
     <thead>
-      <tr><th>BIfunction</th><th>CALL: Name</th><th>Eingaben</th><th>Ausgabe</th></tr>
+      <tr><th>BIfunction</th><th>CALL: Name</th><th data-lang="de">Eingaben</th><th data-lang="en">Inputs</th><th data-lang="de">Ausgabe</th><th data-lang="en">Output</th></tr>
     </thead>
     <tbody>
       <tr>
         <td><code>softdryJANAF</code></td><td><code>SOFTDRYJANAF</code></td>
         <td>temp, pt, fN2, fO2, fAr, fCO2, fNe, fHe, fCH4, fKr, fH2, fN2O, fXe</td>
-        <td>Schallgeschwindigkeit [m/s]</td>
+        <td data-lang="de">Schallgeschwindigkeit [m/s]</td><td data-lang="en">Speed of sound [m/s]</td>
       </tr>
       <tr>
         <td><code>softwetJANAF</code></td><td><code>SOFTWETJANAF</code></td>
-        <td>wie softdryJANAF + fH2O</td>
-        <td>Schallgeschwindigkeit [m/s]</td>
+        <td data-lang="de">wie softdryJANAF + fH2O</td><td data-lang="en">like softdryJANAF + fH2O</td>
+        <td data-lang="de">Schallgeschwindigkeit [m/s]</td><td data-lang="en">Speed of sound [m/s]</td>
       </tr>
       <tr>
         <td><code>cpofTJANAF</code></td><td><code>CPOFTJANAF</code></td>
@@ -447,7 +821,7 @@
       <tr>
         <td><code>CpOfTNOZ</code></td><td><code>CPOFTNOZ</code></td>
         <td>temp, wgr, far</td>
-        <td>cp Düse [J/kgK]</td>
+        <td data-lang="de">cp Düse [J/kgK]</td><td data-lang="en">cp nozzle [J/kgK]</td>
       </tr>
       <tr>
         <td><code>htofTJANAF</code></td><td><code>HTOFTJANAF</code></td>
@@ -457,17 +831,17 @@
       <tr>
         <td><code>htwetofT</code></td><td><code>HTWETOFT</code></td>
         <td>temp, fH2O</td>
-        <td>h feucht [J/kg]</td>
+        <td data-lang="de">h feucht [J/kg]</td><td data-lang="en">h moist [J/kg]</td>
       </tr>
       <tr>
         <td><code>htFuelofTJANAF</code></td><td><code>HTFUELOFTJANAF</code></td>
         <td>temp, tref, fC, fH</td>
-        <td>h Kraftstoff [J/kg]</td>
+        <td data-lang="de">h Kraftstoff [J/kg]</td><td data-lang="en">h fuel [J/kg]</td>
       </tr>
       <tr>
         <td><code>MofCondiRatio</code></td><td><code>MOFCONDIRATIO</code></td>
         <td>arat, kappa</td>
-        <td>Machzahl [−]</td>
+        <td data-lang="de">Machzahl [−]</td><td data-lang="en">Mach number [−]</td>
       </tr>
       <tr>
         <td><code>TsofAlt</code></td><td><code>TSOFALT</code></td>
@@ -487,21 +861,21 @@
       <tr>
         <td><code>relHum</code></td><td><code>RELHUMFAR25</code></td>
         <td>altitude, dTISA</td>
-        <td>rel. Feuchte [−]</td>
+        <td data-lang="de">rel. Feuchte [−]</td><td data-lang="en">rel. humidity [−]</td>
       </tr>
     </tbody>
   </table>
   </div>
 
-  <h3>Vollständiges Prozedurenbeispiel</h3>
-  <pre><span class="cmt">// Prozedurendeklaration am Dateianfang</span>
+  <h3 data-lang="de">Vollständiges Prozedurenbeispiel</h3><h3 data-lang="en">Complete procedure example</h3>
+  <pre><span class="cmt" data-lang="de">// Prozedurendeklaration am Dateianfang</span><span class="cmt" data-lang="en">// Procedure declaration at file start</span>
 <span class="kw">PROCEDURE</span> pSOFTWETJANAF
 <span class="kw">CALL:</span>    SOFTWETJANAF;
 <span class="kw">INPUTS:</span>  REAL, REAL, REAL, REAL, REAL, REAL, REAL, REAL, REAL, REAL, REAL, REAL, REAL, REAL, REAL;
 <span class="kw">OUTPUTS:</span> REAL;
 <span class="kw">END</span>
 
-<span class="cmt">// Verwendung in Gleichung</span>
+<span class="cmt" data-lang="de">// Verwendung in Gleichung</span><span class="cmt" data-lang="en">// Use in equation</span>
 <span class="kw">CALL</span>(PARTM.F060.SOFT) = pSOFTWETJANAF(
     PARTM.F060.TT, PARTM.F060.PT,
     AMB.FN2, AMB.FO2, AMB.FAR, AMB.FCO2,
@@ -510,22 +884,28 @@
     AMB.FH2O, AMB.FH2O
 );</pre>
 
-  <div class="note amber">
+  <div class="note amber" data-lang="de">
     <strong>Hinweis zur Ableitungsqualität:</strong> Da Built-in Funktionen
     numerisch differenziert werden, können an Unstetigkeitsstellen (z.B.
     ISA-Schichtgrenzen, Phasenübergänge) Ableitungsfehler auftreten.
     Der Newton-Solver kann dort Konvergenzprobleme zeigen — in diesem Fall
     Levenberg-Marquardt oder Homotopie verwenden.
+  </div><div class="note amber" data-lang="en">
+    <strong>Note on derivative quality:</strong> because built-in functions
+    are differentiated numerically, derivative errors can occur at
+    discontinuities (e.g., ISA layer boundaries, phase transitions). The
+    Newton solver may show convergence issues there — in which case use
+    Levenberg-Marquardt or homotopy.
   </div>
 </section>
 
 </main>
 
 <footer>
-  <span>CMDSolver Docs · BIfunctions Referenz · v2.5</span>
+  <span data-lang="de">CMDSolver Docs · BIfunctions Referenz · v2.5</span><span data-lang="en">CMDSolver Docs · BIfunctions Reference · v2.5</span>
   <span>
-    <a href="parser_syntax.html">← Parser Syntax</a> &nbsp;|&nbsp;
-    <a href="index.html">← Übersicht</a>
+    <a href="parser_syntax.html" data-lang="de">← Parser Syntax</a><a href="parser_syntax.html" data-lang="en">← Parser Syntax</a> &nbsp;|&nbsp;
+    <a href="index.html" data-lang="de">← Übersicht</a><a href="index.html" data-lang="en">← Overview</a>
   </span>
 </footer>
 </body>

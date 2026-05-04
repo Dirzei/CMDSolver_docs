@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CMDSolver Docs — Batch-Modus & Parameterstudien</title>
+<style>
+/* CMDSolver Documentation — Shared Stylesheet */
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;1,400&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap');
+
+:root {
+  --bg:      #0d0f12;
+  --bg2:     #13161b;
+  --bg3:     #1a1e25;
+  --bg4:     #20252f;
+  --border:  #252a33;
+  --border2: #2e3540;
+  --text:    #c8cdd6;
+  --text2:   #7a8496;
+  --text3:   #4a5568;
+  --accent:  #4a9eff;
+  --ok:      #3ecf8e;
+  --warn:    #f0a030;
+  --err:     #ff5c5c;
+  --purple:  #a78bfa;
+  --teal:    #2dd4bf;
+  --mono:    'IBM Plex Mono', monospace;
+  --sans:    'IBM Plex Sans', sans-serif;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: var(--sans);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 13.5px;
+  line-height: 1.75;
+}
+
+/* ── Header ── */
+.doc-header {
+  border-bottom: 1px solid var(--border);
+  padding: 1.2rem 3rem;
+  display: flex; align-items: center;
+  justify-content: space-between; flex-wrap: wrap; gap: 1rem;
+}
+
+.breadcrumb {
+  font-family: var(--mono); font-size: 11px; color: var(--text3);
+  letter-spacing: .08em; text-transform: uppercase;
+  display: flex; align-items: center; gap: .5rem;
+}
+.breadcrumb a { color: var(--accent); text-decoration: none; }
+.breadcrumb span { color: var(--text3); }
+
+.doc-badge {
+  font-family: var(--mono); font-size: 11px;
+  padding: 3px 10px; border-radius: 4px;
+}
+.doc-badge.solver {
+  background: rgba(74,158,255,.1); border: 1px solid rgba(74,158,255,.25);
+  color: var(--accent);
+}
+.doc-badge.overview {
+  background: rgba(167,139,250,.1); border: 1px solid rgba(167,139,250,.25);
+  color: var(--purple);
+}
+.doc-badge.comparison {
+  background: rgba(62,207,142,.1); border: 1px solid rgba(62,207,142,.25);
+  color: var(--ok);
+}
+
+/* ── Hero ── */
+.hero {
+  padding: 2.5rem 3rem 2rem;
+  border-bottom: 1px solid var(--border);
+  background: linear-gradient(135deg, var(--bg) 0%, #0f1520 100%);
+}
+.hero-sub {
+  font-family: var(--mono); font-size: 11px; color: var(--text3);
+  letter-spacing: .15em; text-transform: uppercase; margin-bottom: .5rem;
+}
+h1 {
+  font-size: 28px; font-weight: 600; color: #e8ecf4;
+  letter-spacing: -.03em; margin-bottom: .5rem; line-height: 1.2;
+}
+.tagline {
+  font-size: 14px; color: var(--text2); margin-bottom: 1.5rem;
+  max-width: 680px;
+}
+.hero-stats { display: flex; gap: 2rem; flex-wrap: wrap; }
+.stat { display: flex; flex-direction: column; gap: .2rem; }
+.stat-val {
+  font-family: var(--mono); font-size: 18px; font-weight: 500; color: var(--ok);
+}
+.stat-lbl {
+  font-size: 11px; color: var(--text3);
+  text-transform: uppercase; letter-spacing: .08em;
+}
+
+/* ── Nav ── */
+nav {
+  position: sticky; top: 0; z-index: 10;
+  background: rgba(13,15,18,.95); backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--border);
+  padding: .6rem 3rem;
+  display: flex; gap: 1.5rem; flex-wrap: wrap;
+}
+nav a {
+  font-family: var(--mono); font-size: 11px; color: var(--text3);
+  text-decoration: none; letter-spacing: .08em;
+  text-transform: uppercase; transition: color .15s;
+}
+nav a:hover { color: var(--accent); }
+
+/* ── Main ── */
+main { padding: 2rem 3rem 4rem; max-width: 1040px; }
+
+section { margin-bottom: 3.5rem; scroll-margin-top: 3rem; }
+
+section > h2 {
+  font-size: 12px; font-family: var(--mono);
+  letter-spacing: .12em; text-transform: uppercase;
+  color: var(--text3); margin-bottom: 1.4rem;
+  padding-bottom: .5rem; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: .6rem;
+}
+section > h2::before {
+  content: ''; display: inline-block;
+  width: 8px; height: 8px; border-radius: 50%; background: var(--accent);
+}
+
+h3 { font-size: 14px; font-weight: 500; color: #e8ecf4; margin: 1.6rem 0 .6rem; }
+h4 { font-size: 13px; font-weight: 500; color: var(--text2); margin: 1.2rem 0 .4rem; }
+
+p { color: var(--text); margin-bottom: .9rem; max-width: 780px; }
+
+/* ── Math ── */
+.math-block {
+  background: var(--bg3); border: 1px solid var(--border);
+  border-left: 3px solid var(--purple);
+  border-radius: 6px; padding: 1.2rem 1.5rem;
+  margin: 1rem 0 1.2rem; font-family: var(--mono);
+  font-size: 13px; line-height: 2.1; white-space: pre;
+}
+.math-block .eq  { color: #e8ecf4; }
+.math-block .cmt { color: var(--text3); font-style: italic; }
+.math-block .hi  { color: var(--teal); }
+.math-block .hi2 { color: var(--warn); }
+
+/* ── Notes ── */
+.note {
+  border-radius: 6px; padding: .85rem 1.1rem;
+  font-size: 13px; line-height: 1.7; margin-bottom: 1.2rem;
+}
+.note.blue   { background: rgba(74,158,255,.06);  border-left: 3px solid var(--accent); }
+.note.green  { background: rgba(62,207,142,.06);  border-left: 3px solid var(--ok); }
+.note.amber  { background: rgba(240,160,48,.06);  border-left: 3px solid var(--warn); }
+.note.red    { background: rgba(255,92,92,.06);   border-left: 3px solid var(--err); }
+.note.purple { background: rgba(167,139,250,.06); border-left: 3px solid var(--purple); }
+.note strong { color: #e8ecf4; }
+
+/* ── Code ── */
+code {
+  font-family: var(--mono); font-size: 11.5px;
+  background: rgba(255,255,255,.05); padding: 1px 5px;
+  border-radius: 3px; color: #a8c8f0;
+}
+pre {
+  font-family: var(--mono); font-size: 12px;
+  background: var(--bg3); border: 1px solid var(--border);
+  border-radius: 8px; padding: 1rem 1.2rem;
+  overflow-x: auto; line-height: 1.7; margin-bottom: 1rem; color: #c8cdd6;
+}
+.kw  { color: var(--purple); }
+.cmt { color: var(--text3); font-style: italic; }
+.fn  { color: var(--teal); }
+.num { color: var(--warn); }
+.str { color: var(--ok); }
+
+/* ── Tables ── */
+.tbl-wrap {
+  overflow-x: auto; border-radius: 8px;
+  border: 1px solid var(--border); margin-bottom: 1.5rem;
+}
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+thead th {
+  background: var(--bg3); padding: 9px 14px; text-align: left;
+  font-weight: 500; font-size: 11px; letter-spacing: .06em;
+  text-transform: uppercase; color: var(--text2);
+  border-bottom: 1px solid var(--border2); white-space: nowrap;
+}
+tbody tr { border-bottom: 1px solid var(--border); transition: background .1s; }
+tbody tr:last-child { border-bottom: none; }
+tbody tr:hover { background: var(--bg3); }
+td { padding: 9px 14px; vertical-align: top; line-height: 1.6; }
+td.center { text-align: center; }
+
+/* ── Badges ── */
+.badge {
+  display: inline-block; font-size: 11px; padding: 2px 9px;
+  border-radius: 12px; font-family: var(--mono); white-space: nowrap;
+}
+.b-ok   { background: rgba(62,207,142,.1);  color: var(--ok);     border: 1px solid rgba(62,207,142,.25); }
+.b-warn { background: rgba(240,160,48,.1);  color: var(--warn);   border: 1px solid rgba(240,160,48,.25); }
+.b-err  { background: rgba(255,92,92,.1);   color: var(--err);    border: 1px solid rgba(255,92,92,.25); }
+.b-info { background: rgba(74,158,255,.1);  color: var(--accent); border: 1px solid rgba(74,158,255,.25); }
+.b-na   { background: rgba(74,84,96,.1);    color: var(--text3);  border: 1px solid var(--border2); }
+
+/* ── Star rating ── */
+.stars { color: var(--warn); letter-spacing: -.05em; }
+.stars.dim { color: var(--border2); }
+
+/* ── File list ── */
+.file-list { list-style: none; }
+.file-list li {
+  display: flex; gap: 1rem; align-items: flex-start;
+  padding: .7rem 1rem; background: var(--bg2);
+  border: 1px solid var(--border); border-radius: 4px; margin-bottom: .4rem;
+}
+.file-icon {
+  font-family: var(--mono); font-size: 11px; color: var(--accent);
+  white-space: nowrap; margin-top: 2px; min-width: 50px;
+}
+.file-desc { font-size: 13px; color: var(--text2); }
+.file-desc strong { color: var(--text); display: block; margin-bottom: .2rem; }
+
+/* ── Flowchart ── */
+.flowchart {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 10px; padding: 1.5rem; margin: 1rem 0 1.5rem;
+  overflow-x: auto;
+}
+
+/* ── Footer ── */
+footer {
+  border-top: 1px solid var(--border); padding: 1.5rem 3rem;
+  font-family: var(--mono); font-size: 11px; color: var(--text3);
+  display: flex; justify-content: space-between; flex-wrap: wrap; gap: .5rem;
+}
+footer a { color: var(--accent); text-decoration: none; }
+
+/* ── Footnotes ── */
+.footnotes {
+  margin-top: 2rem; padding-top: 1.5rem;
+  border-top: 1px solid var(--border);
+  font-size: 12px; color: var(--text2);
+}
+.footnotes p { max-width: none; margin-bottom: .5rem; }
+sup { font-size: 10px; color: var(--accent); }
+
+/* Default: alle Sprachelemente sichtbar (kein JS-Flash) */
+/* Mit lang-Klasse auf body: nur die aktive Sprache sichtbar */
+
+/* Nur wenn body eine Sprachklasse hat, werden Elemente ausgeblendet */
+/* Sprach-Sichtbarkeit via class auf body */
+
+/* ── Flowchart (Batch-Mode Datenfluss CAS → CSV → OUT) ── */
+.flow-grid {
+  display: flex; align-items: center; justify-content: center;
+  gap: 1rem; flex-wrap: wrap; margin: 1.5rem 0 2rem;
+  padding: 1.5rem; background: var(--bg2);
+  border: 1px solid var(--border); border-radius: 10px;
+}
+.flow-card {
+  display: flex; flex-direction: column; align-items: center;
+  gap: .5rem; padding: 1rem 1.2rem; min-width: 130px;
+  background: var(--bg3); border: 1px solid var(--border2);
+  border-radius: 8px; text-align: center;
+}
+.fc-num {
+  font-family: var(--mono); font-size: 13px; font-weight: 600;
+  color: var(--accent); padding: 4px 10px; border-radius: 4px;
+  background: rgba(74,158,255,.1); border: 1px solid rgba(74,158,255,.25);
+  letter-spacing: .04em;
+}
+.fc-label {
+  font-size: 12px; color: var(--text2); line-height: 1.5;
+}
+.flow-arrow {
+  font-family: var(--mono); font-size: 22px; color: var(--text3);
+  font-weight: 300;
+}
+</style>
+<link rel="stylesheet" href="i18n.css">
+</head>
+<body>
+<script>
+(function(){
+  var stored = '';
+  try { stored = localStorage.getItem('cmdlang') || ''; } catch(e){}
+  var lang = stored || 'de';
+
+  function apply(l) {
+    lang = l;
+    try { localStorage.setItem('cmdlang', l); } catch(e){}
+    document.documentElement.lang = l;
+    var body = document.body;
+    body.classList.remove('lang-de','lang-en');
+    body.classList.add('lang-' + l);
+    document.querySelectorAll('.lang-btn').forEach(function(b){
+      b.classList.toggle('active', b.dataset.lang === l);
+    });
+  }
+
+  // Body-Klasse sofort setzen, damit data-lang-Elemente direkt korrekt
+  // sichtbar sind (kein Flash mit unsichtbarem Header-Inhalt).
+  apply(lang);
+  document.addEventListener('DOMContentLoaded', function(){
+    apply(lang); // erneut, damit jetzt auch die Buttons gestyled werden
+    document.querySelectorAll('.lang-btn').forEach(function(b){
+      b.addEventListener('click', function(){ apply(b.dataset.lang); });
+    });
+    // Sticky-Header Schatten via IntersectionObserver
+    var sentinel = document.querySelector('.header-sentinel');
+    var header   = document.querySelector('.doc-header');
+    if (sentinel && header && 'IntersectionObserver' in window) {
+      new IntersectionObserver(function(entries){
+        header.classList.toggle('scrolled', !entries[0].isIntersecting);
+      }).observe(sentinel);
+    }
+  });
+})();
+</script>
+
+
+
+
+<div class="header-sentinel"></div>
+<div class="doc-header">
+  <div class="breadcrumb">
+    <a href="index.html">CMDSolver Docs</a>
+    ›
+  </div>
+  <div class="doc-header-right"><div class="lang-switch"><button class="lang-btn" data-lang="de">DE</button><button class="lang-btn" data-lang="en">EN</button></div><span class="doc-badge overview">Referenz</span></div></div>
+
+<div class="hero">
+  <div class="hero-sub"><span data-lang="de">BatchRunner</span><span data-lang="en">BatchRunner</span></div>
+  <h1 data-lang="de">Batch-Modus &<br>Parameterstudien</h1><h1 data-lang="en">Batch Mode &<br>Parameter Studies</h1>
+  <p class="tagline" data-lang="de">Automatisiertes Lösen von N Betriebspunkten aus einer CSV-Datei — mit Warm-Start, Konvergenzprotokoll und strukturierter Ausgabe.</p>
+  <p class="tagline" data-lang="en">Automated solving of N operating points from a CSV file — with warm-start, convergence log, and structured output.</p>
+  </div>
+
+<nav>
+  <a href="#overview" data-lang="de">Überblick</a><a href="#overview" data-lang="en">Overview</a>
+  <a href="#input" data-lang="de">Eingabe-CSV</a><a href="#input" data-lang="en">Input CSV</a>
+  <a href="#output" data-lang="de">Ausgabe-CSV</a><a href="#output" data-lang="en">Output CSV</a>
+  <a href="#warmstart" data-lang="de">Warm-Start</a><a href="#warmstart" data-lang="en">Warm-Start</a>
+  <a href="#jumpdetect" data-lang="de">Sprung-Erkennung</a><a href="#jumpdetect" data-lang="en">Jump Detection</a>
+  <a href="#usage" data-lang="de">Verwendung</a><a href="#usage" data-lang="en">Usage</a>
+  <a href="#uformat" data-lang="de">-U: Format</a><a href="#uformat" data-lang="en">-U: Format</a>
+  <a href="#tips" data-lang="de">Hinweise</a><a href="#tips" data-lang="en">Tips</a>
+</nav>
+
+<main>
+
+<!-- Überblick -->
+<section id="overview">
+  <h2 data-lang="de">Überblick</h2><h2 data-lang="en">Overview</h2>
+
+  <p data-lang="de">Der Batch-Modus löst dasselbe Gleichungssystem (CAS-Datei) für viele
+  verschiedene Betriebspunkte. Jeder Betriebspunkt definiert neue Werte für
+  ausgewählte fixierte Eingabevariablen — alle freien Variablen werden vom
+  Solver berechnet.</p><p data-lang="en">Batch mode solves the same equation system (CAS file) for many different
+  operating points. Each operating point defines new values for selected fixed
+  input variables — all free variables are computed by the solver.</p>
+
+  <div class="flow-grid">
+    <div class="flow-card">
+      <span class="fc-num">CAS</span>
+      <span class="fc-label" data-lang="de">Gleichungssystem<br>(unverändert für alle Runs)</span><span class="fc-label" data-lang="en">Equation system<br>(same for all runs)</span>
+    </div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-card">
+      <span class="fc-num">CSV</span>
+      <span class="fc-label" data-lang="de">Betriebspunkte<br>(N Zeilen = N Runs)</span><span class="fc-label" data-lang="en">Operating points<br>(N rows = N runs)</span>
+    </div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-card">
+      <span class="fc-num">OUT</span>
+      <span class="fc-label" data-lang="de">result_batch.csv<br>(alle Ergebnisse)</span><span class="fc-label" data-lang="en">result_batch.csv<br>(all results)</span>
+    </div>
+  </div>
+
+  <p data-lang="de">BatchRunner wird automatisch aktiviert wenn die <code>-I:</code>-Datei
+  die Endung <code>.csv</code> hat. Die zugehörige CAS-Datei muss im selben
+  Verzeichnis liegen und denselben Dateinamen haben:</p><p data-lang="en">BatchRunner is activated automatically when the <code>-I:</code> file has
+  the <code>.csv</code> extension. The matching CAS file must be in the same
+  directory and share the same filename:</p>
+
+  <pre><span data-lang="de">parameterstudie.csv    ← Eingabe: -I:parameterstudie.csv
+parameterstudie.cas    ← Gleichungssystem (automatisch gesucht, gleicher Name)</span><span data-lang="en">parameterstudie.csv    ← Input: -I:parameterstudie.csv
+parameterstudie.cas    ← Equation system (auto-located, same name)</span></pre>
+
+  <div class="note blue" data-lang="de">
+    <strong>Abgrenzung der Flags:</strong>
+    <code>-I:</code> bestimmt immer die Haupteingabedatei — <code>.cas</code> für Single-Run,
+    <code>.csv</code> für Batch-Modus.<br>
+    <code>-U:</code> ist für Variablen-Overrides (Einzelpunkte, Key:Value Format).<br>
+    <code>-C:</code> gibt die CAS-Basisdatei explizit an wenn sie nicht denselben Namen wie die CSV hat.
+  </div><div class="note blue" data-lang="en">
+    <strong>Flag boundaries:</strong>
+    <code>-I:</code> always denotes the main input file — <code>.cas</code> for single run,
+    <code>.csv</code> for batch mode.<br>
+    <code>-U:</code> is for variable overrides (single point, Key:Value format).<br>
+    <code>-C:</code> explicitly specifies the CAS base file when it does not share the CSV's name.
+  </div>
+</section>
+
+<!-- Eingabe-CSV -->
+<section id="input">
+  <h2 data-lang="de">Eingabe-CSV — Format</h2><h2 data-lang="en">Input CSV — Format</h2>
+
+  <h3 data-lang="de">Struktur</h3><h3 data-lang="en">Structure</h3>
+  <pre data-lang="de"># Kommentarzeilen beginnen mit # oder // — werden ignoriert
+# Leerzeilen werden ebenfalls ignoriert
+#
+# Erste Nicht-Kommentar-Zeile: Header mit Variablennamen
+VARNAME1, VARNAME2, VARNAME3
+# Danach: eine Zeile pro Betriebspunkt (Datenzeilen)
+289.83, 196273.07, 98136.5
+295.00, 200000.00, 98136.5
+300.00, 210000.00, 95000.0</pre><pre data-lang="en"># Comment lines start with # or // — they are ignored
+# Blank lines are also ignored
+#
+# First non-comment line: header with variable names
+VARNAME1, VARNAME2, VARNAME3
+# Then: one line per operating point (data rows)
+289.83, 196273.07, 98136.5
+295.00, 200000.00, 98136.5
+300.00, 210000.00, 95000.0</pre>
+
+  <h3 data-lang="de">Regeln</h3><h3 data-lang="en">Rules</h3>
+
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th data-lang="de">Regel</th><th data-lang="en">Rule</th><th data-lang="de">Details</th><th data-lang="en">Details</th></tr></thead>
+    <tbody>
+      <tr>
+        <td data-lang="de">Trennzeichen</td><td data-lang="en">Separator</td>
+        <td data-lang="de">Komma <code>,</code> — Leerzeichen vor/nach dem Komma werden ignoriert</td><td data-lang="en">Comma <code>,</code> — whitespace before/after the comma is ignored</td>
+      </tr>
+      <tr>
+        <td data-lang="de">Header-Zeile</td><td data-lang="en">Header line</td>
+        <td data-lang="de">Erste Nicht-Kommentar-Zeile. Enthält die Variablennamen genau so wie
+            sie in der CAS-Datei deklariert sind (Groß-/Kleinschreibung egal).</td><td data-lang="en">First non-comment line. Contains the variable names exactly as declared
+            in the CAS file (case-insensitive).</td>
+      </tr>
+      <tr>
+        <td data-lang="de">Variablentyp</td><td data-lang="en">Variable type</td>
+        <td data-lang="de">Nur <strong>fixierte Variablen</strong> (Spec: Fixed) können als
+            Eingabe gesetzt werden. Freie Variablen werden vom Solver berechnet
+            und können nicht als CSV-Input verwendet werden.</td><td data-lang="en">Only <strong>fixed variables</strong> (Spec: Fixed) can be set as
+            input. Free variables are computed by the solver and cannot be used
+            as CSV input.</td>
+      </tr>
+      <tr>
+        <td data-lang="de">Anzahl Spalten</td><td data-lang="en">Number of columns</td>
+        <td data-lang="de">Jede Datenzeile muss exakt so viele Werte haben wie der Header Spalten.
+            Zeilen mit falscher Spaltenanzahl werden mit WARNING übersprungen.</td><td data-lang="en">Every data row must contain exactly as many values as the header has
+            columns. Rows with mismatched column counts are skipped with a WARNING.</td>
+      </tr>
+      <tr>
+        <td data-lang="de">Zahlenwerte</td><td data-lang="en">Numeric values</td>
+        <td data-lang="de">Nur numerische Werte — keine Einheiten, keine Strings. Exponentialnotation
+            wie <code>1.96e+05</code> ist erlaubt.</td><td data-lang="en">Numeric values only — no units, no strings. Exponential notation such
+            as <code>1.96e+05</code> is allowed.</td>
+      </tr>
+      <tr>
+        <td data-lang="de">Kommentare</td><td data-lang="en">Comments</td>
+        <td data-lang="de"><code>#</code> oder <code>//</code> am Zeilenanfang — auch zwischen Datenzeilen</td><td data-lang="en"><code>#</code> or <code>//</code> at line start — also between data rows</td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3 data-lang="de">Konkretes Beispiel</h3><h3 data-lang="en">Concrete example</h3>
+  <pre data-lang="de"># NozzleSystem Parameterstudie — Einlassbedingungen
+# Variablen: Totaltemperatur, Totaldruck, Umgebungsdruck
+#
+# PARTM.F060.TT  PARTM.F060.PT   AMB.PS
+  PARTM.F060.TT, PARTM.F060.PT,  AMB.PS
+  289.83,        196273.07,       98136.5
+  295.00,        200000.00,       98136.5
+  300.00,        210000.00,       95000.0
+  310.00,        220000.00,       95000.0
+  320.00,        230000.00,       90000.0</pre><pre data-lang="en"># NozzleSystem parameter study — inlet conditions
+# Variables: total temperature, total pressure, ambient pressure
+#
+# PARTM.F060.TT  PARTM.F060.PT   AMB.PS
+  PARTM.F060.TT, PARTM.F060.PT,  AMB.PS
+  289.83,        196273.07,       98136.5
+  295.00,        200000.00,       98136.5
+  300.00,        210000.00,       95000.0
+  310.00,        220000.00,       95000.0
+  320.00,        230000.00,       90000.0</pre>
+
+  <div class="note blue" data-lang="de">
+    <strong>Variablennamen prüfen:</strong> Wenn ein Variablenname im Header
+    nicht in der CAS-Datei gefunden wird, bricht BatchRunner mit einem Fehler ab.
+    Exakte Schreibweise aus der CAS-Datei verwenden (Punkte, Leerzeichen, Indizes).
+  </div><div class="note blue" data-lang="en">
+    <strong>Check variable names:</strong> if a variable name in the header is
+    not found in the CAS file, BatchRunner aborts with an error. Use the exact
+    spelling from the CAS file (dots, spaces, indices).
+  </div>
+
+  <div class="note amber" data-lang="de">
+    <strong>Nur Fixed-Variablen als Input:</strong> Die CSV-Eingabe überschreibt
+    die <code>Value</code>-Felder der angegebenen Variablen für jeden Run.
+    Variablen die in der CAS-Datei als <code>Spec: Free</code> deklariert sind
+    können nicht als CSV-Input verwendet werden — BatchRunner meldet dies als Fehler.
+  </div><div class="note amber" data-lang="en">
+    <strong>Only fixed variables as input:</strong> CSV input overwrites the
+    <code>Value</code> field of the listed variables for every run. Variables
+    declared as <code>Spec: Free</code> in the CAS file cannot be used as CSV
+    input — BatchRunner reports this as an error.
+  </div>
+</section>
+
+<!-- Ausgabe-CSV -->
+<section id="output">
+  <h2 data-lang="de">Ausgabe-CSV — Format</h2><h2 data-lang="en">Output CSV — Format</h2>
+
+  <p data-lang="de">BatchRunner schreibt die Ergebnisse in <code>result_batch.csv</code>
+  im aktuellen Arbeitsverzeichnis. Die Datei enthält:</p><p data-lang="en">BatchRunner writes the results to <code>result_batch.csv</code> in the
+  current working directory. The file contains:</p>
+
+  <pre data-lang="de">RUN, STATUS, ITER, FSUM, [Input-Variablen...], [freie Variablen...]</pre><pre data-lang="en">RUN, STATUS, ITER, FSUM, [input variables...], [free variables...]</pre>
+
+  <h3 data-lang="de">Spalten</h3><h3 data-lang="en">Columns</h3>
+
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th data-lang="de">Spalte</th><th data-lang="en">Column</th><th data-lang="de">Typ</th><th data-lang="en">Type</th><th data-lang="de">Beschreibung</th><th data-lang="en">Description</th></tr></thead>
+    <tbody>
+      <tr><td>RUN</td><td>Meta</td><td data-lang="de">Laufende Nummer des Betriebspunkts (1-basiert)</td><td data-lang="en">Sequential number of the operating point (1-based)</td></tr>
+      <tr><td>STATUS</td><td>Meta</td><td data-lang="de"><code>CONVERGED</code> oder <code>FAILED</code></td><td data-lang="en"><code>CONVERGED</code> or <code>FAILED</code></td></tr>
+      <tr><td>ITER</td><td>Meta</td><td data-lang="de">Anzahl Solver-Iterationen</td><td data-lang="en">Number of solver iterations</td></tr>
+      <tr><td>FSUM</td><td>Meta</td><td data-lang="de">Finales Residuum ||F(x)||</td><td data-lang="en">Final residual ||F(x)||</td></tr>
+      <tr><td data-lang="de">Input-Variablen</td><td data-lang="en">Input variables</td><td>Input</td><td data-lang="de">Werte aus der Eingabe-CSV (unverändert)</td><td data-lang="en">Values from the input CSV (unchanged)</td></tr>
+      <tr><td data-lang="de">Freie Variablen</td><td data-lang="en">Free variables</td><td>Output</td><td data-lang="de">Vom Solver berechnete Werte</td><td data-lang="en">Values computed by the solver</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3 data-lang="de">Beispielausgabe</h3><h3 data-lang="en">Example output</h3>
+  <pre>RUN, STATUS,       ITER,      FSUM, PARTM.F060.TT, PARTM.F060.PT, AMB.PS, PARTM.F060.MA, ...
+  1, CONVERGED,      12,  2.3e-09,        289.83,     196273.07, 98136.5,        0.4831, ...
+  2, CONVERGED,       9,  1.1e-09,        295.00,     200000.00, 98136.5,        0.4912, ...
+  3, FAILED,        100,  4.2e+03,        300.00,     210000.00, 95000.0,            NaN, ...</pre>
+
+  <div class="note blue" data-lang="de">
+    <strong>-BA Flag:</strong> Mit <code>-BA</code> werden auch fixierte Variablen
+    in die Ausgabe geschrieben — nicht nur freie. Nützlich wenn man alle Größen
+    des Modells in einer Datei haben möchte.
+  </div><div class="note blue" data-lang="en">
+    <strong>-BA flag:</strong> with <code>-BA</code>, fixed variables are
+    written to the output as well — not just free ones. Useful when you want
+    every model quantity in a single file.
+  </div>
+</section>
+
+<!-- Warm-Start -->
+<section id="warmstart">
+  <h2 data-lang="de">Warm-Start</h2><h2 data-lang="en">Warm-Start</h2>
+
+  <p data-lang="de">BatchRunner verwendet automatisch den Lösungsvektor des vorherigen
+  erfolgreichen Runs als Startvektor für den nächsten Run. Das ist der
+  größte Performancevorteil des Batch-Modus:</p><p data-lang="en">BatchRunner automatically uses the solution vector of the previous
+  successful run as the starting vector for the next run. This is the biggest
+  performance benefit of batch mode:</p>
+
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th data-lang="de">Situation</th><th data-lang="en">Situation</th><th data-lang="de">Startvektor für Run N</th><th data-lang="en">Starting vector for run N</th></tr></thead>
+    <tbody>
+      <tr>
+        <td data-lang="de">Run 1 (erster Run)</td><td data-lang="en">Run 1 (first run)</td>
+        <td data-lang="de">Startwerte aus der CAS-Datei (<code>Value</code>-Felder)</td><td data-lang="en">Starting values from the CAS file (<code>Value</code> fields)</td>
+      </tr>
+      <tr>
+        <td data-lang="de">Run N, vorheriger Run konvergiert</td><td data-lang="en">Run N, previous run converged</td>
+        <td data-lang="de">Lösung von Run N-1 — <strong>Warm-Start</strong></td><td data-lang="en">Solution of run N-1 — <strong>warm-start</strong></td>
+      </tr>
+      <tr>
+        <td data-lang="de">Run N, vorheriger Run nicht konvergiert</td><td data-lang="en">Run N, previous run did not converge</td>
+        <td data-lang="de">Letzter konvergierter Zustand oder CAS-Startwerte</td><td data-lang="en">Last converged state or CAS starting values</td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="note green" data-lang="de">
+    <strong>Vorteil:</strong> Bei nahe beieinanderliegenden Betriebspunkten
+    (z.B. Kennfeldberechnung in kleinen Schritten) konvergiert der Solver
+    typisch in 2-4 Iterationen statt 10-15. Das reduziert die Gesamtlaufzeit
+    einer Parameterstudie um Faktor 3-5.
+  </div><div class="note green" data-lang="en">
+    <strong>Advantage:</strong> for closely spaced operating points (e.g.,
+    map computation in small steps), the solver typically converges in 2–4
+    iterations instead of 10–15. This reduces the total runtime of a parameter
+    study by a factor of 3–5.
+  </div>
+  <div class="note amber" data-lang="de">
+    <strong>Hinweis:</strong> Wenn die Betriebspunkte in der CSV-Datei weit
+    auseinander liegen, kann der Warm-Start den Solver fehlleiten. In diesem
+    Fall ist es besser die Betriebspunkte nach Ähnlichkeit zu sortieren oder
+    ohne Warm-Start zu arbeiten.
+  </div><div class="note amber" data-lang="en">
+    <strong>Note:</strong> when the operating points in the CSV are far apart,
+    the warm-start can mislead the solver. In that case it is better to sort
+    the operating points by similarity or to work without warm-start.
+  </div>
+</section>
+
+<!-- Verwendung -->
+<section id="usage">
+  <h2 data-lang="de">Verwendung — CLI</h2><h2 data-lang="en">Usage — CLI</h2>
+
+  <h3 data-lang="de">Minimaler Aufruf</h3><h3 data-lang="en">Minimal invocation</h3>
+  <pre>java -cp CMDSolver.jar cmd.CASSolver -I:parameterstudie.csv</pre>
+  <p data-lang="de">Liest <code>parameterstudie.cas</code> aus demselben Verzeichnis.
+  Ergebnis: <code>result_batch.csv</code> im Arbeitsverzeichnis.</p><p data-lang="en">Reads <code>parameterstudie.cas</code> from the same directory.
+  Result: <code>result_batch.csv</code> in the working directory.</p>
+
+  <h3 data-lang="de">Mit Solver-Auswahl</h3><h3 data-lang="en">With solver selection</h3>
+  <pre>java -cp CMDSolver.jar cmd.CASSolver -I:studie.csv -S:NEWTON_SPARSE_ARMIJO</pre>
+
+  <h3 data-lang="de">Mit Equilibrierung (empfohlen für aerothermodynamische Modelle)</h3><h3 data-lang="en">With equilibration (recommended for aerothermodynamic models)</h3>
+  <pre>java -cp CMDSolver.jar cmd.CASSolver -I:studie.csv -S:NEWTON_SPARSE_ARMIJO -SC:EQUILIBRATE</pre>
+
+  <h3 data-lang="de">Alle Variablen in Ausgabe</h3><h3 data-lang="en">All variables in output</h3>
+  <pre>java -cp CMDSolver.jar cmd.CASSolver -I:studie.csv -BA</pre>
+
+  <h3 data-lang="de">Mit Startwert-Optimierung</h3><h3 data-lang="en">With starting-value optimization</h3>
+  <pre>java -cp CMDSolver.jar cmd.CASSolver -I:studie.csv -DI</pre>
+  <p data-lang="de">Nur für Run 1 relevant — ab Run 2 übernimmt der Warm-Start.</p><p data-lang="en">Only relevant for run 1 — from run 2 onward the warm-start takes over.</p>
+
+  <h3 data-lang="de">Vollständige Optionsübersicht</h3><h3 data-lang="en">Full option overview</h3>
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th>Option</th><th data-lang="de">Beschreibung</th><th data-lang="en">Description</th></tr></thead>
+    <tbody>
+      <tr><td>-I:datei.csv</td><td data-lang="de">Aktiviert Batch-Modus. Zugehörige CAS-Datei im selben Verzeichnis.</td><td data-lang="en">Activates batch mode. Matching CAS file in the same directory.</td></tr>
+      <tr><td>-S:SOLVER</td><td data-lang="de">Solver-Auswahl — gilt für alle Runs.</td><td data-lang="en">Solver selection — applies to all runs.</td></tr>
+      <tr><td>-SC:STRATEGIE</td><td data-lang="de">Skalierungsstrategie — <code>EQUILIBRATE</code> empfohlen.</td><td data-lang="en">Scaling strategy — <code>EQUILIBRATE</code> recommended.</td></tr>
+      <tr><td>-BA</td><td data-lang="de">Alle Variablen (auch Fixed) in Ausgabe schreiben.</td><td data-lang="en">Write all variables (including fixed) to the output.</td></tr>
+      <tr><td>-DI</td><td data-lang="de">Startwert-Diagnose und -Optimierung (nur Run 1).</td><td data-lang="en">Starting-value diagnostics and optimization (run 1 only).</td></tr>
+      <tr><td>-DIAG</td><td data-lang="de">Pre-Solve Diagnose vor Run 1.</td><td data-lang="en">Pre-solve diagnostics before run 1.</td></tr>
+      <tr><td>-SN</td><td data-lang="de">Residuen-Normierung — für Systeme mit sehr unterschiedlichen Einheiten.</td><td data-lang="en">Residual normalization — for systems with widely varying units.</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<!-- U-Datei Format -->
+<section id="uformat">
+  <h2 data-lang="de">-U: Datei — Einzelpunkt-Override</h2><h2 data-lang="en">-U: File — Single-point Override</h2>
+
+  <p data-lang="de">Für einen einzelnen Betriebspunkt können Variablen-Overrides mit
+  <code>-U:datei.txt</code> gesetzt werden — ohne eine CSV-Datei zu erstellen.
+  Das Format ist ein semikolon-getrenntes Key:Value Format, eine Variable pro Zeile:</p><p data-lang="en">For a single operating point, variable overrides can be set with
+  <code>-U:file.txt</code> — without creating a CSV file. The format is
+  semicolon-separated key:value, one variable per line:</p>
+
+  <pre data-lang="de"># Kommentare mit # oder // werden ignoriert
+/* Block-Kommentare ebenfalls */
+Name:PARTM.F060.TT; Value:289.83; Lower:200.0; Upper:400.0; Status:Fixed; Unit:K; Descr:Totaltemperatur
+Name:PARTM.F060.PT; Value:196273.07; Lower:50000.0; Upper:500000.0; Status:Fixed; Unit:Pa
+Name:AMB.PS; Value:98136.5; Status:Fixed; Unit:Pa</pre><pre data-lang="en"># Comments with # or // are ignored
+/* Block comments too */
+Name:PARTM.F060.TT; Value:289.83; Lower:200.0; Upper:400.0; Status:Fixed; Unit:K; Descr:Total temperature
+Name:PARTM.F060.PT; Value:196273.07; Lower:50000.0; Upper:500000.0; Status:Fixed; Unit:Pa
+Name:AMB.PS; Value:98136.5; Status:Fixed; Unit:Pa</pre>
+
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr><th data-lang="de">Feld</th><th data-lang="en">Field</th><th data-lang="de">Pflicht</th><th data-lang="en">Required</th><th data-lang="de">Beschreibung</th><th data-lang="en">Description</th></tr></thead>
+    <tbody>
+      <tr><td>Name</td><td data-lang="de">✅ Ja</td><td data-lang="en">✅ Yes</td><td data-lang="de">Variablenname exakt wie in der CAS-Datei</td><td data-lang="en">Variable name exactly as in the CAS file</td></tr>
+      <tr><td>Value</td><td data-lang="de">✅ Ja</td><td data-lang="en">✅ Yes</td><td data-lang="de">Startwert / Fixwert</td><td data-lang="en">Starting / fixed value</td></tr>
+      <tr><td>Status</td><td data-lang="de">Nein</td><td data-lang="en">No</td><td data-lang="de"><code>Fixed</code> oder <code>Free</code> — überschreibt CAS-Deklaration</td><td data-lang="en"><code>Fixed</code> or <code>Free</code> — overrides the CAS declaration</td></tr>
+      <tr><td>Lower</td><td data-lang="de">Nein</td><td data-lang="en">No</td><td data-lang="de">Untere Schranke</td><td data-lang="en">Lower bound</td></tr>
+      <tr><td>Upper</td><td data-lang="de">Nein</td><td data-lang="en">No</td><td data-lang="de">Obere Schranke</td><td data-lang="en">Upper bound</td></tr>
+      <tr><td>Unit</td><td data-lang="de">Nein</td><td data-lang="en">No</td><td data-lang="de">Einheit (nur für Dokumentation)</td><td data-lang="en">Unit (documentation only)</td></tr>
+      <tr><td>Descr</td><td data-lang="de">Nein</td><td data-lang="en">No</td><td data-lang="de">Beschreibung (nur für Dokumentation)</td><td data-lang="en">Description (documentation only)</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <p data-lang="de">Verwendung für Single-Run:</p><p data-lang="en">Usage for single run:</p>
+  <pre>java CASSolver -I:model.cas -U:betriebspunkt.txt -S:NEWTON_SPARSE_ARMIJO</pre>
+
+  <div class="note blue" data-lang="de">
+    <strong>Hinweis:</strong> Die <code>-U:</code>-Datei kann auch im Batch-Modus
+    verwendet werden — die Overrides gelten dann als Basiswerte für Run 1,
+    werden aber durch die CSV-Werte überschrieben.
+  </div><div class="note blue" data-lang="en">
+    <strong>Note:</strong> the <code>-U:</code> file can also be used in batch
+    mode — the overrides then act as base values for run 1 but are overwritten
+    by the CSV values.
+  </div>
+</section>
+
+
+<!-- Sprung-Erkennung -->
+<section id="jumpdetect">
+  <h2><span data-lang="de">Warm-Start Sprung-Erkennung</span><span data-lang="en">Warm-Start Jump Detection</span></h2>
+
+  <div data-lang="de">
+    <p>Bei Parameterstudien mit Sägezahnkurven als Input (z.B. Druck steigt,
+    fällt, steigt wieder) kann der Warm-Start schaden: der Solver startet mit
+    der Lösung des letzten Betriebspunkts, der weit entfernt ist.</p>
+    <p>Die Sprung-Erkennung verwirft den Warm-Start automatisch wenn sich
+    eine Input-Variable um mehr als den Schwellwert ändert:</p>
+  </div>
+  <div data-lang="en">
+    <p>For parameter studies with sawtooth-shaped inputs (e.g. pressure rises,
+    falls, rises again), the warm-start can be counterproductive: the solver
+    starts from the previous solution which may be far away.</p>
+    <p>Jump detection automatically discards the warm-start when any input
+    variable changes by more than the threshold:</p>
+  </div>
+
+  <pre>relJump = |new - old| / max(|old|, |new|, 1e-10)</pre>
+
+  <div class="tbl-wrap">
+  <table>
+    <thead><tr>
+      <th>Flag</th>
+      <th data-lang="de">Beschreibung</th><th data-lang="en">Description</th>
+      <th data-lang="de">Standard</th><th data-lang="en">Default</th>
+    </tr></thead>
+    <tbody>
+      <tr>
+        <td>-BC:JUMPTHRESH=0.20</td>
+        <td data-lang="de">Warm-Start verwerfen wenn relativer Sprung &gt; 20%</td>
+        <td data-lang="en">Discard warm-start if relative jump &gt; 20%</td>
+        <td data-lang="de">Ja (20%)</td>
+        <td data-lang="en">Yes (20%)</td>
+      </tr>
+      <tr>
+        <td>-BC:JUMPTHRESH=0.10</td>
+        <td data-lang="de">Engere Schwelle für feine Sägezahnkurven</td>
+        <td data-lang="en">Tighter threshold for fine sawtooth curves</td>
+        <td>—</td>
+      </tr>
+      <tr>
+        <td>-BC:JUMPTHRESH=0</td>
+        <td data-lang="de">Sprung-Erkennung deaktivieren</td>
+        <td data-lang="en">Disable jump detection entirely</td>
+        <td>—</td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+
+  <p data-lang="de"><b>Log-Ausgabe bei erkanntem Sprung:</b></p><p data-lang="en"><b>Log output when jump detected:</b></p>
+  <pre>Run 4: input jump 45% &gt; threshold 20% — warm-start discarded
+Run 4: CONVERGED  iter=11  fsum=2.3e-09  t=0.387s</pre>
+
+  <div class="note amber" data-lang="de">
+    <strong>Empfehlung:</strong>
+    <span>Betriebspunkte in der CSV monoton sortieren (aufsteigend oder
+    absteigend) wenn möglich — dann ist der Warm-Start immer günstig und
+    die Sprung-Erkennung greift selten ein.</span>
+  </div><div class="note amber" data-lang="en">
+    <strong>Recommendation:</strong>
+    <span>Sort operating points monotonically (ascending or descending)
+    in the CSV when possible — the warm-start is always beneficial and
+    jump detection rarely triggers.</span>
+  </div>
+</section>
+
+<!-- Tipps -->
+<section id="tips">
+  <h2 data-lang="de">Hinweise & Tipps</h2><h2 data-lang="en">Notes & Tips</h2>
+
+  <h3 data-lang="de">CSV-Datei erstellen</h3><h3 data-lang="en">Creating the CSV file</h3>
+  <p data-lang="de">Die CSV-Datei kann in Excel, LibreOffice Calc oder einem Texteditor erstellt werden.
+  Wichtig: als UTF-8 oder ASCII speichern, nicht als Excel-Format (<code>.xlsx</code>).</p><p data-lang="en">The CSV file can be created in Excel, LibreOffice Calc, or a text editor.
+  Important: save as UTF-8 or ASCII, not as Excel format (<code>.xlsx</code>).</p>
+
+  <h3 data-lang="de">Betriebspunkte sortieren</h3><h3 data-lang="en">Sorting operating points</h3>
+  <p data-lang="de">Für optimale Warm-Start-Effizienz die Betriebspunkte so sortieren dass
+  benachbarte Zeilen physikalisch ähnliche Zustände beschreiben — z.B. Druck
+  monoton steigend, Temperatur monoton steigend.</p><p data-lang="en">For best warm-start efficiency, sort operating points so that adjacent
+  rows describe physically similar states — e.g., pressure monotonically rising,
+  temperature monotonically rising.</p>
+
+  <h3 data-lang="de">Nicht-konvergierte Runs</h3><h3 data-lang="en">Non-converged runs</h3>
+  <p data-lang="de">Runs mit <code>STATUS = FAILED</code> haben in der Ausgabe für freie
+  Variablen den letzten Solver-Zustand (nicht konvergiert). Diese Werte
+  können unphysikalisch sein. Empfehlung: gefilterte Auswertung nur über
+  <code>CONVERGED</code>-Zeilen.</p><p data-lang="en">Runs with <code>STATUS = FAILED</code> contain the last (non-converged)
+  solver state for free variables. These values may be unphysical. Recommendation:
+  filter analysis to <code>CONVERGED</code> rows only.</p>
+
+  <h3 data-lang="de">Ausgabedatei</h3><h3 data-lang="en">Output file</h3>
+  <p data-lang="de"><code>result_batch.csv</code> wird immer ins Arbeitsverzeichnis geschrieben
+  (<code>-DI</code> Arbeitsverzeichnis = dort wo der java-Aufruf stattfindet).
+  Bei wiederholten Runs wird die Datei überschrieben.</p><p data-lang="en"><code>result_batch.csv</code> is always written to the working directory
+  (the directory the java invocation runs from). On repeated runs the file is
+  overwritten.</p>
+
+  <h3 data-lang="de">Große Parameterstudien</h3><h3 data-lang="en">Large parameter studies</h3>
+  <p data-lang="de">Für sehr viele Betriebspunkte (N &gt; 1000) empfiehlt sich
+  <code>-S:BROYDEN_SPARSE</code> — Broyden mit GSPAR ist pro Run schneller
+  als Newton weil die Jacobi nicht jede Iteration neu aufgebaut wird.</p><p data-lang="en">For very many operating points (N &gt; 1000), <code>-S:BROYDEN_SPARSE</code>
+  is recommended — Broyden with GSPAR is faster per run than Newton because the
+  Jacobian is not rebuilt every iteration.</p>
+
+  <div class="note blue" data-lang="de">
+    <strong>Parameterstudie vs. Optimierung:</strong> BatchRunner ist kein
+    Optimierungsalgorithmus — er löst das Gleichungssystem für vorgegebene
+    Eingabewerte. Für automatische Optimierung (z.B. Wirkungsgradmaximierung)
+    muss ein externer Optimizer die CSV-Datei generieren und die Ausgabe auswerten.
+  </div><div class="note blue" data-lang="en">
+    <strong>Parameter study vs. optimization:</strong> BatchRunner is not an
+    optimization algorithm — it solves the equation system for given input
+    values. For automatic optimization (e.g., efficiency maximization) an
+    external optimizer must generate the CSV file and evaluate the output.
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <span data-lang="de">CMDSolver Docs · Batch-Modus & Parameterstudien · v2.13</span><span data-lang="en">CMDSolver Docs · Batch Mode & Parameter Studies · v2.13</span>
+  <span><a href="solver_options.html" data-lang="de">← Solver Optionen</a><a href="solver_options.html" data-lang="en">← Solver Options</a> &nbsp;|&nbsp; <a href="index.html" data-lang="de">Startseite</a><a href="index.html" data-lang="en">Home</a></span>
+</footer>
+
+</body>
+</html>

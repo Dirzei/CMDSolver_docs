@@ -1,0 +1,1032 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CMDSolver Docs — Adaptive Lambda Continuation</title>
+<style>
+/* CMDSolver Documentation — Shared Stylesheet */
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;1,400&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap');
+
+:root {
+  --bg:      #0d0f12;
+  --bg2:     #13161b;
+  --bg3:     #1a1e25;
+  --bg4:     #20252f;
+  --border:  #252a33;
+  --border2: #2e3540;
+  --text:    #c8cdd6;
+  --text2:   #7a8496;
+  --text3:   #4a5568;
+  --accent:  #4a9eff;
+  --ok:      #3ecf8e;
+  --warn:    #f0a030;
+  --err:     #ff5c5c;
+  --purple:  #a78bfa;
+  --teal:    #2dd4bf;
+  --mono:    'IBM Plex Mono', monospace;
+  --sans:    'IBM Plex Sans', sans-serif;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: var(--sans);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 13.5px;
+  line-height: 1.75;
+}
+
+/* ── Header ── */
+.doc-header {
+  border-bottom: 1px solid var(--border);
+  padding: 1.2rem 3rem;
+  display: flex; align-items: center;
+  justify-content: space-between; flex-wrap: wrap; gap: 1rem;
+}
+
+.breadcrumb {
+  font-family: var(--mono); font-size: 11px; color: var(--text3);
+  letter-spacing: .08em; text-transform: uppercase;
+  display: flex; align-items: center; gap: .5rem;
+}
+.breadcrumb a { color: var(--accent); text-decoration: none; }
+.breadcrumb span { color: var(--text3); }
+
+.doc-badge {
+  font-family: var(--mono); font-size: 11px;
+  padding: 3px 10px; border-radius: 4px;
+}
+.doc-badge.solver {
+  background: rgba(74,158,255,.1); border: 1px solid rgba(74,158,255,.25);
+  color: var(--accent);
+}
+.doc-badge.overview {
+  background: rgba(167,139,250,.1); border: 1px solid rgba(167,139,250,.25);
+  color: var(--purple);
+}
+.doc-badge.comparison {
+  background: rgba(62,207,142,.1); border: 1px solid rgba(62,207,142,.25);
+  color: var(--ok);
+}
+
+/* ── Hero ── */
+.hero {
+  padding: 2.5rem 3rem 2rem;
+  border-bottom: 1px solid var(--border);
+  background: linear-gradient(135deg, var(--bg) 0%, #0f1520 100%);
+}
+.hero-sub {
+  font-family: var(--mono); font-size: 11px; color: var(--text3);
+  letter-spacing: .15em; text-transform: uppercase; margin-bottom: .5rem;
+}
+h1 {
+  font-size: 28px; font-weight: 600; color: #e8ecf4;
+  letter-spacing: -.03em; margin-bottom: .5rem; line-height: 1.2;
+}
+.tagline {
+  font-size: 14px; color: var(--text2); margin-bottom: 1.5rem;
+  max-width: 680px;
+}
+.hero-stats { display: flex; gap: 2rem; flex-wrap: wrap; }
+.stat { display: flex; flex-direction: column; gap: .2rem; }
+.stat-val {
+  font-family: var(--mono); font-size: 18px; font-weight: 500; color: var(--ok);
+}
+.stat-lbl {
+  font-size: 11px; color: var(--text3);
+  text-transform: uppercase; letter-spacing: .08em;
+}
+
+/* ── Nav ── */
+nav {
+  position: sticky; top: 0; z-index: 10;
+  background: rgba(13,15,18,.95); backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--border);
+  padding: .6rem 3rem;
+  display: flex; gap: 1.5rem; flex-wrap: wrap;
+}
+nav a {
+  font-family: var(--mono); font-size: 11px; color: var(--text3);
+  text-decoration: none; letter-spacing: .08em;
+  text-transform: uppercase; transition: color .15s;
+}
+nav a:hover { color: var(--accent); }
+
+/* ── Main ── */
+main { padding: 2rem 3rem 4rem; max-width: 1040px; }
+
+section { margin-bottom: 3.5rem; scroll-margin-top: 3rem; }
+
+section > h2 {
+  font-size: 12px; font-family: var(--mono);
+  letter-spacing: .12em; text-transform: uppercase;
+  color: var(--text3); margin-bottom: 1.4rem;
+  padding-bottom: .5rem; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: .6rem;
+}
+section > h2::before {
+  content: ''; display: inline-block;
+  width: 8px; height: 8px; border-radius: 50%; background: var(--accent);
+}
+
+h3 { font-size: 14px; font-weight: 500; color: #e8ecf4; margin: 1.6rem 0 .6rem; }
+h4 { font-size: 13px; font-weight: 500; color: var(--text2); margin: 1.2rem 0 .4rem; }
+
+p { color: var(--text); margin-bottom: .9rem; max-width: 780px; }
+
+/* ── Math ── */
+.math-block {
+  background: var(--bg3); border: 1px solid var(--border);
+  border-left: 3px solid var(--purple);
+  border-radius: 6px; padding: 1.2rem 1.5rem;
+  margin: 1rem 0 1.2rem; font-family: var(--mono);
+  font-size: 13px; line-height: 2.1; white-space: pre;
+}
+.math-block .eq  { color: #e8ecf4; }
+.math-block .cmt { color: var(--text3); font-style: italic; }
+.math-block .hi  { color: var(--teal); }
+.math-block .hi2 { color: var(--warn); }
+
+/* ── Notes ── */
+.note {
+  border-radius: 6px; padding: .85rem 1.1rem;
+  font-size: 13px; line-height: 1.7; margin-bottom: 1.2rem;
+}
+.note.blue   { background: rgba(74,158,255,.06);  border-left: 3px solid var(--accent); }
+.note.green  { background: rgba(62,207,142,.06);  border-left: 3px solid var(--ok); }
+.note.amber  { background: rgba(240,160,48,.06);  border-left: 3px solid var(--warn); }
+.note.red    { background: rgba(255,92,92,.06);   border-left: 3px solid var(--err); }
+.note.purple { background: rgba(167,139,250,.06); border-left: 3px solid var(--purple); }
+.note strong { color: #e8ecf4; }
+
+/* ── Code ── */
+code {
+  font-family: var(--mono); font-size: 11.5px;
+  background: rgba(255,255,255,.05); padding: 1px 5px;
+  border-radius: 3px; color: #a8c8f0;
+}
+pre {
+  font-family: var(--mono); font-size: 12px;
+  background: var(--bg3); border: 1px solid var(--border);
+  border-radius: 8px; padding: 1rem 1.2rem;
+  overflow-x: auto; line-height: 1.7; margin-bottom: 1rem; color: #c8cdd6;
+}
+.kw  { color: var(--purple); }
+.cmt { color: var(--text3); font-style: italic; }
+.fn  { color: var(--teal); }
+.num { color: var(--warn); }
+.str { color: var(--ok); }
+
+/* ── Tables ── */
+.tbl-wrap {
+  overflow-x: auto; border-radius: 8px;
+  border: 1px solid var(--border); margin-bottom: 1.5rem;
+}
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+thead th {
+  background: var(--bg3); padding: 9px 14px; text-align: left;
+  font-weight: 500; font-size: 11px; letter-spacing: .06em;
+  text-transform: uppercase; color: var(--text2);
+  border-bottom: 1px solid var(--border2); white-space: nowrap;
+}
+tbody tr { border-bottom: 1px solid var(--border); transition: background .1s; }
+tbody tr:last-child { border-bottom: none; }
+tbody tr:hover { background: var(--bg3); }
+td { padding: 9px 14px; vertical-align: top; line-height: 1.6; }
+td.center { text-align: center; }
+
+/* ── Badges ── */
+.badge {
+  display: inline-block; font-size: 11px; padding: 2px 9px;
+  border-radius: 12px; font-family: var(--mono); white-space: nowrap;
+}
+.b-ok   { background: rgba(62,207,142,.1);  color: var(--ok);     border: 1px solid rgba(62,207,142,.25); }
+.b-warn { background: rgba(240,160,48,.1);  color: var(--warn);   border: 1px solid rgba(240,160,48,.25); }
+.b-err  { background: rgba(255,92,92,.1);   color: var(--err);    border: 1px solid rgba(255,92,92,.25); }
+.b-info { background: rgba(74,158,255,.1);  color: var(--accent); border: 1px solid rgba(74,158,255,.25); }
+.b-na   { background: rgba(74,84,96,.1);    color: var(--text3);  border: 1px solid var(--border2); }
+
+/* ── Star rating ── */
+.stars { color: var(--warn); letter-spacing: -.05em; }
+.stars.dim { color: var(--border2); }
+
+/* ── File list ── */
+.file-list { list-style: none; }
+.file-list li {
+  display: flex; gap: 1rem; align-items: flex-start;
+  padding: .7rem 1rem; background: var(--bg2);
+  border: 1px solid var(--border); border-radius: 4px; margin-bottom: .4rem;
+}
+.file-icon {
+  font-family: var(--mono); font-size: 11px; color: var(--accent);
+  white-space: nowrap; margin-top: 2px; min-width: 50px;
+}
+.file-desc { font-size: 13px; color: var(--text2); }
+.file-desc strong { color: var(--text); display: block; margin-bottom: .2rem; }
+
+/* ── Flowchart ── */
+.flowchart {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 10px; padding: 1.5rem; margin: 1rem 0 1.5rem;
+  overflow-x: auto;
+}
+
+/* ── Footer ── */
+footer {
+  border-top: 1px solid var(--border); padding: 1.5rem 3rem;
+  font-family: var(--mono); font-size: 11px; color: var(--text3);
+  display: flex; justify-content: space-between; flex-wrap: wrap; gap: .5rem;
+}
+footer a { color: var(--accent); text-decoration: none; }
+
+/* ── Footnotes ── */
+.footnotes {
+  margin-top: 2rem; padding-top: 1.5rem;
+  border-top: 1px solid var(--border);
+  font-size: 12px; color: var(--text2);
+}
+.footnotes p { max-width: none; margin-bottom: .5rem; }
+sup { font-size: 10px; color: var(--accent); }
+
+/* Default: alle Sprachelemente sichtbar (kein JS-Flash) */
+/* Mit lang-Klasse auf body: nur die aktive Sprache sichtbar */
+
+/* Nur wenn body eine Sprachklasse hat, werden Elemente ausgeblendet */
+/* Sprach-Sichtbarkeit via class auf body */
+</style>
+<link rel="stylesheet" href="i18n.css">
+</head>
+<body>
+<script>
+(function(){
+  var stored = '';
+  try { stored = localStorage.getItem('cmdlang') || ''; } catch(e){}
+  var lang = stored || 'de';
+
+  function apply(l) {
+    lang = l;
+    try { localStorage.setItem('cmdlang', l); } catch(e){}
+    document.documentElement.lang = l;
+    var body = document.body;
+    body.classList.remove('lang-de','lang-en');
+    body.classList.add('lang-' + l);
+    document.querySelectorAll('.lang-btn').forEach(function(b){
+      b.classList.toggle('active', b.dataset.lang === l);
+    });
+  }
+
+  // Body-Klasse sofort setzen, damit data-lang-Elemente direkt korrekt
+  // sichtbar sind (kein Flash mit unsichtbarem Header-Inhalt).
+  apply(lang);
+  document.addEventListener('DOMContentLoaded', function(){
+    apply(lang); // erneut, damit jetzt auch die Buttons gestyled werden
+    document.querySelectorAll('.lang-btn').forEach(function(b){
+      b.addEventListener('click', function(){ apply(b.dataset.lang); });
+    });
+    // Sticky-Header Schatten via IntersectionObserver
+    var sentinel = document.querySelector('.header-sentinel');
+    var header   = document.querySelector('.doc-header');
+    if (sentinel && header && 'IntersectionObserver' in window) {
+      new IntersectionObserver(function(entries){
+        header.classList.toggle('scrolled', !entries[0].isIntersecting);
+      }).observe(sentinel);
+    }
+  });
+})();
+</script>
+
+
+
+
+<div class="header-sentinel"></div>
+<div class="doc-header">
+  <div class="breadcrumb">
+    <a href="index.html">CMDSolver Docs</a>
+    ›
+    ›
+  </div>
+  <div class="doc-header-right"><div class="lang-switch"><button class="lang-btn" data-lang="de">DE</button><button class="lang-btn" data-lang="en">EN</button></div><span class="doc-badge solver">SolverType.ADAPTIVE_LAMBDA</span></div></div>
+
+<div class="hero">
+  <div class="hero-sub"><span data-lang="de">Experimentell</span><span data-lang="en">Experimental</span></div>
+  <h1 data-lang="de">Adaptive Lambda Continuation<br>Newton-driven Wrapper</h1><h1 data-lang="en">Adaptive Lambda Continuation<br>Newton-driven Wrapper</h1>
+  <p class="tagline" data-lang="de">Pragmatischer Continuation-Wrapper über Newton-Armijo (oder andere innere Solver). Versucht zuerst direkten Lösungsweg, fällt bei Bedarf auf λ-Continuation zurück. <strong>Phase 1 (try-direct) funktioniert produktiv</strong>, Phase 2 (Continuation) ist auf NozzleSystem nicht zuverlässig — siehe <a href="#status" data-lang="de">Status</a><a href="#status" data-lang="en">Status</a>.</p>
+  <p class="tagline" data-lang="en">Pragmatic continuation wrapper around Newton-Armijo (or other inner solvers). First attempts a direct solve, falls back to λ-continuation when needed. <strong>Phase 1 (try-direct) works in production</strong>, Phase 2 (continuation) is not reliable on NozzleSystem — see <a href="#status">Status</a>.</p>
+  <div class="hero-stats">
+    <div class="stat"><span class="stat-val">5-6</span><span class="stat-lbl">Iter (Phase 1)</span></div>
+    <div class="stat"><span class="stat-val">~0.4s</span><span class="stat-lbl">Laufzeit (Phase 1)</span></div>
+    <div class="stat"><span class="stat-val">EXPERIMENTAL</span><span class="stat-lbl">Phase 2</span></div>
+    <div class="stat"><span class="stat-val">Wrapper</span><span class="stat-lbl">Architektur</span></div>
+  </div>
+</div>
+
+<nav>
+  <a href="#status">Status</a>
+  <a href="#idee" data-lang="de">Grundidee</a><a href="#idee" data-lang="en">Idea</a>
+  <a href="#flussdiagramm" data-lang="de">Flussdiagramm</a><a href="#flussdiagramm" data-lang="en">Flow chart</a>
+  <a href="#pseudocode" data-lang="de">Pseudocode</a><a href="#pseudocode" data-lang="en">Pseudocode</a>
+  <a href="#dateien" data-lang="de">Dateien</a><a href="#dateien" data-lang="en">Files</a>
+  <a href="#parameter" data-lang="de">Parameter</a><a href="#parameter" data-lang="en">Parameters</a>
+  <a href="#verhalten" data-lang="de">Verhalten auf NozzleSystem</a><a href="#verhalten" data-lang="en">Behavior on NozzleSystem</a>
+  <a href="#grenzen" data-lang="de">Grenzen</a><a href="#grenzen" data-lang="en">Limits</a>
+</nav>
+
+<main>
+
+<section id="status">
+  <h2 data-lang="de">Status — wichtig zu lesen</h2><h2 data-lang="en">Status — important to read</h2>
+
+  <div class="note green" data-lang="de">
+    <strong>Phase 1 (try-direct-first) ist produktiv nutzbar.</strong>
+    Der Wrapper versucht zuerst den direkten inneren Solver mit
+    geerbter Skalierungsstrategie. Auf NozzleSystem konvergiert das
+    in 5 Iter (mit EQUILIBRATE) bzw. 6 Iter (ohne) in ~0.4 Sekunden —
+    identisch zu direktem NEWTON_ARMIJO. Praktisch sinnvoll als
+    "sicherer Wrapper" der bei Bedarf eine Continuation-Schicht hinzufügt.
+  </div><div class="note green" data-lang="en">
+    <strong>Phase 1 (try-direct-first) is production-ready.</strong>
+    The wrapper first tries the direct inner solver with the inherited scaling
+    strategy. On NozzleSystem this converges in 5 iter (with EQUILIBRATE) or
+    6 iter (without) in ~0.4 seconds — identical to direct NEWTON_ARMIJO.
+    Practically useful as a "safe wrapper" that adds a continuation layer when
+    needed.
+  </div>
+
+  <div class="note red" data-lang="de">
+    <strong>Phase 2 (λ-Continuation) ist EXPERIMENTAL — derzeit nicht
+    produktiv konvergent auf NozzleSystem.</strong> Wenn Phase 1 scheitert
+    (oder per <code>-SH:DIRECT=OFF</code> übersprungen wird), startet die
+    λ-Schleife. Auf NozzleSystem divergiert der innere Solver auf dem
+    H_λ-System (siehe <a href="#verhalten">Diagnose</a>): Skalen-Mismatch
+    zwischen linearem Anteil <code>(1-λ)·J₀·(x-x₀)</code> und nichtlinearem
+    Anteil <code>λ·F(x)</code> bei großen <code>(x-x₀)</code>-Abweichungen.
+  </div><div class="note red" data-lang="en">
+    <strong>Phase 2 (λ continuation) is EXPERIMENTAL — currently does not
+    converge productively on NozzleSystem.</strong> When phase 1 fails (or is
+    skipped via <code>-SH:DIRECT=OFF</code>), the λ loop starts. On
+    NozzleSystem the inner solver diverges on the H_λ system (see
+    <a href="#verhalten">diagnostic</a>): a scale mismatch between the linear
+    part <code>(1-λ)·J₀·(x-x₀)</code> and the nonlinear part <code>λ·F(x)</code>
+    at large <code>(x-x₀)</code> deviations.
+  </div>
+
+  <div class="note blue" data-lang="de">
+    <strong>Empfehlung:</strong>
+    <ul style="margin-top: 0.4rem;">
+      <li>Für NozzleSystem-artige Probleme: stattdessen direkt
+        <a href="solver_newton_armijo.html">NEWTON_ARMIJO</a> mit
+        <code>-SC:EQUILIBRATE</code> oder
+        <a href="solver_lm.html">LEVENBERG_MARQUARDT</a> verwenden</li>
+      <li>ADAPTIVE_LAMBDA sinnvoll als Wrapper wenn Du <em>nicht weißt</em>
+        ob das Modell direkt konvergiert — Phase 1 versucht's, Phase 2
+        ist Fallback (mit den genannten Limitierungen)</li>
+    </ul>
+  </div><div class="note blue" data-lang="en">
+    <strong>Recommendation:</strong>
+    <ul style="margin-top: 0.4rem;">
+      <li>For NozzleSystem-like problems: use
+        <a href="solver_newton_armijo.html">NEWTON_ARMIJO</a> with
+        <code>-SC:EQUILIBRATE</code> or
+        <a href="solver_lm.html">LEVENBERG_MARQUARDT</a> directly instead</li>
+      <li>ADAPTIVE_LAMBDA is useful as a wrapper when you <em>don't know</em>
+        whether the model converges directly — phase 1 tries, phase 2 is
+        fallback (with the limitations noted)</li>
+    </ul>
+  </div>
+</section>
+
+<section id="idee">
+  <h2 data-lang="de">Grundidee — Wrapper über bewährte Solver</h2><h2 data-lang="en">Idea — wrapper over proven solvers</h2>
+
+  <p data-lang="de">
+    Statt eigene Continuation-Mathematik (wie HOMOTOPY oder ARC_LENGTH)
+    nutzt ADAPTIVE_LAMBDA den existierenden Newton-Armijo-Solver als
+    Engine und legt eine zweistufige Schicht darüber:
+  </p><p data-lang="en">
+    Instead of its own continuation mathematics (like HOMOTOPY or ARC_LENGTH),
+    ADAPTIVE_LAMBDA uses the existing Newton-Armijo solver as the engine and
+    adds a two-stage layer on top:
+  </p>
+
+  <div class="math-block">
+    <div class="eq"><span class="hi" data-lang="de">Phase 1 — try-direct-first (Default an):</span><span class="hi" data-lang="en">Phase 1 — try-direct-first (default on):</span></div>
+    <div class="eq" data-lang="de">  versuche innerSolver.solve(F = 0, x₀)</div><div class="eq" data-lang="en">  try innerSolver.solve(F = 0, x₀)</div>
+    <div class="eq" data-lang="de">  konvergiert? → fertig, kein Continuation</div><div class="eq" data-lang="en">  converged? → done, no continuation</div>
+    <div class="eq"></div>
+    <div class="eq"><span class="hi" data-lang="de">Phase 2 — Continuation (wenn Phase 1 scheitert):</span><span class="hi" data-lang="en">Phase 2 — continuation (when phase 1 fails):</span></div>
+    <div class="eq" data-lang="de">  J₀ = FD-Jacobi am Startpunkt</div><div class="eq" data-lang="en">  J₀ = FD Jacobian at start point</div>
+    <div class="eq">  λ = 0,  dλ = 0.5</div>
+    <div class="eq">  while λ &lt; 1:</div>
+    <div class="eq">    λ_next = min(λ + dλ, 1)</div>
+    <div class="eq">    F_λ(x) = (1-λ_next)·J₀·(x-x₀) + λ_next·F(x) = 0</div>
+    <div class="eq" data-lang="de">    versuche innerSolver.solve(F_λ = 0, x_current)</div><div class="eq" data-lang="en">    try innerSolver.solve(F_λ = 0, x_current)</div>
+    <div class="eq" data-lang="de">    konvergiert? → x_current = result, λ = λ_next</div><div class="eq" data-lang="en">    converged? → x_current = result, λ = λ_next</div>
+    <div class="eq" data-lang="de">                   wenn iter &lt; target/2: dλ *= 1.5</div><div class="eq" data-lang="en">                   if iter &lt; target/2: dλ *= 1.5</div>
+    <div class="eq" data-lang="de">    fehlgeschlagen? → dλ /= 2,  retry</div><div class="eq" data-lang="en">    failed? → dλ /= 2,  retry</div>
+  </div>
+
+  <h3 data-lang="de">Was diese Architektur attraktiv macht</h3><h3 data-lang="en">Why this architecture is attractive</h3>
+  <ul data-lang="de">
+    <li><strong>Nutzt was funktioniert:</strong> Newton-Armijo+EQUILIBRATE
+        konvergiert NozzleSystem in 5 Iter — wir bauen darüber, statt
+        parallel.</li>
+    <li><strong>Kein eigener Predictor:</strong> x_current ist Predictor —
+        Newton's Armijo macht den Rest (Schrittdämpfung, Akzeptanz).</li>
+    <li><strong>Inkrementell sicher:</strong> Phase 1 ist ein einfacher
+        Wrapper-Aufruf. Phase 2 wird nur aktiv wenn nötig.</li>
+    <li><strong>Innerer Solver erbt Skalierung:</strong>
+        <code>-SC:EQUILIBRATE</code> wirkt automatisch auf den inneren
+        Workhorse (Variante c).</li>
+  </ul><ul data-lang="en">
+    <li><strong>Uses what works:</strong> Newton-Armijo+EQUILIBRATE converges
+        NozzleSystem in 5 iter — we build on top, not in parallel.</li>
+    <li><strong>No custom predictor:</strong> x_current is the predictor —
+        Newton's Armijo does the rest (step damping, acceptance).</li>
+    <li><strong>Incrementally safe:</strong> phase 1 is a simple wrapper call.
+        Phase 2 only activates when needed.</li>
+    <li><strong>Inner solver inherits scaling:</strong>
+        <code>-SC:EQUILIBRATE</code> automatically affects the inner workhorse
+        (variant c).</li>
+  </ul>
+
+  <h3 data-lang="de">Innerer Solver — Auswahl</h3><h3 data-lang="en">Inner solver — selection</h3>
+  <p data-lang="de">
+    Der innere Solver wird so konfiguriert:
+  </p><p data-lang="en">
+    The inner solver is configured as follows:
+  </p>
+  <ul data-lang="de">
+    <li><strong>Algorithmus:</strong> NEWTON_ARMIJO als sicherer Default.
+        Per <code>-SH:INNER=LEVENBERG_MARQUARDT</code> (oder andere SolverTypes)
+        überschreibbar.</li>
+    <li><strong>Skalierungsstrategie:</strong> Geerbt aus dem Hauptaufruf
+        (<code>-SC:</code>) — das gilt für beide Phasen.</li>
+    <li><strong>maxIter, tolerance:</strong> Aus der äußeren SolverConfig
+        übernommen.</li>
+  </ul><ul data-lang="en">
+    <li><strong>Algorithm:</strong> NEWTON_ARMIJO as safe default.
+        Overridable via <code>-SH:INNER=LEVENBERG_MARQUARDT</code> (or other
+        SolverTypes).</li>
+    <li><strong>Scaling strategy:</strong> inherited from the main call
+        (<code>-SC:</code>) — applies to both phases.</li>
+    <li><strong>maxIter, tolerance:</strong> taken from the outer SolverConfig.</li>
+  </ul>
+</section>
+
+<section id="flussdiagramm">
+  <h2 data-lang="de">Flussdiagramm</h2><h2 data-lang="en">Flow chart</h2>
+  <div data-lang="de"><div class="flowchart">
+  <svg width="100%" viewBox="0 0 700 620" xmlns="http://www.w3.org/2000/svg"
+       font-family="IBM Plex Sans, sans-serif" font-size="12">
+    <defs>
+      <marker id="arr" viewBox="0 0 10 10" refX="8" refY="5"
+              markerWidth="6" markerHeight="6" orient="auto">
+        <path d="M2 1L8 5L2 9" fill="none" stroke="#4a9eff" stroke-width="1.5"/>
+      </marker>
+      <marker id="arr-ok" viewBox="0 0 10 10" refX="8" refY="5"
+              markerWidth="6" markerHeight="6" orient="auto">
+        <path d="M2 1L8 5L2 9" fill="none" stroke="#3ecf8e" stroke-width="1.5"/>
+      </marker>
+      <marker id="arr-warn" viewBox="0 0 10 10" refX="8" refY="5"
+              markerWidth="6" markerHeight="6" orient="auto">
+        <path d="M2 1L8 5L2 9" fill="none" stroke="#f0a030" stroke-width="1.5"/>
+      </marker>
+    </defs>
+
+    <rect x="250" y="10" width="200" height="38" rx="19" fill="#1a2535" stroke="#4a9eff" stroke-width="1.5"/>
+    <text x="350" y="34" text-anchor="middle" fill="#4a9eff" font-weight="600">START  -S:ADAPTIVE_LAMBDA</text>
+    <line x1="350" y1="48" x2="350" y2="76" stroke="#4a9eff" stroke-width="1.5" marker-end="url(#arr)"/>
+
+    <!-- Phase 1 Diamant -->
+    <polygon points="350,78 470,104 350,130 230,104"
+             fill="#1a1e25" stroke="#a78bfa" stroke-width="1.5"/>
+    <text x="350" y="103" text-anchor="middle" fill="#a78bfa" font-size="11">tryDirect</text>
+    <text x="350" y="118" text-anchor="middle" fill="#a78bfa" font-size="11">First?</text>
+
+    <!-- Ja: Direct versuchen -->
+    <line x1="470" y1="104" x2="540" y2="104" stroke="#4a9eff" stroke-width="1.5" marker-end="url(#arr)"/>
+    <rect x="540" y="84" width="150" height="40" rx="6" fill="#13161b" stroke="#2e3540"/>
+    <text x="615" y="108" text-anchor="middle" fill="#c8cdd6" font-size="11">Phase 1: direkt</text>
+    <text x="490" y="94" fill="#a78bfa" font-size="10">ja</text>
+
+    <!-- Phase 1 konvergiert? -->
+    <line x1="615" y1="124" x2="615" y2="148" stroke="#4a9eff" stroke-width="1.5" marker-end="url(#arr)"/>
+    <polygon points="615,150 695,176 615,202 535,176"
+             fill="#1a1e25" stroke="#3ecf8e" stroke-width="1.5"/>
+    <text x="615" y="180" text-anchor="middle" fill="#3ecf8e" font-size="10">conv?</text>
+
+    <!-- Ja: Fertig -->
+    <line x1="615" y1="202" x2="615" y2="220" stroke="#3ecf8e" stroke-width="1.5" marker-end="url(#arr-ok)"/>
+    <rect x="555" y="222" width="120" height="40" rx="20" fill="#0f2a1e" stroke="#3ecf8e" stroke-width="1.5"/>
+    <text x="615" y="246" text-anchor="middle" fill="#3ecf8e" font-weight="600">CONVERGED</text>
+    <text x="625" y="220" fill="#3ecf8e" font-size="10">ja</text>
+
+    <!-- Nein: Phase 2 starten -->
+    <line x1="535" y1="176" x2="490" y2="176" stroke="#f0a030" stroke-width="1.5" marker-end="url(#arr-warn)"/>
+    <text x="495" y="167" fill="#f0a030" font-size="10">nein</text>
+
+    <!-- DIRECT=OFF Branch -->
+    <line x1="230" y1="104" x2="170" y2="104" stroke="#4a9eff" stroke-width="1"/>
+    <line x1="170" y1="104" x2="170" y2="290" stroke="#4a9eff" stroke-width="1"/>
+    <text x="200" y="94" fill="#a78bfa" font-size="10">nein</text>
+
+    <!-- Phase 2 Header -->
+    <text x="350" y="280" text-anchor="middle" fill="#4a5568" font-size="11">── Phase 2: λ-Continuation ──</text>
+
+    <!-- J0 berechnen -->
+    <rect x="170" y="290" width="360" height="44" rx="6" fill="#13161b" stroke="#2e3540"/>
+    <text x="350" y="309" text-anchor="middle" fill="#c8cdd6">J₀ via FD am Startpunkt</text>
+    <text x="350" y="325" text-anchor="middle" fill="#4a5568" font-size="10">x_current = x₀, λ = 0, dλ = 0.5</text>
+    <line x1="350" y1="334" x2="350" y2="358" stroke="#4a9eff" stroke-width="1.5" marker-end="url(#arr)"/>
+
+    <!-- λ < 1? -->
+    <polygon points="350,360 470,386 350,412 230,386"
+             fill="#1a1e25" stroke="#3ecf8e" stroke-width="1.5"/>
+    <text x="350" y="390" text-anchor="middle" fill="#3ecf8e" font-size="11">λ &lt; 1?</text>
+
+    <line x1="470" y1="386" x2="555" y2="386" stroke="#3ecf8e" stroke-width="1.5" marker-end="url(#arr-ok)"/>
+    <rect x="555" y="366" width="120" height="40" rx="20" fill="#0f2a1e" stroke="#3ecf8e" stroke-width="1.5"/>
+    <text x="615" y="390" text-anchor="middle" fill="#3ecf8e" font-weight="600">CONVERGED</text>
+    <text x="475" y="376" fill="#3ecf8e" font-size="10">nein</text>
+
+    <line x1="350" y1="412" x2="350" y2="436" stroke="#4a9eff" stroke-width="1.5" marker-end="url(#arr)"/>
+    <text x="360" y="428" fill="#4a5568" font-size="10">ja</text>
+
+    <!-- Inner solve -->
+    <rect x="170" y="438" width="360" height="44" rx="6" fill="#13161b" stroke="#2e3540"/>
+    <text x="350" y="457" text-anchor="middle" fill="#c8cdd6">Inner: solve F_λ(x) = 0 ab x_current</text>
+    <text x="350" y="473" text-anchor="middle" fill="#4a5568" font-size="10">F_λ = (1-λ)·J₀·(x-x₀) + λ·F(x)</text>
+    <line x1="350" y1="482" x2="350" y2="510" stroke="#4a9eff" stroke-width="1.5" marker-end="url(#arr)"/>
+
+    <!-- Konvergiert? -->
+    <polygon points="350,512 470,538 350,564 230,538"
+             fill="#1a1e25" stroke="#a78bfa" stroke-width="1.5"/>
+    <text x="350" y="542" text-anchor="middle" fill="#a78bfa" font-size="11">inner OK?</text>
+
+    <!-- Nein: dλ halbieren -->
+    <line x1="230" y1="538" x2="120" y2="538" stroke="#f0a030" stroke-width="1.5" marker-end="url(#arr-warn)"/>
+    <rect x="10" y="518" width="110" height="40" rx="4" fill="#1a1600" stroke="#f0a030"/>
+    <text x="65" y="535" text-anchor="middle" fill="#f0a030" font-size="11">dλ ← dλ / 2</text>
+    <text x="65" y="550" text-anchor="middle" fill="#4a5568" font-size="10">retry</text>
+    <line x1="65" y1="518" x2="65" y2="395" stroke="#f0a030" stroke-width="1"/>
+    <line x1="65" y1="395" x2="228" y2="395" stroke="#f0a030" stroke-width="1" marker-end="url(#arr-warn)"/>
+    <text x="180" y="528" fill="#f0a030" font-size="10">nein</text>
+
+    <!-- Ja: λ-Update -->
+    <line x1="350" y1="564" x2="610" y2="564" stroke="#3ecf8e" stroke-width="1.5"/>
+    <line x1="610" y1="564" x2="610" y2="411" stroke="#3ecf8e" stroke-width="1"/>
+    <line x1="610" y1="411" x2="471" y2="411" stroke="#3ecf8e" stroke-width="1" marker-end="url(#arr-ok)"/>
+    <text x="360" y="558" fill="#3ecf8e" font-size="10">ja: λ ← λ_next</text>
+  </svg>
+  </div></div><div data-lang="en"><div class="flowchart">
+  <svg width="100%" viewBox="0 0 700 620" xmlns="http://www.w3.org/2000/svg"
+       font-family="IBM Plex Sans, sans-serif" font-size="12">
+    <defs>
+      <marker id="arr" viewBox="0 0 10 10" refX="8" refY="5"
+              markerWidth="6" markerHeight="6" orient="auto">
+        <path d="M2 1L8 5L2 9" fill="none" stroke="#4a9eff" stroke-width="1.5"/>
+      </marker>
+      <marker id="arr-ok" viewBox="0 0 10 10" refX="8" refY="5"
+              markerWidth="6" markerHeight="6" orient="auto">
+        <path d="M2 1L8 5L2 9" fill="none" stroke="#3ecf8e" stroke-width="1.5"/>
+      </marker>
+      <marker id="arr-warn" viewBox="0 0 10 10" refX="8" refY="5"
+              markerWidth="6" markerHeight="6" orient="auto">
+        <path d="M2 1L8 5L2 9" fill="none" stroke="#f0a030" stroke-width="1.5"/>
+      </marker>
+    </defs>
+
+    <rect x="250" y="10" width="200" height="38" rx="19" fill="#1a2535" stroke="#4a9eff" stroke-width="1.5"/>
+    <text x="350" y="34" text-anchor="middle" fill="#4a9eff" font-weight="600">START  -S:ADAPTIVE_LAMBDA</text>
+    <line x1="350" y1="48" x2="350" y2="76" stroke="#4a9eff" stroke-width="1.5" marker-end="url(#arr)"/>
+
+    <!-- Phase 1 Diamant -->
+    <polygon points="350,78 470,104 350,130 230,104"
+             fill="#1a1e25" stroke="#a78bfa" stroke-width="1.5"/>
+    <text x="350" y="103" text-anchor="middle" fill="#a78bfa" font-size="11">tryDirect</text>
+    <text x="350" y="118" text-anchor="middle" fill="#a78bfa" font-size="11">First?</text>
+
+    <!-- Ja: Direct versuchen -->
+    <line x1="470" y1="104" x2="540" y2="104" stroke="#4a9eff" stroke-width="1.5" marker-end="url(#arr)"/>
+    <rect x="540" y="84" width="150" height="40" rx="6" fill="#13161b" stroke="#2e3540"/>
+    <text x="615" y="108" text-anchor="middle" fill="#c8cdd6" font-size="11">Phase 1: direct</text>
+    <text x="490" y="94" fill="#a78bfa" font-size="10">yes</text>
+
+    <!-- Phase 1 konvergiert? -->
+    <line x1="615" y1="124" x2="615" y2="148" stroke="#4a9eff" stroke-width="1.5" marker-end="url(#arr)"/>
+    <polygon points="615,150 695,176 615,202 535,176"
+             fill="#1a1e25" stroke="#3ecf8e" stroke-width="1.5"/>
+    <text x="615" y="180" text-anchor="middle" fill="#3ecf8e" font-size="10">conv?</text>
+
+    <!-- Ja: Fertig -->
+    <line x1="615" y1="202" x2="615" y2="220" stroke="#3ecf8e" stroke-width="1.5" marker-end="url(#arr-ok)"/>
+    <rect x="555" y="222" width="120" height="40" rx="20" fill="#0f2a1e" stroke="#3ecf8e" stroke-width="1.5"/>
+    <text x="615" y="246" text-anchor="middle" fill="#3ecf8e" font-weight="600">CONVERGED</text>
+    <text x="625" y="220" fill="#3ecf8e" font-size="10">yes</text>
+
+    <!-- Nein: Phase 2 starten -->
+    <line x1="535" y1="176" x2="490" y2="176" stroke="#f0a030" stroke-width="1.5" marker-end="url(#arr-warn)"/>
+    <text x="495" y="167" fill="#f0a030" font-size="10">no</text>
+
+    <!-- DIRECT=OFF Branch -->
+    <line x1="230" y1="104" x2="170" y2="104" stroke="#4a9eff" stroke-width="1"/>
+    <line x1="170" y1="104" x2="170" y2="290" stroke="#4a9eff" stroke-width="1"/>
+    <text x="200" y="94" fill="#a78bfa" font-size="10">no</text>
+
+    <!-- Phase 2 Header -->
+    <text x="350" y="280" text-anchor="middle" fill="#4a5568" font-size="11">── Phase 2: λ continuation ──</text>
+
+    <!-- J0 berechnen -->
+    <rect x="170" y="290" width="360" height="44" rx="6" fill="#13161b" stroke="#2e3540"/>
+    <text x="350" y="309" text-anchor="middle" fill="#c8cdd6">J₀ via FD at start point</text>
+    <text x="350" y="325" text-anchor="middle" fill="#4a5568" font-size="10">x_current = x₀, λ = 0, dλ = 0.5</text>
+    <line x1="350" y1="334" x2="350" y2="358" stroke="#4a9eff" stroke-width="1.5" marker-end="url(#arr)"/>
+
+    <!-- λ < 1? -->
+    <polygon points="350,360 470,386 350,412 230,386"
+             fill="#1a1e25" stroke="#3ecf8e" stroke-width="1.5"/>
+    <text x="350" y="390" text-anchor="middle" fill="#3ecf8e" font-size="11">λ &lt; 1?</text>
+
+    <line x1="470" y1="386" x2="555" y2="386" stroke="#3ecf8e" stroke-width="1.5" marker-end="url(#arr-ok)"/>
+    <rect x="555" y="366" width="120" height="40" rx="20" fill="#0f2a1e" stroke="#3ecf8e" stroke-width="1.5"/>
+    <text x="615" y="390" text-anchor="middle" fill="#3ecf8e" font-weight="600">CONVERGED</text>
+    <text x="475" y="376" fill="#3ecf8e" font-size="10">no</text>
+
+    <line x1="350" y1="412" x2="350" y2="436" stroke="#4a9eff" stroke-width="1.5" marker-end="url(#arr)"/>
+    <text x="360" y="428" fill="#4a5568" font-size="10">yes</text>
+
+    <!-- Inner solve -->
+    <rect x="170" y="438" width="360" height="44" rx="6" fill="#13161b" stroke="#2e3540"/>
+    <text x="350" y="457" text-anchor="middle" fill="#c8cdd6">Inner: solve F_λ(x) = 0 from x_current</text>
+    <text x="350" y="473" text-anchor="middle" fill="#4a5568" font-size="10">F_λ = (1-λ)·J₀·(x-x₀) + λ·F(x)</text>
+    <line x1="350" y1="482" x2="350" y2="510" stroke="#4a9eff" stroke-width="1.5" marker-end="url(#arr)"/>
+
+    <!-- Konvergiert? -->
+    <polygon points="350,512 470,538 350,564 230,538"
+             fill="#1a1e25" stroke="#a78bfa" stroke-width="1.5"/>
+    <text x="350" y="542" text-anchor="middle" fill="#a78bfa" font-size="11">inner OK?</text>
+
+    <!-- Nein: dλ halbieren -->
+    <line x1="230" y1="538" x2="120" y2="538" stroke="#f0a030" stroke-width="1.5" marker-end="url(#arr-warn)"/>
+    <rect x="10" y="518" width="110" height="40" rx="4" fill="#1a1600" stroke="#f0a030"/>
+    <text x="65" y="535" text-anchor="middle" fill="#f0a030" font-size="11">dλ ← dλ / 2</text>
+    <text x="65" y="550" text-anchor="middle" fill="#4a5568" font-size="10">retry</text>
+    <line x1="65" y1="518" x2="65" y2="395" stroke="#f0a030" stroke-width="1"/>
+    <line x1="65" y1="395" x2="228" y2="395" stroke="#f0a030" stroke-width="1" marker-end="url(#arr-warn)"/>
+    <text x="180" y="528" fill="#f0a030" font-size="10">no</text>
+
+    <!-- Ja: λ-Update -->
+    <line x1="350" y1="564" x2="610" y2="564" stroke="#3ecf8e" stroke-width="1.5"/>
+    <line x1="610" y1="564" x2="610" y2="411" stroke="#3ecf8e" stroke-width="1"/>
+    <line x1="610" y1="411" x2="471" y2="411" stroke="#3ecf8e" stroke-width="1" marker-end="url(#arr-ok)"/>
+    <text x="360" y="558" fill="#3ecf8e" font-size="10">yes: λ ← λ_next</text>
+  </svg>
+  </div></div>
+</section>
+
+<section id="pseudocode">
+  <h2 data-lang="de">Pseudocode</h2><h2 data-lang="en">Pseudocode</h2>
+<div data-lang="de"><pre><code>solve(sysData, useInitData):
+  x₀ = extractFreeValues(sysData)
+
+  // ---- Phase 1: try-direct-first ----
+  if hcfg.tryDirectFirst:
+    innerCfg = buildInnerConfig()              // Newton-Armijo + EQUILIBRATE etc.
+    direct = innerCfg.solver.solve(sysData)
+    if direct.converged:
+      return success(direct)
+    reset values to x₀                          // wichtig: x kann driften
+
+  // ---- Phase 2: λ-Continuation ----
+  J₀ = FD-Jacobi am Startpunkt
+  x_current = x₀
+  λ = 0,  dλ = 0.5
+  innerSolver = SolverFactory.create(innerCfg)
+
+  while λ &lt; 1:
+    λ_next = min(λ + dλ, 1)
+    subSystem = buildHomotopySystem(sysData, J₀, x₀, λ_next)
+    applyValuesToSystem(subSystem, x_current)
+    inner = innerSolver.solve(subSystem)
+
+    if inner.converged:
+      x_current = extractFreeValues(subSystem)
+      λ = λ_next
+      if inner.iter &lt; target/2:
+        dλ = min(dλ * 1.5, 0.5)
+    else:
+      dλ /= 2
+      if dλ &lt; 1e-3: abort
+
+  return success(x_current)
+</code></pre></div><div data-lang="en"><pre><code>solve(sysData, useInitData):
+  x₀ = extractFreeValues(sysData)
+
+  // ---- Phase 1: try-direct-first ----
+  if hcfg.tryDirectFirst:
+    innerCfg = buildInnerConfig()              // Newton-Armijo + EQUILIBRATE etc.
+    direct = innerCfg.solver.solve(sysData)
+    if direct.converged:
+      return success(direct)
+    reset values to x₀                          // important: x may have drifted
+
+  // ---- Phase 2: λ continuation ----
+  J₀ = FD Jacobian at start point
+  x_current = x₀
+  λ = 0,  dλ = 0.5
+  innerSolver = SolverFactory.create(innerCfg)
+
+  while λ &lt; 1:
+    λ_next = min(λ + dλ, 1)
+    subSystem = buildHomotopySystem(sysData, J₀, x₀, λ_next)
+    applyValuesToSystem(subSystem, x_current)
+    inner = innerSolver.solve(subSystem)
+
+    if inner.converged:
+      x_current = extractFreeValues(subSystem)
+      λ = λ_next
+      if inner.iter &lt; target/2:
+        dλ = min(dλ * 1.5, 0.5)
+    else:
+      dλ /= 2
+      if dλ &lt; 1e-3: abort
+
+  return success(x_current)
+</code></pre></div>
+</section>
+
+<section id="dateien">
+  <h2 data-lang="de">Dateien</h2><h2 data-lang="en">Files</h2>
+  <div class="file-list">
+    <div class="file-icon">📄</div>
+    <div>
+      <code>src/apps/eqnParser/solver/AdaptiveLambdaSolver.java</code>
+      <span class="file-desc" data-lang="de">Hauptklasse, 375 Zeilen — Phase 1 + Phase 2</span><span class="file-desc" data-lang="en">Main class, 375 lines — phase 1 + phase 2</span>
+    </div>
+  </div>
+  <div class="file-list">
+    <div class="file-icon">⚙️</div>
+    <div>
+      <code>src/apps/eqnParser/solver/HomotopyConfig.java</code>
+      <span class="file-desc" data-lang="de">Wiederverwendet, neu: <code>tryDirectFirst</code>-Feld (Default true)</span><span class="file-desc" data-lang="en">Reused, new: <code>tryDirectFirst</code> field (default true)</span>
+    </div>
+  </div>
+  <div class="file-list">
+    <div class="file-icon">🔗</div>
+    <div>
+      <code>src/apps/eqnParser/solver/HomotopySolver.java</code>
+      <span class="file-desc" data-lang="de">Helper-Methoden (buildHomotopySystem, computeInitialJacobian, ...) sind package-private und werden geteilt</span><span class="file-desc" data-lang="en">Helper methods (buildHomotopySystem, computeInitialJacobian, ...) are package-private and shared</span>
+    </div>
+  </div>
+</section>
+
+<section id="parameter">
+  <h2 data-lang="de">CLI-Parameter</h2><h2 data-lang="en">CLI parameters</h2>
+
+  <table class="comparison">
+    <thead>
+      <tr>
+        <th>Parameter</th>
+        <th>Default</th>
+        <th data-lang="de">Beschreibung</th><th data-lang="en">Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>-S:ADAPTIVE_LAMBDA</code></td>
+        <td>—</td>
+        <td data-lang="de">Aktiviert den Solver</td><td data-lang="en">Activates the solver</td>
+      </tr>
+      <tr>
+        <td><code>-SC:&lt;strategy&gt;</code></td>
+        <td>NONE</td>
+        <td data-lang="de">Skalierungsstrategie wird auf den inneren Solver vererbt
+          (NONE / EQUILIBRATE / DIAGONAL)</td><td data-lang="en">Scaling strategy is inherited by the inner solver
+          (NONE / EQUILIBRATE / DIAGONAL)</td>
+      </tr>
+      <tr>
+        <td><code>-SH:DIRECT=ON|OFF</code></td>
+        <td>ON</td>
+        <td data-lang="de">Phase 1 (try-direct-first) ein/aus. OFF erzwingt
+          Phase 2 (Continuation) auch wenn Phase 1 erfolgreich wäre</td><td data-lang="en">Phase 1 (try-direct-first) on/off. OFF forces phase 2 (continuation)
+          even when phase 1 would succeed</td>
+      </tr>
+      <tr>
+        <td><code>-SH:INNER=&lt;type&gt;</code></td>
+        <td>NEWTON_ARMIJO</td>
+        <td data-lang="de">Algorithmus des inneren Solvers (NEWTON_ARMIJO, LEVENBERG_MARQUARDT, BROYDEN)</td><td data-lang="en">Algorithm of the inner solver (NEWTON_ARMIJO, LEVENBERG_MARQUARDT, BROYDEN)</td>
+      </tr>
+      <tr>
+        <td><code>-SH:STEPS=&lt;n&gt;</code></td>
+        <td>10</td>
+        <td data-lang="de">Maximal-Anzahl Pfadschritte in Phase 2</td><td data-lang="en">Maximum number of path steps in phase 2</td>
+      </tr>
+      <tr>
+        <td><code>-SH:DS=&lt;x&gt;</code></td>
+        <td>0.1</td>
+        <td data-lang="de">Initiale dλ-Schrittweite (wird intern auf 0.5 erhöht)</td><td data-lang="en">Initial dλ step size (raised internally to 0.5)</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3 data-lang="de">Beispiel-Aufrufe</h3><h3 data-lang="en">Example invocations</h3>
+<pre><code><span class="cmt" data-lang="de"># Standard: Phase 1 versucht NEWTON_ARMIJO+EQUILIBRATE direkt</span><span class="cmt" data-lang="en"># Default: phase 1 tries NEWTON_ARMIJO+EQUILIBRATE directly</span>
+java cmd.CASSolver -I:NozzleSystem.cas -S:ADAPTIVE_LAMBDA -SC:EQUILIBRATE
+
+<span class="cmt" data-lang="de"># Continuation erzwingen (auch wenn direkt klappen würde)</span><span class="cmt" data-lang="en"># Force continuation (even if direct would succeed)</span>
+java cmd.CASSolver -I:NozzleSystem.cas -S:ADAPTIVE_LAMBDA -SC:EQUILIBRATE -SH:DIRECT=OFF
+
+<span class="cmt" data-lang="de"># Mit LM als innerem Solver</span><span class="cmt" data-lang="en"># With LM as the inner solver</span>
+java cmd.CASSolver -I:NozzleSystem.cas -S:ADAPTIVE_LAMBDA -SC:EQUILIBRATE -SH:INNER=LEVENBERG_MARQUARDT
+</code></pre>
+</section>
+
+<section id="verhalten">
+  <h2 data-lang="de">Verhalten auf NozzleSystem</h2><h2 data-lang="en">Behavior on NozzleSystem</h2>
+
+  <h3 data-lang="de">Phase 1 mit EQUILIBRATE — produktiv ✅</h3><h3 data-lang="en">Phase 1 with EQUILIBRATE — production-ready ✅</h3>
+  <pre data-lang="de"><code>$ -S:ADAPTIVE_LAMBDA -SC:EQUILIBRATE
+
+[INFO] Phase 1: trying direct Newton-Raphson + Armijo line search (scaling=EQUILIBRATE)
+[INFO] Iter 0: ||F||=2.27e+07
+[INFO] Iter 5: ||F||=8.99e-09  ← konvergiert
+[INFO] Phase 1 succeeded: direct solver converged in 5 iter — no continuation needed</code></pre><pre data-lang="en"><code>$ -S:ADAPTIVE_LAMBDA -SC:EQUILIBRATE
+
+[INFO] Phase 1: trying direct Newton-Raphson + Armijo line search (scaling=EQUILIBRATE)
+[INFO] Iter 0: ||F||=2.27e+07
+[INFO] Iter 5: ||F||=8.99e-09  ← converged
+[INFO] Phase 1 succeeded: direct solver converged in 5 iter — no continuation needed</code></pre>
+
+  <h3 data-lang="de">Phase 1 ohne Skalierung — auch produktiv ✅</h3><h3 data-lang="en">Phase 1 without scaling — also production-ready ✅</h3>
+  <p data-lang="de">
+    Mit GAMMA-Bound-Fix (Lower=1.05) im Modell konvergiert Newton auch
+    ohne Equilibrator:
+  </p><p data-lang="en">
+    With the GAMMA bound fix (Lower=1.05) in the model, Newton also converges
+    without the equilibrator:
+  </p>
+  <pre data-lang="de"><code>$ -S:ADAPTIVE_LAMBDA
+
+[INFO] Phase 1: trying direct (scaling=NONE)
+[INFO] Iter 6: ||F||=1.64e-08  ← konvergiert
+[INFO] Phase 1 succeeded: direct solver converged in 6 iter</code></pre><pre data-lang="en"><code>$ -S:ADAPTIVE_LAMBDA
+
+[INFO] Phase 1: trying direct (scaling=NONE)
+[INFO] Iter 6: ||F||=1.64e-08  ← converged
+[INFO] Phase 1 succeeded: direct solver converged in 6 iter</code></pre>
+
+  <h3 data-lang="de">Phase 2 mit -SH:DIRECT=OFF — divergiert ❌</h3><h3 data-lang="en">Phase 2 with -SH:DIRECT=OFF — diverges ❌</h3>
+  <pre data-lang="de"><code>$ -S:ADAPTIVE_LAMBDA -SC:EQUILIBRATE -SH:DIRECT=OFF
+
+[INFO] Phase 2: starting lambda continuation
+[INFO] Step 1: λ 0.0000 → 0.5000
+[INFO] inner Iter 0: ||F||=9.02e+07     ← schon größer als Original-||F(x₀)||
+[INFO] inner Iter 99: ||F||=1.33e+10    ← divergiert
+[WARN]   → failed at λ=0.5000, reducing dλ
+[INFO] Step 2: λ 0.0000 → 0.2500
+[INFO] inner Iter 0: ||F||=2.92e+07
+... (gleiche Divergenz)</code></pre><pre data-lang="en"><code>$ -S:ADAPTIVE_LAMBDA -SC:EQUILIBRATE -SH:DIRECT=OFF
+
+[INFO] Phase 2: starting lambda continuation
+[INFO] Step 1: λ 0.0000 → 0.5000
+[INFO] inner Iter 0: ||F||=9.02e+07     ← already larger than original ||F(x₀)||
+[INFO] inner Iter 99: ||F||=1.33e+10    ← diverges
+[WARN]   → failed at λ=0.5000, reducing dλ
+[INFO] Step 2: λ 0.0000 → 0.2500
+[INFO] inner Iter 0: ||F||=2.92e+07
+... (same divergence)</code></pre>
+
+  <h3 data-lang="de">Diagnose der Phase-2-Divergenz</h3><h3 data-lang="en">Diagnostic of phase-2 divergence</h3>
+  <p data-lang="de">
+    Das Sub-System <code>F_λ(x) = (1-λ)·J₀·(x-x₀) + λ·F(x) = 0</code> hat
+    bei NozzleSystem ein konzeptionelles Skalen-Problem:
+  </p><p data-lang="en">
+    The sub-system <code>F_λ(x) = (1-λ)·J₀·(x-x₀) + λ·F(x) = 0</code> has a
+    conceptual scale problem on NozzleSystem:
+  </p>
+  <ul data-lang="de">
+    <li>Linearer Anteil <code>J₀·(x-x₀)</code> wächst <em>linear</em> mit
+        |x-x₀|. Bei großen Newton-Schritten dominiert er F(x).</li>
+    <li>Bounds-Verletzungen: <code>FULLM.F080.PS = -2.02e+06 (Lower=1000)</code>,
+        <code>FULLM.F180.RHO = -22 (Lower=0)</code> — Newton's Schritt
+        treibt Variablen weit aus zulässigen Bereichen.</li>
+    <li>Equilibrator-Skalen springen zwischen Iter sprunghaft
+        (<code>rowScale_min: 2.16e-12 → 2.96e-16</code>) — System verliert
+        seine Konsistenz.</li>
+  </ul><ul data-lang="en">
+    <li>The linear part <code>J₀·(x-x₀)</code> grows <em>linearly</em> with
+        |x-x₀|. On large Newton steps it dominates F(x).</li>
+    <li>Bounds violations: <code>FULLM.F080.PS = -2.02e+06 (Lower=1000)</code>,
+        <code>FULLM.F180.RHO = -22 (Lower=0)</code> — Newton's step pushes
+        variables far outside admissible ranges.</li>
+    <li>Equilibrator scales jump abruptly between iterations
+        (<code>rowScale_min: 2.16e-12 → 2.96e-16</code>) — the system loses
+        its consistency.</li>
+  </ul>
+
+  <p data-lang="de">
+    Das ist <strong>kein Solver-Bug</strong>, sondern eine Folge der
+    Problem-Topologie: das Modell hat enge Bounds (Drücke ≥ 1000 Pa)
+    und Newton-Armijo's Armijo-Dämpfung reicht nicht aus um auf dem
+    H_λ-System zu konvergieren — selbst wenn er auf dem reinen F-System
+    konvergieren würde.
+  </p><p data-lang="en">
+    This is <strong>not a solver bug</strong> but a consequence of the
+    problem topology: the model has tight bounds (pressures ≥ 1000 Pa) and
+    Newton-Armijo's Armijo damping is not sufficient to converge on the H_λ
+    system — even when it would converge on the plain F system.
+  </p>
+</section>
+
+<section id="grenzen">
+  <h2 data-lang="de">Grenzen — wann nicht verwenden</h2><h2 data-lang="en">Limits — when not to use</h2>
+
+  <ul data-lang="de">
+    <li>
+      <strong>Phase 2 auf Modellen mit engen Bounds und kappa &gt; 10⁹:</strong>
+      Funktioniert nicht zuverlässig (siehe NozzleSystem-Diagnose oben).
+      Diese Modelle sind besser direkt mit Newton-Armijo+EQUILIBRATE oder
+      LM zu lösen.
+    </li>
+    <li>
+      <strong>Phase 1 wenn Newton sicher direkt scheitert:</strong> Spart
+      ein paar Iterationen wenn man Continuation eh braucht — dann
+      <code>-SH:DIRECT=OFF</code> setzen. Aber ehrlicherweise ist dann
+      auch Phase 2 fragwürdig.
+    </li>
+  </ul><ul data-lang="en">
+    <li>
+      <strong>Phase 2 on models with tight bounds and kappa &gt; 10⁹:</strong>
+      Does not work reliably (see NozzleSystem diagnostic above). These
+      models are better solved directly with Newton-Armijo+EQUILIBRATE or LM.
+    </li>
+    <li>
+      <strong>Phase 1 when Newton is sure to fail directly:</strong> saves a
+      few iterations if continuation is needed anyway — then set
+      <code>-SH:DIRECT=OFF</code>. But honestly, phase 2 is also questionable
+      in that case.
+    </li>
+  </ul>
+
+  <h3 data-lang="de">Wann er sinnvoll ist</h3><h3 data-lang="en">When it is useful</h3>
+  <ul data-lang="de">
+    <li><strong>Als Wrapper bei unbekanntem Modell-Verhalten:</strong>
+        Phase 1 versucht's pragmatisch, Phase 2 ist Sicherheitsnetz.
+        Bei moderaten Modellen kann Phase 2 helfen.</li>
+    <li><strong>Phase 1 alleine als Default-Solver:</strong> Identische
+        Performance zu Newton-Armijo, aber mit eingebautem Fallback-Verhalten
+        falls die innere Konvergenz scheitert.</li>
+  </ul><ul data-lang="en">
+    <li><strong>As a wrapper for unknown model behavior:</strong> phase 1
+        tries pragmatically, phase 2 is the safety net. On moderate models
+        phase 2 can help.</li>
+    <li><strong>Phase 1 alone as default solver:</strong> identical
+        performance to Newton-Armijo, but with built-in fallback behavior
+        if inner convergence fails.</li>
+  </ul>
+
+  <h3 data-lang="de">Roadmap</h3><h3 data-lang="en">Roadmap</h3>
+  <p data-lang="de">
+    Phase 2 könnte mit folgenden Verbesserungen produktiv werden:
+  </p><p data-lang="en">
+    Phase 2 could become production-ready with the following improvements:
+  </p>
+  <ul data-lang="de">
+    <li>Skalen-bewusste H_λ-Definition: <code>F_λ = (1-λ)·D·(x-x₀) + λ·F(x)</code>
+      mit Diagonalmatrix D passend zu F-Skalen</li>
+    <li>Bounds-Vorhersage im äußeren Loop — kleineres dλ wählen wenn
+      Bounds-Verletzung droht</li>
+    <li>Trust-Region zwischen λ-Schritten</li>
+  </ul><ul data-lang="en">
+    <li>Scale-aware H_λ definition: <code>F_λ = (1-λ)·D·(x-x₀) + λ·F(x)</code>
+      with diagonal matrix D matched to F scales</li>
+    <li>Bounds prediction in the outer loop — pick a smaller dλ when bounds
+      violation looms</li>
+    <li>Trust region between λ steps</li>
+  </ul>
+  <p data-lang="de">
+    Diese Verbesserungen sind nicht implementiert weil das vorhandene
+    Test-Modell (NozzleSystem mit GAMMA-Fix) Phase 1 löst und kein
+    weiteres pathologisches Modell zur Validierung verfügbar ist.
+  </p><p data-lang="en">
+    These improvements are not implemented because the existing test model
+    (NozzleSystem with GAMMA fix) is solved by phase 1 and no further
+    pathological model is available for validation.
+  </p>
+</section>
+
+</main>
+
+<footer>
+  <span data-lang="de">CMDSolver Docs · Adaptive-Lambda (Phase 1 produktiv, Phase 2 experimental) · v2.12</span><span data-lang="en">CMDSolver Docs · Adaptive-Lambda (phase 1 production, phase 2 experimental) · v2.12</span>
+  <span>
+    <a href="solver_arc_length.html" data-lang="de">← Arc-Length</a><a href="solver_arc_length.html" data-lang="en">← Arc-Length</a>
+    &nbsp;|&nbsp;
+    <a href="index.html" data-lang="de">Übersicht →</a><a href="index.html" data-lang="en">Overview →</a>
+  </span>
+</footer>
+
+</body>
+</html>

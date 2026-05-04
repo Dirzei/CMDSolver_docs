@@ -4,9 +4,395 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>CMDSolver Dokumentation</title>
-<link rel="stylesheet" href="docs.css">
 <style>
+/* CMDSolver Documentation — Shared Stylesheet */
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;1,400&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap');
+
+:root {
+  --bg:      #0d0f12;
+  --bg2:     #13161b;
+  --bg3:     #1a1e25;
+  --bg4:     #20252f;
+  --border:  #252a33;
+  --border2: #2e3540;
+  --text:    #c8cdd6;
+  --text2:   #7a8496;
+  --text3:   #4a5568;
+  --accent:  #4a9eff;
+  --ok:      #3ecf8e;
+  --warn:    #f0a030;
+  --err:     #ff5c5c;
+  --purple:  #a78bfa;
+  --teal:    #2dd4bf;
+  --mono:    'IBM Plex Mono', monospace;
+  --sans:    'IBM Plex Sans', sans-serif;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: var(--sans);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 13.5px;
+  line-height: 1.75;
+}
+
+/* ── Header ── */
+.doc-header {
+  border-bottom: 1px solid var(--border);
+  padding: 1.2rem 3rem;
+  display: flex; align-items: center;
+  justify-content: space-between; flex-wrap: wrap; gap: 1rem;
+}
+
+.breadcrumb {
+  font-family: var(--mono); font-size: 11px; color: var(--text3);
+  letter-spacing: .08em; text-transform: uppercase;
+  display: flex; align-items: center; gap: .5rem;
+}
+.breadcrumb a { color: var(--accent); text-decoration: none; }
+.breadcrumb span { color: var(--text3); }
+
+.doc-badge {
+  font-family: var(--mono); font-size: 11px;
+  padding: 3px 10px; border-radius: 4px;
+}
+.doc-badge.solver {
+  background: rgba(74,158,255,.1); border: 1px solid rgba(74,158,255,.25);
+  color: var(--accent);
+}
+.doc-badge.overview {
+  background: rgba(167,139,250,.1); border: 1px solid rgba(167,139,250,.25);
+  color: var(--purple);
+}
+.doc-badge.comparison {
+  background: rgba(62,207,142,.1); border: 1px solid rgba(62,207,142,.25);
+  color: var(--ok);
+}
+
+/* ── Hero ── */
+.hero {
+  padding: 2.5rem 3rem 2rem;
+  border-bottom: 1px solid var(--border);
+  background: linear-gradient(135deg, var(--bg) 0%, #0f1520 100%);
+}
+.hero-sub {
+  font-family: var(--mono); font-size: 11px; color: var(--text3);
+  letter-spacing: .15em; text-transform: uppercase; margin-bottom: .5rem;
+}
+h1 {
+  font-size: 28px; font-weight: 600; color: #e8ecf4;
+  letter-spacing: -.03em; margin-bottom: .5rem; line-height: 1.2;
+}
+.tagline {
+  font-size: 14px; color: var(--text2); margin-bottom: 1.5rem;
+  max-width: 680px;
+}
+.hero-stats { display: flex; gap: 2rem; flex-wrap: wrap; }
+.stat { display: flex; flex-direction: column; gap: .2rem; }
+.stat-val {
+  font-family: var(--mono); font-size: 18px; font-weight: 500; color: var(--ok);
+}
+.stat-lbl {
+  font-size: 11px; color: var(--text3);
+  text-transform: uppercase; letter-spacing: .08em;
+}
+
+/* ── Nav ── */
+nav {
+  position: sticky; top: 0; z-index: 10;
+  background: rgba(13,15,18,.95); backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--border);
+  padding: .6rem 3rem;
+  display: flex; gap: 1.5rem; flex-wrap: wrap;
+}
+nav a {
+  font-family: var(--mono); font-size: 11px; color: var(--text3);
+  text-decoration: none; letter-spacing: .08em;
+  text-transform: uppercase; transition: color .15s;
+}
+nav a:hover { color: var(--accent); }
+
+/* ── Main ── */
+main { padding: 2rem 3rem 4rem; max-width: 1040px; }
+
+section { margin-bottom: 3.5rem; scroll-margin-top: 3rem; }
+
+section > h2 {
+  font-size: 12px; font-family: var(--mono);
+  letter-spacing: .12em; text-transform: uppercase;
+  color: var(--text3); margin-bottom: 1.4rem;
+  padding-bottom: .5rem; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: .6rem;
+}
+section > h2::before {
+  content: ''; display: inline-block;
+  width: 8px; height: 8px; border-radius: 50%; background: var(--accent);
+}
+
+h3 { font-size: 14px; font-weight: 500; color: #e8ecf4; margin: 1.6rem 0 .6rem; }
+h4 { font-size: 13px; font-weight: 500; color: var(--text2); margin: 1.2rem 0 .4rem; }
+
+p { color: var(--text); margin-bottom: .9rem; max-width: 780px; }
+
+/* ── Math ── */
+.math-block {
+  background: var(--bg3); border: 1px solid var(--border);
+  border-left: 3px solid var(--purple);
+  border-radius: 6px; padding: 1.2rem 1.5rem;
+  margin: 1rem 0 1.2rem; font-family: var(--mono);
+  font-size: 13px; line-height: 2.1; white-space: pre;
+}
+.math-block .eq  { color: #e8ecf4; }
+.math-block .cmt { color: var(--text3); font-style: italic; }
+.math-block .hi  { color: var(--teal); }
+.math-block .hi2 { color: var(--warn); }
+
+/* ── Notes ── */
+.note {
+  border-radius: 6px; padding: .85rem 1.1rem;
+  font-size: 13px; line-height: 1.7; margin-bottom: 1.2rem;
+}
+.note.blue   { background: rgba(74,158,255,.06);  border-left: 3px solid var(--accent); }
+.note.green  { background: rgba(62,207,142,.06);  border-left: 3px solid var(--ok); }
+.note.amber  { background: rgba(240,160,48,.06);  border-left: 3px solid var(--warn); }
+.note.red    { background: rgba(255,92,92,.06);   border-left: 3px solid var(--err); }
+.note.purple { background: rgba(167,139,250,.06); border-left: 3px solid var(--purple); }
+.note strong { color: #e8ecf4; }
+
+/* ── Code ── */
+code {
+  font-family: var(--mono); font-size: 11.5px;
+  background: rgba(255,255,255,.05); padding: 1px 5px;
+  border-radius: 3px; color: #a8c8f0;
+}
+pre {
+  font-family: var(--mono); font-size: 12px;
+  background: var(--bg3); border: 1px solid var(--border);
+  border-radius: 8px; padding: 1rem 1.2rem;
+  overflow-x: auto; line-height: 1.7; margin-bottom: 1rem; color: #c8cdd6;
+}
+.kw  { color: var(--purple); }
+.cmt { color: var(--text3); font-style: italic; }
+.fn  { color: var(--teal); }
+.num { color: var(--warn); }
+.str { color: var(--ok); }
+
+/* ── Tables ── */
+.tbl-wrap {
+  overflow-x: auto; border-radius: 8px;
+  border: 1px solid var(--border); margin-bottom: 1.5rem;
+}
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+thead th {
+  background: var(--bg3); padding: 9px 14px; text-align: left;
+  font-weight: 500; font-size: 11px; letter-spacing: .06em;
+  text-transform: uppercase; color: var(--text2);
+  border-bottom: 1px solid var(--border2); white-space: nowrap;
+}
+tbody tr { border-bottom: 1px solid var(--border); transition: background .1s; }
+tbody tr:last-child { border-bottom: none; }
+tbody tr:hover { background: var(--bg3); }
+td { padding: 9px 14px; vertical-align: top; line-height: 1.6; }
+td.center { text-align: center; }
+
+/* ── Badges ── */
+.badge {
+  display: inline-block; font-size: 11px; padding: 2px 9px;
+  border-radius: 12px; font-family: var(--mono); white-space: nowrap;
+}
+.b-ok   { background: rgba(62,207,142,.1);  color: var(--ok);     border: 1px solid rgba(62,207,142,.25); }
+.b-warn { background: rgba(240,160,48,.1);  color: var(--warn);   border: 1px solid rgba(240,160,48,.25); }
+.b-err  { background: rgba(255,92,92,.1);   color: var(--err);    border: 1px solid rgba(255,92,92,.25); }
+.b-info { background: rgba(74,158,255,.1);  color: var(--accent); border: 1px solid rgba(74,158,255,.25); }
+.b-na   { background: rgba(74,84,96,.1);    color: var(--text3);  border: 1px solid var(--border2); }
+
+/* ── Star rating ── */
+.stars { color: var(--warn); letter-spacing: -.05em; }
+.stars.dim { color: var(--border2); }
+
+/* ── File list ── */
+.file-list { list-style: none; }
+.file-list li {
+  display: flex; gap: 1rem; align-items: flex-start;
+  padding: .7rem 1rem; background: var(--bg2);
+  border: 1px solid var(--border); border-radius: 4px; margin-bottom: .4rem;
+}
+.file-icon {
+  font-family: var(--mono); font-size: 11px; color: var(--accent);
+  white-space: nowrap; margin-top: 2px; min-width: 50px;
+}
+.file-desc { font-size: 13px; color: var(--text2); }
+.file-desc strong { color: var(--text); display: block; margin-bottom: .2rem; }
+
+/* ── Flowchart ── */
+.flowchart {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 10px; padding: 1.5rem; margin: 1rem 0 1.5rem;
+  overflow-x: auto;
+}
+
+/* ── Footer ── */
+footer {
+  border-top: 1px solid var(--border); padding: 1.5rem 3rem;
+  font-family: var(--mono); font-size: 11px; color: var(--text3);
+  display: flex; justify-content: space-between; flex-wrap: wrap; gap: .5rem;
+}
+footer a { color: var(--accent); text-decoration: none; }
+
+/* ── Footnotes ── */
+.footnotes {
+  margin-top: 2rem; padding-top: 1.5rem;
+  border-top: 1px solid var(--border);
+  font-size: 12px; color: var(--text2);
+}
+.footnotes p { max-width: none; margin-bottom: .5rem; }
+sup { font-size: 10px; color: var(--accent); }
+
+/* Default: alle Sprachelemente sichtbar (kein JS-Flash) */
+/* Mit lang-Klasse auf body: nur die aktive Sprache sichtbar */
+
+/* Nur wenn body eine Sprachklasse hat, werden Elemente ausgeblendet */
+/* Sprach-Sichtbarkeit via 
+  /* ── Index Kachel-Layout ── */
   .index-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1rem; margin-bottom: 2rem;
+  }
+  .index-card {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: 10px; padding: 1.4rem; text-decoration: none;
+    display: block; transition: border-color .2s, background .2s;
+  }
+  .index-card:hover { border-color: var(--accent); background: var(--bg3); }
+  .index-card.featured { border-color: rgba(62,207,142,.3); }
+  .index-card.featured:hover { border-color: var(--ok); }
+  .card-num {
+    font-family: var(--mono); font-size: 10px; color: var(--text3);
+    letter-spacing: .1em; text-transform: uppercase; margin-bottom: .4rem;
+  }
+  .card-title { font-size: 15px; font-weight: 500; color: #e8ecf4; margin-bottom: .4rem; line-height: 1.3; }
+  .card-desc  { font-size: 12px; color: var(--text2); line-height: 1.6; margin-bottom: .8rem; }
+  .card-meta  { display: flex; gap: .5rem; align-items: center; flex-wrap: wrap; }
+  .card-type  {
+    font-family: var(--mono); font-size: 10px; color: var(--text3);
+    padding: 2px 7px; border-radius: 3px;
+    background: rgba(255,255,255,.04); border: 1px solid var(--border2);
+  }
+  .card-type.solver { color: var(--accent); border-color: rgba(74,158,255,.2); }
+  .card-type.math   { color: var(--purple); border-color: rgba(167,139,250,.2); }
+  .card-type.comp   { color: var(--ok);     border-color: rgba(62,207,142,.2); }
+  .perf-chip { font-family: var(--mono); font-size: 10px; color: var(--ok); margin-left: auto; }
+  .version-box {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: 8px; padding: 1rem 1.4rem;
+    margin-bottom: 2rem; display: flex; align-items: center; gap: 2rem; flex-wrap: wrap;
+  }
+  .version-box .v  { font-family: var(--mono); font-size: 22px; font-weight: 500; color: var(--ok); }
+  .version-box .vl { font-size: 11px; color: var(--text3); }
+
+
+/* ── Collapsible sections ─────────────────────────────────────────── */
+details.section {
+  margin-bottom: 2rem;
+  scroll-margin-top: 5rem;
+}
+details.section[open] {
+  margin-bottom: 3.5rem;
+}
+details.section > summary {
+  list-style: none;        /* Firefox */
+  cursor: pointer;
+  user-select: none;
+  margin-bottom: 1.4rem;
+  padding-bottom: .5rem;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  transition: border-bottom-color .15s, color .15s;
+}
+details.section > summary::-webkit-details-marker { display: none; }  /* Safari */
+details.section > summary:hover { border-bottom-color: var(--border2); }
+details.section > summary:hover h2 { color: var(--text2); }
+
+/* Bullet (kept from original h2::before) */
+details.section > summary::before {
+  content: '';
+  display: inline-block;
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+  flex-shrink: 0;
+  transition: background .15s;
+}
+details.section:not([open]) > summary::before { background: var(--text3); }
+
+/* h2 inside summary keeps its existing style — display NICHT setzen,
+   sonst überschreibt die höhere Spezifität die i18n-Hide-Regeln aus
+   i18n.css und beide Sprachen werden gleichzeitig sichtbar. */
+details.section > summary > h2 {
+  font-size: 12px; font-family: var(--mono);
+  letter-spacing: .12em; text-transform: uppercase;
+  color: var(--text3); margin: 0;
+  border: none; padding: 0;
+  transition: color .15s;
+}
+
+/* Chevron on the right side */
+details.section > summary::after {
+  content: '';
+  margin-left: auto;
+  width: 7px; height: 7px;
+  border-right: 1.5px solid var(--text3);
+  border-bottom: 1.5px solid var(--text3);
+  transform: rotate(-45deg);     /* points up — collapsed */
+  transition: transform .2s ease;
+  flex-shrink: 0;
+}
+details.section[open] > summary::after {
+  transform: rotate(45deg);      /* points down — expanded */
+}
+
+/* When closed, also add a small "n items" hint */
+details.section > summary > .item-count {
+  font-family: var(--mono); font-size: 10px;
+  color: var(--text3); margin-left: .8rem;
+  letter-spacing: .05em; text-transform: none;
+}
+details.section[open] > summary > .item-count { display: none; }
+
+/* ── Expand-/Collapse-All toolbar ─────────────────────────────────── */
+.section-toolbar {
+  display: flex; gap: .5rem; align-items: center;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  font-family: var(--mono); font-size: 11px;
+}
+.section-toolbar button {
+  background: none;
+  border: 1px solid var(--border2);
+  color: var(--text3);
+  padding: 4px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: .04em;
+  transition: all .15s;
+}
+.section-toolbar button:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+
+
+/* ── Seitenspezifische Klassen ────────────────────────
+   (aus alter index.html wiederhergestellt) */
+.index-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
     gap: 1rem;
@@ -72,124 +458,211 @@
                     font-weight: 500; color: var(--ok); }
   .version-box .vl { font-size: 11px; color: var(--text3); }
 </style>
+<link rel="stylesheet" href="i18n.css">
 </head>
-<body>
 
+<div id="zip-warning" style="display:none;background:#f0a030;color:#000;padding:.8rem 3rem;font-family:monospace;font-size:12px;">
+  ⚠ Bitte die ZIP-Datei zuerst entpacken, dann index.html aus dem entpackten Ordner öffnen — nicht direkt aus dem ZIP.
+  &nbsp;|&nbsp; Please extract the ZIP first, then open index.html from the extracted folder — not from within the ZIP.
+</div>
+<script>
+  // Warnung anzeigen wenn aus ZIP geöffnet (Pfad enthält .zip)
+  if(location.href.indexOf('.zip') > -1 || location.protocol === 'blob:') {
+    document.getElementById('zip-warning').style.display='block';
+  }
+</script>
+<body>
+<script>
+(function(){
+  var stored = '';
+  try { stored = localStorage.getItem('cmdlang') || ''; } catch(e){}
+  var lang = stored || 'de';
+
+  function apply(l) {
+    lang = l;
+    try { localStorage.setItem('cmdlang', l); } catch(e){}
+    document.documentElement.lang = l;
+    var body = document.body;
+    body.classList.remove('lang-de','lang-en');
+    body.classList.add('lang-' + l);
+    document.querySelectorAll('.lang-btn').forEach(function(b){
+      b.classList.toggle('active', b.dataset.lang === l);
+    });
+  }
+
+  // Body-Klasse sofort setzen, damit data-lang-Elemente direkt korrekt
+  // sichtbar sind (kein Flash mit unsichtbarem Header-Inhalt).
+  apply(lang);
+  document.addEventListener('DOMContentLoaded', function(){
+    apply(lang); // erneut, damit jetzt auch die Buttons gestyled werden
+    document.querySelectorAll('.lang-btn').forEach(function(b){
+      b.addEventListener('click', function(){ apply(b.dataset.lang); });
+    });
+    // Sticky-Header Schatten via IntersectionObserver
+    var sentinel = document.querySelector('.header-sentinel');
+    var header   = document.querySelector('.doc-header');
+    if (sentinel && header && 'IntersectionObserver' in window) {
+      new IntersectionObserver(function(entries){
+        header.classList.toggle('scrolled', !entries[0].isIntersecting);
+      }).observe(sentinel);
+    }
+  });
+})();
+</script>
+
+
+
+
+<div class="header-sentinel"></div>
 <div class="doc-header">
   <div class="breadcrumb">
-    <span>CMDSolver Dokumentation</span>
+    <span data-lang="de">CMDSolver Dokumentation</span><span data-lang="en">CMDSolver Documentation</span>
   </div>
-  <span class="doc-badge overview">v2.5</span>
-</div>
+  <div class="doc-header-right"><div class="lang-switch"><button class="lang-btn" data-lang="de">DE</button><button class="lang-btn" data-lang="en">EN</button></div><span class="doc-badge overview">v2.12</span></div></div>
 
 <div class="hero">
-  <div class="hero-sub">Dokumentation</div>
-  <h1>CMDSolver</h1>
-  <p class="tagline">
-    Modularer algebraischer Gleichungssystem-Solver für thermodynamische Modelle.
-    7 Solver-Algorithmen · CAS-Dateiformat · Programmatische API.
-  </p>
+  <div class="hero-sub"><span data-lang="de">Dokumentation</span><span data-lang="en">Documentation</span></div>
+  <h1 data-lang="de">CMDSolver</h1><h1 data-lang="en">CMDSolver</h1>
+  <p class="tagline" data-lang="de">Modularer Newton-Solver für nichtlineare algebraische Gleichungssysteme. 7 Solver-Algorithmen, Jacobi-Equilibrierung, Batch-Parameterstudien, Pre-Solve Diagnose und systematisches Modell-Debugging.</p>
+  <p class="tagline" data-lang="en">Modular Newton solver for nonlinear algebraic equation systems. Seven solver algorithms, Jacobian equilibration, batch parameter studies, pre-solve diagnostics, and systematic model debugging.</p>
   <div class="hero-stats">
-    <div class="stat"><span class="stat-val">7</span><span class="stat-lbl">Solver</span></div>
-    <div class="stat"><span class="stat-val">303+</span><span class="stat-lbl">Gleichungen</span></div>
-    <div class="stat"><span class="stat-val">v2.11</span><span class="stat-lbl">Version</span></div>
-    <div class="stat"><span class="stat-val">Java 11+</span><span class="stat-lbl">Plattform</span></div>
+    <div class="stat"><span class="stat-val">7</span><span class="stat-lbl" data-lang="de">Solver</span><span class="stat-lbl" data-lang="en">Solvers</span></div>
+    <div class="stat"><span class="stat-val">303+</span><span class="stat-lbl" data-lang="de">Gleichungen</span><span class="stat-lbl" data-lang="en">Equations</span></div>
+    <div class="stat"><span class="stat-val">v2.14</span><span class="stat-lbl" data-lang="de">Version</span><span class="stat-lbl" data-lang="en">Version</span></div>
+    <div class="stat"><span class="stat-val">Java 11+</span><span class="stat-lbl" data-lang="de">Plattform</span><span class="stat-lbl" data-lang="en">Platform</span></div>
   </div>
 </div>
 
 <main>
 
+<div class="section-toolbar">
+  <span data-lang="de"><button class="expand-all">Alle aufklappen</button></span>
+  <span data-lang="en"><button class="expand-all">Expand all</button></span>
+  <span data-lang="de"><button class="collapse-all">Alle einklappen</button></span>
+  <span data-lang="en"><button class="collapse-all">Collapse all</button></span>
+</div>
+
 <!-- Einstieg -->
-<section>
-  <h2>Einstieg</h2>
+<details class="section" open data-key="einstieg">
+  <summary><h2 data-lang="de">Einstieg</h2><h2 data-lang="en">Getting Started</h2><span class="item-count" data-lang="de">4 Einträge</span><span class="item-count" data-lang="en">4 entries</span></summary>
   <div class="index-grid">
 
     <a href="getting_started.html" class="index-card featured">
-      <div class="card-num">Kapitel 0 — Start hier</div>
+      <div class="card-num" data-lang="de">Kapitel 0 — Start hier</div><div class="card-num" data-lang="en">Chapter 0 — Start here</div>
       <div class="card-title">Getting Started</div>
-      <div class="card-desc">
+      <div class="card-desc" data-lang="de">
         Von Null zum ersten Ergebnis in 10 Minuten — CLI-Aufruf und SolverAPI-Einbettung.
         Zwei Einstiegspfade, Fehlerbehandlung, GUI-Integration. Voraussetzungen und Classpath.
       </div>
-      <div class="card-meta"><span class="card-type comp">Start</span></div>
+      <div class="card-desc" data-lang="en">
+        From zero to first result in 10 minutes — CLI invocation and SolverAPI embedding.
+        Two entry paths, error handling, GUI integration. Prerequisites and classpath.
+      </div>
+      <div class="card-meta"><span class="card-type comp" data-lang="de">Start</span><span class="card-type comp" data-lang="en">Start</span></div>
     </a>
 
     <a href="troubleshooting.html" class="index-card">
-      <div class="card-num">Hilfe</div>
-      <div class="card-title">Troubleshooting &amp; FAQ</div>
-      <div class="card-desc">
+      <div class="card-num" data-lang="de">Hilfe</div><div class="card-num" data-lang="en">Help</div>
+      <div class="card-title" data-lang="de">Troubleshooting &amp; FAQ</div><div class="card-title" data-lang="en">Troubleshooting &amp; FAQ</div>
+      <div class="card-desc" data-lang="de">
         Häufige Probleme mit Symptom, Diagnose und Lösung — NOT_CONVERGED,
         κ-Warnungen, NaN, ParseErrors, Versionsmischung.
         Schnellreferenz: Symptom → Lösung auf einen Blick.
       </div>
-      <div class="card-meta"><span class="card-type comp">Hilfe</span></div>
+      <div class="card-desc" data-lang="en">
+        Common issues with symptom, diagnosis, and fix — NOT_CONVERGED,
+        κ warnings, NaN, parse errors, version mismatches.
+        Quick reference: symptom → fix at a glance.
+      </div>
+      <div class="card-meta"><span class="card-type comp" data-lang="de">Hilfe</span><span class="card-type comp" data-lang="en">Help</span></div>
     </a>
 
     <a href="examples.html" class="index-card">
-      <div class="card-num">Beispiele</div>
-      <div class="card-title">Beispielmodelle</div>
-      <div class="card-desc">
+      <div class="card-num" data-lang="de">Beispiele</div><div class="card-num" data-lang="en">Examples</div>
+      <div class="card-title" data-lang="de">Beispielmodelle</div><div class="card-title" data-lang="en">Example Models</div>
+      <div class="card-desc" data-lang="de">
         SimpleSystem (12 Gl.) und NozzleSystem (303 Gl.) mit vollständiger Erklärung.
         Warum konvergiert welcher Solver? Starter-Template für eigene Modelle.
       </div>
-      <div class="card-meta"><span class="card-type comp">Praxis</span></div>
+      <div class="card-desc" data-lang="en">
+        SimpleSystem (12 eqs.) and NozzleSystem (303 eqs.) with full explanation.
+        Which solver converges, and why? Starter template for your own models.
+      </div>
+      <div class="card-meta"><span class="card-type comp" data-lang="de">Praxis</span><span class="card-type comp" data-lang="en">Hands-on</span></div>
     </a>
 
     <a href="api_reference.html" class="index-card">
       <div class="card-num">API</div>
-      <div class="card-title">API-Referenz</div>
-      <div class="card-desc">
+      <div class="card-title" data-lang="de">API-Referenz</div><div class="card-title" data-lang="en">API Reference</div>
+      <div class="card-desc" data-lang="de">
         Alle public Methoden von SolverAPI, SolverResult, SolverConfig.Builder,
         ParseError und SolverType — für Einbettung in eigene Anwendungen.
       </div>
-      <div class="card-meta"><span class="card-type comp">Referenz</span></div>
+      <div class="card-desc" data-lang="en">
+        All public methods of SolverAPI, SolverResult, SolverConfig.Builder,
+        ParseError, and SolverType — for embedding into your own applications.
+      </div>
+      <div class="card-meta"><span class="card-type comp" data-lang="de">Referenz</span><span class="card-type comp" data-lang="en">Reference</span></div>
     </a>
 
   </div>
-</section>
+</details>
 
 <!-- Grundlagen -->
-<section>
-  <h2>Grundlagen</h2>
+<details class="section" open data-key="grundlagen">
+  <summary><h2 data-lang="de">Grundlagen</h2><h2 data-lang="en">Foundations</h2><span class="item-count" data-lang="de">2 Einträge</span><span class="item-count" data-lang="en">2 entries</span></summary>
   <div class="index-grid">
     <a href="math_overview.html" class="index-card">
-      <div class="card-num">Kapitel 1</div>
-      <div class="card-title">Mathematischer Überblick</div>
-      <div class="card-desc">
+      <div class="card-num" data-lang="de">Kapitel 1</div><div class="card-num" data-lang="en">Chapter 1</div>
+      <div class="card-title" data-lang="de">Mathematischer Überblick</div><div class="card-title" data-lang="en">Mathematical Overview</div>
+      <div class="card-desc" data-lang="de">
         Nichtlineare Gleichungssysteme — implementierte und nicht implementierte
         Lösungsverfahren. Klassifikation, Eigenschaften thermodynamischer Systeme,
         Verfahrenswahl-Leitfaden.
       </div>
+      <div class="card-desc" data-lang="en">
+        Nonlinear equation systems — implemented and unimplemented
+        solution methods. Classification, properties of thermodynamic systems,
+        method-selection guide.
+      </div>
       <div class="card-meta">
-        <span class="card-type math">Grundlagen</span>
+        <span class="card-type math" data-lang="de">Grundlagen</span><span class="card-type math" data-lang="en">Foundations</span>
       </div>
     </a>
 
     <a href="solver_comparison.html" class="index-card">
-      <div class="card-num">Kapitel 2</div>
-      <div class="card-title">Solver Vergleichsmatrix</div>
-      <div class="card-desc">
+      <div class="card-num" data-lang="de">Kapitel 2</div><div class="card-num" data-lang="en">Chapter 2</div>
+      <div class="card-title" data-lang="de">Solver Vergleichsmatrix</div><div class="card-title" data-lang="en">Solver Comparison Matrix</div>
+      <div class="card-desc" data-lang="de">
         Alle 7 Solver im direkten Vergleich — Konvergenzrate, Rechenaufwand,
         Robustheit, Empfehlungen. Testergebnisse SimpleSystem.cas. Entscheidungsbaum.
       </div>
+      <div class="card-desc" data-lang="en">
+        All seven solvers in direct comparison — convergence rate, computational cost,
+        robustness, recommendations. Test results SimpleSystem.cas. Decision tree.
+      </div>
       <div class="card-meta">
-        <span class="card-type comp">Vergleich</span>
+        <span class="card-type comp" data-lang="de">Vergleich</span><span class="card-type comp" data-lang="en">Comparison</span>
       </div>
     </a>
   </div>
-</section>
+</details>
 
 <!-- Solver -->
-<section>
-  <h2>Solver — Detaildokumentation</h2>
+<details class="section" open data-key="solver-detail">
+  <summary><h2 data-lang="de">Solver — Detaildokumentation</h2><h2 data-lang="en">Solvers — Detailed Documentation</h2><span class="item-count" data-lang="de">9 Einträge</span><span class="item-count" data-lang="en">9 entries</span></summary>
   <div class="index-grid">
 
     <a href="solver_newton_armijo.html" class="index-card">
       <div class="card-num">Solver 1 · NEWTON_ARMIJO</div>
       <div class="card-title">Newton-Raphson + Armijo</div>
-      <div class="card-desc">
+      <div class="card-desc" data-lang="de">
         Standard-Solver. Dichte LU, Armijo-Backtracking.
         Quadratische Konvergenz. Für kleine bis mittlere Systeme.
+      </div>
+      <div class="card-desc" data-lang="en">
+        Default solver. Dense LU, Armijo backtracking.
+        Quadratic convergence. For small to medium systems.
       </div>
       <div class="card-meta">
         <span class="card-type solver">SolverType.NEWTON_ARMIJO</span>
@@ -200,9 +673,13 @@
     <a href="solver_newton_sparse.html" class="index-card">
       <div class="card-num">Solver 2 · NEWTON_SPARSE</div>
       <div class="card-title">Newton-GSPAR Sparse LU</div>
-      <div class="card-desc">
+      <div class="card-desc" data-lang="de">
         GSPAR Sparse-LU statt dichter LU. Bis 10× schneller bei großen Systemen.
         Kein Backtracking — für gute Startvektoren.
+      </div>
+      <div class="card-desc" data-lang="en">
+        GSPAR sparse LU instead of dense LU. Up to 10× faster on large systems.
+        No backtracking — needs good starting vectors.
       </div>
       <div class="card-meta">
         <span class="card-type solver">SolverType.NEWTON_SPARSE</span>
@@ -211,11 +688,15 @@
     </a>
 
     <a href="solver_newton_sparse_armijo.html" class="index-card featured">
-      <div class="card-num">Solver 3 · NEWTON_SPARSE_ARMIJO ★ Empfohlen</div>
+      <div class="card-num" data-lang="de">Solver 3 · NEWTON_SPARSE_ARMIJO ★ Empfohlen</div><div class="card-num" data-lang="en">Solver 3 · NEWTON_SPARSE_ARMIJO ★ Recommended</div>
       <div class="card-title">Newton-Sparse + Armijo</div>
-      <div class="card-desc">
+      <div class="card-desc" data-lang="de">
         Beste Kombination: GSPAR Sparse-LU + Armijo-Backtracking.
         Schnell und robust. Empfohlener Standard-Solver für die meisten Systeme.
+      </div>
+      <div class="card-desc" data-lang="en">
+        Best combination: GSPAR sparse LU + Armijo backtracking.
+        Fast and robust. Recommended default solver for most systems.
       </div>
       <div class="card-meta">
         <span class="card-type solver">SolverType.NEWTON_SPARSE_ARMIJO</span>
@@ -226,35 +707,47 @@
     <a href="solver_lm.html" class="index-card">
       <div class="card-num">Solver 4 · LEVENBERG_MARQUARDT</div>
       <div class="card-title">Levenberg-Marquardt</div>
-      <div class="card-desc">
+      <div class="card-desc" data-lang="de">
         Robustester Solver für schlecht konditionierte Systeme (κ &gt; 10¹²).
         Adaptiver Dämpfungsparameter μ kombiniert Newton mit Gradientenabstieg.
       </div>
+      <div class="card-desc" data-lang="en">
+        Most robust solver for ill-conditioned systems (κ &gt; 10¹²).
+        Adaptive damping parameter μ combines Newton with gradient descent.
+      </div>
       <div class="card-meta">
         <span class="card-type solver">SolverType.LEVENBERG_MARQUARDT</span>
-        <span class="perf-chip">36 Iter · κ bis 10²⁵</span>
+        <span class="perf-chip" data-lang="de">36 Iter · κ bis 10²⁵</span><span class="perf-chip" data-lang="en">36 iter · κ up to 10²⁵</span>
       </div>
     </a>
 
     <a href="solver_broyden.html" class="index-card">
       <div class="card-num">Solver 5 · BROYDEN</div>
       <div class="card-title">Broyden Quasi-Newton</div>
-      <div class="card-desc">
+      <div class="card-desc" data-lang="de">
         Rang-1-Update der Jacobi statt vollständigem Neuaufbau.
         Günstiger pro Iteration — vorteilhaft bei Parameterstudien.
       </div>
+      <div class="card-desc" data-lang="en">
+        Rank-1 update of the Jacobian instead of full rebuild.
+        Cheaper per iteration — advantageous for parameter studies.
+      </div>
       <div class="card-meta">
         <span class="card-type solver">SolverType.BROYDEN</span>
-        <span class="perf-chip">25 Iter · O(n²) Update</span>
+        <span class="perf-chip" data-lang="de">25 Iter · O(n²) Update</span><span class="perf-chip" data-lang="en">25 iter · O(n²) update</span>
       </div>
     </a>
 
     <a href="solver_broyden_sparse.html" class="index-card">
       <div class="card-num">Solver 6 · BROYDEN_SPARSE</div>
       <div class="card-title">Broyden-GSPAR Sparse</div>
-      <div class="card-desc">
+      <div class="card-desc" data-lang="de">
         Broyden-Update mit GSPAR Sparse-LU. Schnellster Solver im Testbetrieb (~9ms).
         Ideal für Parameterstudien mit großen Systemen.
+      </div>
+      <div class="card-desc" data-lang="en">
+        Broyden update with GSPAR sparse LU. Fastest solver in test runs (~9ms).
+        Ideal for parameter studies on large systems.
       </div>
       <div class="card-meta">
         <span class="card-type solver">SolverType.BROYDEN_SPARSE</span>
@@ -264,196 +757,352 @@
 
     <a href="solver_homotopy.html" class="index-card">
       <div class="card-num">Solver 7 · HOMOTOPY</div>
-      <div class="card-title">Homotopie Arc-Length</div>
-      <div class="card-desc">
-        Globale Methode: Pfadverfolgung von einfachem Startproblem zum Zielproblem.
-        Konvergiert auch bei sehr schlechten Startvektoren. Langsamer aber robust.
+      <div class="card-title" data-lang="de">Homotopie Arc-Length</div><div class="card-title" data-lang="en">Homotopy Arc-Length</div>
+      <div class="card-desc" data-lang="de">
+        Klassische Continuation: Pfadverfolgung von einfachem Startproblem zum Zielproblem
+        via Predictor-Korrektor mit fester t-Parametrisierung.
+      </div>
+      <div class="card-desc" data-lang="en">
+        Classical continuation: path tracking from a simple starting problem to the
+        target problem via predictor-corrector with fixed t-parametrization.
       </div>
       <div class="card-meta">
         <span class="card-type solver">SolverType.HOMOTOPY</span>
-        <span class="perf-chip">Pfad t∈[0,1]</span>
+        <span class="perf-chip" data-lang="de">Pfad t∈[0,1]</span><span class="perf-chip" data-lang="en">Path t∈[0,1]</span>
+      </div>
+    </a>
+
+    <a href="solver_arc_length.html" class="index-card">
+      <div class="card-num">Solver 8 · ARC_LENGTH ⚠ Experimental</div>
+      <div class="card-title">Arc-Length Continuation</div>
+      <div class="card-desc" data-lang="de">
+        Bogen-Längen-Verfolgung im erweiterten Zustand y=(x,t) — konzeptionell für
+        Pfade mit Wendepunkten / Bifurkationen. Aktuell experimentell, auf NozzleSystem
+        nicht produktiv konvergent.
+      </div>
+      <div class="card-desc" data-lang="en">
+        Path tracking by arc length in extended state y=(x,t) — designed for
+        paths with turning points / bifurcations. Currently experimental, not
+        productively convergent on NozzleSystem.
+      </div>
+      <div class="card-meta">
+        <span class="card-type solver">SolverType.ARC_LENGTH</span>
+        <span class="perf-chip" data-lang="de">Wendepunkte</span><span class="perf-chip" data-lang="en">Turning points</span>
+      </div>
+    </a>
+
+    <a href="solver_adaptive_lambda.html" class="index-card">
+      <div class="card-num">Solver 9 · ADAPTIVE_LAMBDA ⚠ Phase 2 Experimental</div>
+      <div class="card-title">Adaptive Lambda Continuation</div>
+      <div class="card-desc" data-lang="de">
+        Pragmatischer Wrapper: Phase 1 versucht Newton direkt (produktiv),
+        Phase 2 fällt auf λ-Continuation zurück (experimentell auf NozzleSystem).
+      </div>
+      <div class="card-desc" data-lang="en">
+        Pragmatic wrapper: Phase 1 tries Newton directly (production-ready),
+        Phase 2 falls back to λ-continuation (experimental on NozzleSystem).
+      </div>
+      <div class="card-meta">
+        <span class="card-type solver">SolverType.ADAPTIVE_LAMBDA</span>
+        <span class="perf-chip">Wrapper</span>
       </div>
     </a>
 
   </div>
-</section>
+</details>
 
 <!-- Referenz -->
-<section>
-  <h2>Referenz</h2>
+<details class="section" open data-key="referenz">
+  <summary><h2 data-lang="de">Referenz</h2><h2 data-lang="en">Reference</h2><span class="item-count" data-lang="de">4 Einträge</span><span class="item-count" data-lang="en">4 entries</span></summary>
   <div class="index-grid">
 
     <a href="solver_options.html" class="index-card">
-      <div class="card-num">Kapitel 3</div>
-      <div class="card-title">Solver Optionen — CLI Referenz</div>
-      <div class="card-desc">
+      <div class="card-num" data-lang="de">Kapitel 3</div><div class="card-num" data-lang="en">Chapter 3</div>
+      <div class="card-title" data-lang="de">Solver Optionen — CLI Referenz</div><div class="card-title" data-lang="en">Solver Options — CLI Reference</div>
+      <div class="card-desc" data-lang="de">
         Alle Kommandozeilenargumente: allgemeine Optionen für alle Solver,
         solver-exklusive Parameter (-SH: Homotopie, -SB: Broyden),
         Diagnose-Optionen und Batch-Modus.
       </div>
-      <div class="card-meta"><span class="card-type math">Referenz</span></div>
+      <div class="card-desc" data-lang="en">
+        All command-line arguments: general options for all solvers,
+        solver-specific parameters (-SH: Homotopy, -SB: Broyden),
+        diagnostic options, and batch mode.
+      </div>
+      <div class="card-meta"><span class="card-type math" data-lang="de">Referenz</span><span class="card-type math" data-lang="en">Reference</span></div>
+    </a>
+
+    <a href="batch_mode.html" class="index-card">
+      <div class="card-num" data-lang="de">Kapitel 4</div>
+      <div class="card-num" data-lang="en">Chapter 4</div>
+      <div class="card-title" data-lang="de">Batch-Modus &amp; Parameterstudien</div>
+      <div class="card-title" data-lang="en">Batch Mode &amp; Parameter Studies</div>
+      <div class="card-desc" data-lang="de">
+        Automatisiertes Lösen von N Betriebspunkten aus einer CSV-Datei.
+        Eingabe/Ausgabe-Format, Warm-Start, Sprung-Erkennung (-BC:JUMPTHRESH),
+        Bounds-Analyse und Laufzeit-Ausgabe.
+      </div>
+      <div class="card-desc" data-lang="en">
+        Automated solving of N operating points from a CSV file.
+        Input/output format, warm-start, jump detection (-BC:JUMPTHRESH),
+        bounds analysis and timing output.
+      </div>
+      <div class="card-meta"><span class="card-type math" data-lang="de">Referenz</span><span class="card-type math" data-lang="en">Reference</span></div>
     </a>
 
     <a href="parser_syntax.html" class="index-card">
-      <div class="card-num">Kapitel 4</div>
-      <div class="card-title">CAS-Dateiformat — Parser Syntax</div>
-      <div class="card-desc">
+      <div class="card-num" data-lang="de">Kapitel 5</div><div class="card-num" data-lang="en">Chapter 5</div>
+      <div class="card-title" data-lang="de">CAS-Dateiformat — Parser Syntax</div><div class="card-title" data-lang="en">CAS File Format — Parser Syntax</div>
+      <div class="card-desc" data-lang="de">
         Vollständige Parser-Referenz: Sektionen, Variablendeklaration (Langform + AS REAL),
         INITIALIZE-Block, PROCEDURE/CALL, Gleichungen, IF/ELSEIF/ENDIF/FOR,
         Operatoren und mathematische Funktionen.
       </div>
-      <div class="card-meta"><span class="card-type math">Referenz</span></div>
+      <div class="card-desc" data-lang="en">
+        Complete parser reference: sections, variable declaration (long form + AS REAL),
+        INITIALIZE block, PROCEDURE/CALL, equations, IF/ELSEIF/ENDIF/FOR,
+        operators, and mathematical functions.
+      </div>
+      <div class="card-meta"><span class="card-type math" data-lang="de">Referenz</span><span class="card-type math" data-lang="en">Reference</span></div>
     </a>
 
     <a href="bifunctions_reference.html" class="index-card">
-      <div class="card-num">Kapitel 5</div>
-      <div class="card-title">BIfunctions — Thermodynamische Funktionen</div>
-      <div class="card-desc">
+      <div class="card-num" data-lang="de">Kapitel 5</div><div class="card-num" data-lang="en">Chapter 5</div>
+      <div class="card-title" data-lang="de">BIfunctions — Thermodynamische Funktionen</div><div class="card-title" data-lang="en">BIfunctions — Thermodynamic Functions</div>
+      <div class="card-desc" data-lang="de">
         Alle Built-in Funktionen mit physikalischem Hintergrund: JANAF-Polynome,
         ISA-Atmosphärenmodell (9 Schichten), Schallgeschwindigkeit, Enthalpie, cp,
         MofCondiRatio. Numerische Ableitungen via 5-Punkte-Formel O(h⁴).
       </div>
-      <div class="card-meta"><span class="card-type math">Referenz</span></div>
+      <div class="card-desc" data-lang="en">
+        All built-in functions with physical background: JANAF polynomials,
+        ISA atmosphere model (9 layers), speed of sound, enthalpy, cp,
+        MofCondiRatio. Numerical derivatives via 5-point formula O(h⁴).
+      </div>
+      <div class="card-meta"><span class="card-type math" data-lang="de">Referenz</span><span class="card-type math" data-lang="en">Reference</span></div>
     </a>
 
 
   </div>
-</section>
+</details>
 
 <!-- Weitere Kapitel -->
-<section>
-  <h2>Engineering-Wissen</h2>
+<details class="section" open data-key="engineering">
+  <summary><h2 data-lang="de">Engineering-Wissen</h2><h2 data-lang="en">Engineering Knowledge</h2><span class="item-count" data-lang="de">7 Einträge</span><span class="item-count" data-lang="en">7 entries</span></summary>
   <div class="index-grid">
 
     <a href="lessons_learned.html" class="index-card">
-      <div class="card-num">Kapitel 7</div>
+      <div class="card-num" data-lang="de">Kapitel 7</div><div class="card-num" data-lang="en">Chapter 7</div>
       <div class="card-title">Lessons Learned</div>
-      <div class="card-desc">
+      <div class="card-desc" data-lang="de">
         18 Engineering-Erkenntnisse aus allen Entwicklungsphasen — Architektur,
         Algorithmen, Refactoring, Debugging, Werkzeuge. 8 klassische + 10 neue
         Erkenntnisse seit v2.3. Das wichtigste Kapitel für langfristige Wartbarkeit.
       </div>
-      <div class="card-meta"><span class="card-type math">Wissen</span></div>
+      <div class="card-desc" data-lang="en">
+        18 engineering insights from all development phases — architecture,
+        algorithms, refactoring, debugging, tooling. 8 classical + 10 new
+        insights since v2.3. The most important chapter for long-term maintainability.
+      </div>
+      <div class="card-meta"><span class="card-type math" data-lang="de">Wissen</span><span class="card-type math" data-lang="en">Knowledge</span></div>
     </a>
 
     <a href="dev_history.html" class="index-card">
-      <div class="card-num">Kapitel 8</div>
-      <div class="card-title">Entwicklungsgeschichte &amp; Bug Fix Log</div>
-      <div class="card-desc">
+      <div class="card-num" data-lang="de">Kapitel 8</div><div class="card-num" data-lang="en">Chapter 8</div>
+      <div class="card-title" data-lang="de">Entwicklungsgeschichte &amp; Bug Fix Log</div><div class="card-title" data-lang="en">Development History &amp; Bug Fix Log</div>
+      <div class="card-desc" data-lang="de">
         9 Entwicklungsphasen von der monolithischen Ursprungsversion bis v2.5.
         Vollständiger Bug Fix Log (27+ Bugs, BF-01–BF-12 + B27–B28 + Refactoring-Bugs
         + GSPAR Fortran-Port). Offene Punkte mit Status.
       </div>
-      <div class="card-meta"><span class="card-type math">Geschichte</span></div>
+      <div class="card-desc" data-lang="en">
+        9 development phases from the monolithic original through v2.5.
+        Complete bug fix log (27+ bugs, BF-01–BF-12 + B27–B28 + refactoring bugs
+        + GSPAR Fortran port). Open items with status.
+      </div>
+      <div class="card-meta"><span class="card-type math" data-lang="de">Geschichte</span><span class="card-type math" data-lang="en">History</span></div>
     </a>
 
     <a href="maintenance.html" class="index-card">
-      <div class="card-num">Kapitel 6</div>
-      <div class="card-title">Wartung &amp; Entwicklung</div>
-      <div class="card-desc">
+      <div class="card-num" data-lang="de">Kapitel 6</div><div class="card-num" data-lang="en">Chapter 6</div>
+      <div class="card-title" data-lang="de">Wartung &amp; Entwicklung</div><div class="card-title" data-lang="en">Maintenance &amp; Development</div>
+      <div class="card-desc" data-lang="de">
         Zwei Einstiegspunkte: Schnelleinstieg (Architektur, Rezepte, Checkliste)
         und vollständige Einführung (Datenfluss, Klassen, Erweiterungspunkte,
         Fallstricke, Build-Umgebung). Toggle-Button schaltet zwischen Modi.
       </div>
-      <div class="card-meta"><span class="card-type math">Wartung</span></div>
+      <div class="card-desc" data-lang="en">
+        Two entry points: quick start (architecture, recipes, checklist)
+        and full introduction (data flow, classes, extension points,
+        pitfalls, build environment). Toggle button switches between modes.
+      </div>
+      <div class="card-meta"><span class="card-type math" data-lang="de">Wartung</span><span class="card-type math" data-lang="en">Maintenance</span></div>
     </a>
 
 
     <a href="roadmap.html" class="index-card">
-      <div class="card-num">Kapitel 9</div>
-      <div class="card-title">Roadmap &amp; Offene Punkte</div>
-      <div class="card-desc">
+      <div class="card-num" data-lang="de">Kapitel 9</div><div class="card-num" data-lang="en">Chapter 9</div>
+      <div class="card-title" data-lang="de">Roadmap &amp; Offene Punkte</div><div class="card-title" data-lang="en">Roadmap &amp; Open Items</div>
+      <div class="card-desc" data-lang="de">
         18 priorisierte Entwicklungspunkte mit Zeithorizont, Aufwandsschätzung und
         Wechselwirkungsanalyse. Solver-Erweiterungen (GMRES, Trust-Region, Anderson),
         CAS-Erweiterungen (MIN/MAX, SQR, SECTION), Performance, Architektur, GUI-Vorbereitung.
       </div>
-      <div class="card-meta"><span class="card-type math">Planung</span></div>
+      <div class="card-desc" data-lang="en">
+        18 prioritized development items with time horizon, effort estimation, and
+        interaction analysis. Solver extensions (GMRES, Trust-Region, Anderson),
+        CAS extensions (MIN/MAX, SQR, SECTION), performance, architecture, GUI preparation.
+      </div>
+      <div class="card-meta"><span class="card-type math" data-lang="de">Planung</span><span class="card-type math" data-lang="en">Planning</span></div>
     </a>
 
+    <a href="infra_reviews.html" class="index-card">
+      <div class="card-num" data-lang="de"><span class="new-badge">NEU v2.12</span> Kapitel 10</div><div class="card-num" data-lang="en"><span class="new-badge">NEW v2.12</span> Chapter 10</div>
+      <div class="card-title">Code Review</div>
+      <div class="card-desc" data-lang="de">
+        Bewertung aller Parser-, Solver- und Infrastruktur-Komponenten von A
+        (exzellent) bis D (problematisch). 11 Komponenten begutachtet,
+        Empfehlungen für Refactoring und Stand der Code-Qualität nach v2.12.
+      </div>
+      <div class="card-desc" data-lang="en">
+        Assessment of all parser, solver, and infrastructure components from A
+        (excellent) to D (problematic). 11 components reviewed,
+        recommendations for refactoring, and code-quality status after v2.12.
+      </div>
+      <div class="card-meta"><span class="card-type comp">Review</span></div>
+    </a>
+    <a href="parser_reviews.html" class="index-card">
+      <div class="card-num">Code Review</div>
+      <div class="card-title">Parser Code Review</div>
+      <div class="card-desc" data-lang="de">Bewertung der Parser-Komponenten: EqnSysReader (Note B), EqnData, BIfunctions.</div>
+      <div class="card-desc" data-lang="en">Assessment of parser components: EqnSysReader (Grade B), EqnData, BIfunctions.</div>
+      <div class="card-meta"><span class="card-type comp">Review</span></div>
+    </a>
+
+    <a href="solver_reviews.html" class="index-card">
+      <div class="card-num">Code Review</div>
+      <div class="card-title">Solver Code Review</div>
+      <div class="card-desc" data-lang="de">Bewertung aller 7 Solver (Newton-Armijo Note A, LM v3b Note A, GSPAR-Familie Note A).</div>
+      <div class="card-desc" data-lang="en">Assessment of all 7 solvers (Newton-Armijo Grade A, LM v3b Grade A, GSPAR family Grade A).</div>
+      <div class="card-meta"><span class="card-type comp">Review</span></div>
+    </a>
+
+
   </div>
-</section>
+</details>
 
 <!-- Versionshistorie -->
-<section>
-  <h2>Versionshistorie</h2>
+<details class="section" open data-key="versionshistorie">
+  <summary><h2 data-lang="de">Versionshistorie</h2><h2 data-lang="en">Version History</h2></summary>
 
   <div class="tbl-wrap">
   <table>
-    <thead><tr><th>Version</th><th>Inhalt</th><th>Status</th></tr></thead>
+    <thead><tr><th>Version</th><th data-lang="de">Inhalt</th><th data-lang="en">Content</th><th>Status</th></tr></thead>
     <tbody>
       <tr>
+        <td><code>v2.1</code></td>
+        <td data-lang="de">Baseline — Newton-Armijo, LM, Broyden</td><td data-lang="en">Baseline — Newton-Armijo, LM, Broyden</td>
+        <td><span class="badge b-na" data-lang="de">Archiv</span><span class="badge b-na" data-lang="en">Archive</span></td>
+      </tr>
+      <tr>
+        <td><code>v2.2</code></td>
+        <td data-lang="de">GSPAR Sparse-LU, paralleler Jacobi-Aufbau</td><td data-lang="en">GSPAR sparse LU, parallel Jacobian assembly</td>
+        <td><span class="badge b-na" data-lang="de">Archiv</span><span class="badge b-na" data-lang="en">Archive</span></td>
+      </tr>
+      <tr>
         <td><code>v2.3</code></td>
-        <td>SolverAPI, Logging-Bereinigung, Javadoc, ELSEIF-Expansion, B27/B28 Bugfixes</td>
-        <td><span class="badge b-na">Archiv</span></td>
+        <td data-lang="de">SolverAPI, Logging-Bereinigung, Javadoc, ELSEIF-Expansion, B27/B28 Bugfixes</td><td data-lang="en">SolverAPI, logging cleanup, Javadoc, ELSEIF expansion, B27/B28 bugfixes</td>
+        <td><span class="badge b-na" data-lang="de">Archiv</span><span class="badge b-na" data-lang="en">Archive</span></td>
       </tr>
       <tr>
         <td><code>v2.4</code></td>
-        <td>ParseError-Infrastruktur — strukturierte Fehlerbehandlung mit Zeilennummern</td>
-        <td><span class="badge b-na">Archiv</span></td>
+        <td data-lang="de">ParseError-Infrastruktur — strukturierte Fehlerbehandlung mit Zeilennummern</td><td data-lang="en">ParseError infrastructure — structured error handling with line numbers</td>
+        <td><span class="badge b-na" data-lang="de">Archiv</span><span class="badge b-na" data-lang="en">Archive</span></td>
       </tr>
       <tr>
         <td><code>v2.5</code></td>
-        <td>LinkedHashMap Refactoring (EqnData) + Output-Writer (SolverResult)</td>
-        <td><span class="badge b-na">Archiv</span></td>
+        <td data-lang="de">LinkedHashMap Refactoring (EqnData) + Output-Writer (SolverResult)</td><td data-lang="en">LinkedHashMap refactoring (EqnData) + output writer (SolverResult)</td>
+        <td><span class="badge b-na" data-lang="de">Archiv</span><span class="badge b-na" data-lang="en">Archive</span></td>
       </tr>
       <tr>
-        <td><code>v2.6</code></td>
-        <td>Bugfix FUNC_MAP Wortgrenzen — verhindert Korrumpierung von Variablennamen</td>
-        <td><span class="badge b-na">Archiv</span></td>
-      </tr>
-      <tr>
-        <td><code>v2.7</code></td>
-        <td>Javadoc — alle 14 undokumentierten Klassen vollständig dokumentiert</td>
-        <td><span class="badge b-na">Archiv</span></td>
-      </tr>
-      <tr>
-        <td><code>v2.8</code></td>
-        <td>R-07 Inline-Kommentare · R-08 SQR(x)=x² · R-13 Relatives Abbruchkriterium</td>
-        <td><span class="badge b-na">Archiv</span></td>
-      </tr>
-      <tr>
-        <td><code>v2.9</code></td>
-        <td>R-16 SolverLogger Handler · R-17 SolverResultTableModel (GUI-Vorbereitung)</td>
-        <td><span class="badge b-na">Archiv</span></td>
-      </tr>
-      <tr>
-        <td><code>v2.10</code></td>
-        <td>R-03/06/09/14/20/21 — alle mittelfristigen Roadmap-Punkte umgesetzt</td>
-        <td><span class="badge b-ok">✅ Stabil</span></td>
+        <td><code>v2.6 – v2.10</code></td>
+        <td data-lang="de">FUNC_MAP-Bugfix, Javadoc-Komplettierung, SQR/MIN/MAX-Expansion, GUI-Vorbereitung,
+            Homotopie Tangenten-Prädiktor (R-03), relatives Abbruchkriterium (R-13)</td><td data-lang="en">FUNC_MAP bugfix, Javadoc completion, SQR/MIN/MAX expansion, GUI preparation,
+            Homotopy tangent predictor (R-03), relative termination criterion (R-13)</td>
+        <td><span class="badge b-na" data-lang="de">Archiv</span><span class="badge b-na" data-lang="en">Archive</span></td>
       </tr>
       <tr>
         <td><code>v2.11</code></td>
-        <td>JacobiEquilibrator (Sinkhorn-Knopp) · Roadmap R-01 analysiert · LL-19</td>
-        <td><span class="badge b-ok">✅ Aktuell</span></td>
+        <td data-lang="de">7-Solver-Stabilisierung — alle Solver-Typen auf NozzleSystem_4_fixed verifiziert.
+            JacobiEquilibrator-Klasse vorbereitet (noch nicht in Solve-Loop integriert)</td><td data-lang="en">7-solver stabilization — all solver types verified on NozzleSystem_4_fixed.
+            JacobiEquilibrator class prepared (not yet integrated into solve loop)</td>
+        <td><span class="badge b-na" data-lang="de">Archiv</span><span class="badge b-na" data-lang="en">Archive</span></td>
+      </tr>
+      <tr>
+        <td><code>v2.12</code></td>
+        <td data-lang="de">R-01 umgesetzt: Jacobi-Equilibrierung (Sinkhorn-Knopp R·J·C) als
+            <code>-SC:EQUILIBRATE</code>. Inline-Armijo-Refactor in den vier
+            Newton-Armijo/Broyden-Solvern, dadurch DIAGONAL/UNIT_INTERVAL erstmals
+            funktionsfähig. NONE-Modus bit-exakt rückwärtskompatibel zu v2.11</td><td data-lang="en">R-01 implemented: Jacobian equilibration (Sinkhorn-Knopp R·J·C) as
+            <code>-SC:EQUILIBRATE</code>. Inline-Armijo refactor in the four
+            Newton-Armijo/Broyden solvers, making DIAGONAL/UNIT_INTERVAL functional
+            for the first time. NONE mode bit-exact backward-compatible with v2.11</td>
+        <td><span class="badge b-ok" data-lang="de">✅ Aktuell</span><span class="badge b-ok" data-lang="en">✅ Current</span></td>
       </tr>
     </tbody>
   </table>
   </div>
-</section>
-
-<!-- Quellcode -->
-<section>
-  <h2>Quellcode & Lizenz</h2>
-  <div class="note blue">
-    <strong>Quellcode:</strong> Der Java-Quellcode von CMDSolver ist in einem
-    privaten Repository verfügbar. Diese Dokumentation wird öffentlich bereitgestellt
-    um die Nutzung der API und die Modellierungskonzepte zu erläutern.
-    Für Anfragen zum Quellcode bitte direkt Kontakt aufnehmen.
-  </div>
-  <div class="note amber" style="margin-top:.8rem">
-    <strong>Hinweis:</strong> CMDSolver ist ein Forschungs- und Entwicklungsprojekt.
-    Die Dokumentation spiegelt den aktuellen Entwicklungsstand wider und wird
-    kontinuierlich erweitert. Alle Solver wurden auf den bereitgestellten
-    Beispielmodellen getestet (SimpleSystem.cas, NozzleSystem_4_fixed.cas).
-  </div>
-</section>
+</details>
 
 </main>
 
 <footer>
-  <span>CMDSolver Dokumentation · v2.11 · Mai 2026</span>
-  <span>Alle Solver getestet auf SimpleSystem.cas · Java 21</span>
+  <span data-lang="de">CMDSolver Dokumentation · v2.12 · Mai 2026</span><span data-lang="en">CMDSolver Documentation · v2.12 · May 2026</span>
+  <span data-lang="de">Alle Solver getestet auf NozzleSystem_4_fixed.cas · Java 21</span><span data-lang="en">All solvers tested on NozzleSystem_4_fixed.cas · Java 21</span>
 </footer>
 
+<script>
+(function(){
+  // ── localStorage-Persistenz pro Sektion ──────────────────────────
+  // Schlüssel: "cmdsection:<data-key>" → "open" | "closed"
+  function storageKey(k){ return 'cmdsection:' + k; }
+
+  document.addEventListener('DOMContentLoaded', function(){
+    document.querySelectorAll('details.section').forEach(function(d){
+      var key = d.dataset.key;
+      if (!key) return;
+      // Restore saved state
+      try {
+        var saved = localStorage.getItem(storageKey(key));
+        if (saved === 'closed') d.removeAttribute('open');
+        else if (saved === 'open') d.setAttribute('open', '');
+        // No saved state → keep default "open"
+      } catch(e) {}
+      // Persist on every toggle
+      d.addEventListener('toggle', function(){
+        try {
+          localStorage.setItem(storageKey(key), d.open ? 'open' : 'closed');
+        } catch(e) {}
+      });
+    });
+
+    // ── Expand-/Collapse-All Buttons ──────────────────────────────
+    document.querySelectorAll('.expand-all').forEach(function(b){
+      b.addEventListener('click', function(){
+        document.querySelectorAll('details.section').forEach(function(d){
+          if (!d.open) d.setAttribute('open', '');  // toggle event fires → persists
+        });
+      });
+    });
+    document.querySelectorAll('.collapse-all').forEach(function(b){
+      b.addEventListener('click', function(){
+        document.querySelectorAll('details.section').forEach(function(d){
+          if (d.open) d.removeAttribute('open');
+        });
+      });
+    });
+  });
+})();
+</script>
 </body>
 </html>

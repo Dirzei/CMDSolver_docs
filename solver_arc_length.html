@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CMDSolver Docs — Arc-Length Continuation</title>
+<style>
+/* CMDSolver Documentation — Shared Stylesheet */
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;1,400&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap');
+
+:root {
+  --bg:      #0d0f12;
+  --bg2:     #13161b;
+  --bg3:     #1a1e25;
+  --bg4:     #20252f;
+  --border:  #252a33;
+  --border2: #2e3540;
+  --text:    #c8cdd6;
+  --text2:   #7a8496;
+  --text3:   #4a5568;
+  --accent:  #4a9eff;
+  --ok:      #3ecf8e;
+  --warn:    #f0a030;
+  --err:     #ff5c5c;
+  --purple:  #a78bfa;
+  --teal:    #2dd4bf;
+  --mono:    'IBM Plex Mono', monospace;
+  --sans:    'IBM Plex Sans', sans-serif;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: var(--sans);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 13.5px;
+  line-height: 1.75;
+}
+
+/* ── Header ── */
+.doc-header {
+  border-bottom: 1px solid var(--border);
+  padding: 1.2rem 3rem;
+  display: flex; align-items: center;
+  justify-content: space-between; flex-wrap: wrap; gap: 1rem;
+}
+
+.breadcrumb {
+  font-family: var(--mono); font-size: 11px; color: var(--text3);
+  letter-spacing: .08em; text-transform: uppercase;
+  display: flex; align-items: center; gap: .5rem;
+}
+.breadcrumb a { color: var(--accent); text-decoration: none; }
+.breadcrumb span { color: var(--text3); }
+
+.doc-badge {
+  font-family: var(--mono); font-size: 11px;
+  padding: 3px 10px; border-radius: 4px;
+}
+.doc-badge.solver {
+  background: rgba(74,158,255,.1); border: 1px solid rgba(74,158,255,.25);
+  color: var(--accent);
+}
+.doc-badge.overview {
+  background: rgba(167,139,250,.1); border: 1px solid rgba(167,139,250,.25);
+  color: var(--purple);
+}
+.doc-badge.comparison {
+  background: rgba(62,207,142,.1); border: 1px solid rgba(62,207,142,.25);
+  color: var(--ok);
+}
+
+/* ── Hero ── */
+.hero {
+  padding: 2.5rem 3rem 2rem;
+  border-bottom: 1px solid var(--border);
+  background: linear-gradient(135deg, var(--bg) 0%, #0f1520 100%);
+}
+.hero-sub {
+  font-family: var(--mono); font-size: 11px; color: var(--text3);
+  letter-spacing: .15em; text-transform: uppercase; margin-bottom: .5rem;
+}
+h1 {
+  font-size: 28px; font-weight: 600; color: #e8ecf4;
+  letter-spacing: -.03em; margin-bottom: .5rem; line-height: 1.2;
+}
+.tagline {
+  font-size: 14px; color: var(--text2); margin-bottom: 1.5rem;
+  max-width: 680px;
+}
+.hero-stats { display: flex; gap: 2rem; flex-wrap: wrap; }
+.stat { display: flex; flex-direction: column; gap: .2rem; }
+.stat-val {
+  font-family: var(--mono); font-size: 18px; font-weight: 500; color: var(--ok);
+}
+.stat-lbl {
+  font-size: 11px; color: var(--text3);
+  text-transform: uppercase; letter-spacing: .08em;
+}
+
+/* ── Nav ── */
+nav {
+  position: sticky; top: 0; z-index: 10;
+  background: rgba(13,15,18,.95); backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--border);
+  padding: .6rem 3rem;
+  display: flex; gap: 1.5rem; flex-wrap: wrap;
+}
+nav a {
+  font-family: var(--mono); font-size: 11px; color: var(--text3);
+  text-decoration: none; letter-spacing: .08em;
+  text-transform: uppercase; transition: color .15s;
+}
+nav a:hover { color: var(--accent); }
+
+/* ── Main ── */
+main { padding: 2rem 3rem 4rem; max-width: 1040px; }
+
+section { margin-bottom: 3.5rem; scroll-margin-top: 3rem; }
+
+section > h2 {
+  font-size: 12px; font-family: var(--mono);
+  letter-spacing: .12em; text-transform: uppercase;
+  color: var(--text3); margin-bottom: 1.4rem;
+  padding-bottom: .5rem; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: .6rem;
+}
+section > h2::before {
+  content: ''; display: inline-block;
+  width: 8px; height: 8px; border-radius: 50%; background: var(--accent);
+}
+
+h3 { font-size: 14px; font-weight: 500; color: #e8ecf4; margin: 1.6rem 0 .6rem; }
+h4 { font-size: 13px; font-weight: 500; color: var(--text2); margin: 1.2rem 0 .4rem; }
+
+p { color: var(--text); margin-bottom: .9rem; max-width: 780px; }
+
+/* ── Math ── */
+.math-block {
+  background: var(--bg3); border: 1px solid var(--border);
+  border-left: 3px solid var(--purple);
+  border-radius: 6px; padding: 1.2rem 1.5rem;
+  margin: 1rem 0 1.2rem; font-family: var(--mono);
+  font-size: 13px; line-height: 2.1; white-space: pre;
+}
+.math-block .eq  { color: #e8ecf4; }
+.math-block .cmt { color: var(--text3); font-style: italic; }
+.math-block .hi  { color: var(--teal); }
+.math-block .hi2 { color: var(--warn); }
+
+/* ── Notes ── */
+.note {
+  border-radius: 6px; padding: .85rem 1.1rem;
+  font-size: 13px; line-height: 1.7; margin-bottom: 1.2rem;
+}
+.note.blue   { background: rgba(74,158,255,.06);  border-left: 3px solid var(--accent); }
+.note.green  { background: rgba(62,207,142,.06);  border-left: 3px solid var(--ok); }
+.note.amber  { background: rgba(240,160,48,.06);  border-left: 3px solid var(--warn); }
+.note.red    { background: rgba(255,92,92,.06);   border-left: 3px solid var(--err); }
+.note.purple { background: rgba(167,139,250,.06); border-left: 3px solid var(--purple); }
+.note strong { color: #e8ecf4; }
+
+/* ── Code ── */
+code {
+  font-family: var(--mono); font-size: 11.5px;
+  background: rgba(255,255,255,.05); padding: 1px 5px;
+  border-radius: 3px; color: #a8c8f0;
+}
+pre {
+  font-family: var(--mono); font-size: 12px;
+  background: var(--bg3); border: 1px solid var(--border);
+  border-radius: 8px; padding: 1rem 1.2rem;
+  overflow-x: auto; line-height: 1.7; margin-bottom: 1rem; color: #c8cdd6;
+}
+.kw  { color: var(--purple); }
+.cmt { color: var(--text3); font-style: italic; }
+.fn  { color: var(--teal); }
+.num { color: var(--warn); }
+.str { color: var(--ok); }
+
+/* ── Tables ── */
+.tbl-wrap {
+  overflow-x: auto; border-radius: 8px;
+  border: 1px solid var(--border); margin-bottom: 1.5rem;
+}
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+thead th {
+  background: var(--bg3); padding: 9px 14px; text-align: left;
+  font-weight: 500; font-size: 11px; letter-spacing: .06em;
+  text-transform: uppercase; color: var(--text2);
+  border-bottom: 1px solid var(--border2); white-space: nowrap;
+}
+tbody tr { border-bottom: 1px solid var(--border); transition: background .1s; }
+tbody tr:last-child { border-bottom: none; }
+tbody tr:hover { background: var(--bg3); }
+td { padding: 9px 14px; vertical-align: top; line-height: 1.6; }
+td.center { text-align: center; }
+
+/* ── Badges ── */
+.badge {
+  display: inline-block; font-size: 11px; padding: 2px 9px;
+  border-radius: 12px; font-family: var(--mono); white-space: nowrap;
+}
+.b-ok   { background: rgba(62,207,142,.1);  color: var(--ok);     border: 1px solid rgba(62,207,142,.25); }
+.b-warn { background: rgba(240,160,48,.1);  color: var(--warn);   border: 1px solid rgba(240,160,48,.25); }
+.b-err  { background: rgba(255,92,92,.1);   color: var(--err);    border: 1px solid rgba(255,92,92,.25); }
+.b-info { background: rgba(74,158,255,.1);  color: var(--accent); border: 1px solid rgba(74,158,255,.25); }
+.b-na   { background: rgba(74,84,96,.1);    color: var(--text3);  border: 1px solid var(--border2); }
+
+/* ── Star rating ── */
+.stars { color: var(--warn); letter-spacing: -.05em; }
+.stars.dim { color: var(--border2); }
+
+/* ── File list ── */
+.file-list { list-style: none; }
+.file-list li {
+  display: flex; gap: 1rem; align-items: flex-start;
+  padding: .7rem 1rem; background: var(--bg2);
+  border: 1px solid var(--border); border-radius: 4px; margin-bottom: .4rem;
+}
+.file-icon {
+  font-family: var(--mono); font-size: 11px; color: var(--accent);
+  white-space: nowrap; margin-top: 2px; min-width: 50px;
+}
+.file-desc { font-size: 13px; color: var(--text2); }
+.file-desc strong { color: var(--text); display: block; margin-bottom: .2rem; }
+
+/* ── Flowchart ── */
+.flowchart {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 10px; padding: 1.5rem; margin: 1rem 0 1.5rem;
+  overflow-x: auto;
+}
+
+/* ── Footer ── */
+footer {
+  border-top: 1px solid var(--border); padding: 1.5rem 3rem;
+  font-family: var(--mono); font-size: 11px; color: var(--text3);
+  display: flex; justify-content: space-between; flex-wrap: wrap; gap: .5rem;
+}
+footer a { color: var(--accent); text-decoration: none; }
+
+/* ── Footnotes ── */
+.footnotes {
+  margin-top: 2rem; padding-top: 1.5rem;
+  border-top: 1px solid var(--border);
+  font-size: 12px; color: var(--text2);
+}
+.footnotes p { max-width: none; margin-bottom: .5rem; }
+sup { font-size: 10px; color: var(--accent); }
+
+/* Default: alle Sprachelemente sichtbar (kein JS-Flash) */
+/* Mit lang-Klasse auf body: nur die aktive Sprache sichtbar */
+
+/* Nur wenn body eine Sprachklasse hat, werden Elemente ausgeblendet */
+/* Sprach-Sichtbarkeit via class auf body */
+</style>
+<link rel="stylesheet" href="i18n.css">
+</head>
+<body>
+<script>
+(function(){
+  var stored = '';
+  try { stored = localStorage.getItem('cmdlang') || ''; } catch(e){}
+  var lang = stored || 'de';
+
+  function apply(l) {
+    lang = l;
+    try { localStorage.setItem('cmdlang', l); } catch(e){}
+    document.documentElement.lang = l;
+    var body = document.body;
+    body.classList.remove('lang-de','lang-en');
+    body.classList.add('lang-' + l);
+    document.querySelectorAll('.lang-btn').forEach(function(b){
+      b.classList.toggle('active', b.dataset.lang === l);
+    });
+  }
+
+  // Body-Klasse sofort setzen, damit data-lang-Elemente direkt korrekt
+  // sichtbar sind (kein Flash mit unsichtbarem Header-Inhalt).
+  apply(lang);
+  document.addEventListener('DOMContentLoaded', function(){
+    apply(lang); // erneut, damit jetzt auch die Buttons gestyled werden
+    document.querySelectorAll('.lang-btn').forEach(function(b){
+      b.addEventListener('click', function(){ apply(b.dataset.lang); });
+    });
+    // Sticky-Header Schatten via IntersectionObserver
+    var sentinel = document.querySelector('.header-sentinel');
+    var header   = document.querySelector('.doc-header');
+    if (sentinel && header && 'IntersectionObserver' in window) {
+      new IntersectionObserver(function(entries){
+        header.classList.toggle('scrolled', !entries[0].isIntersecting);
+      }).observe(sentinel);
+    }
+  });
+})();
+</script>
+
+
+
+
+<div class="header-sentinel"></div>
+<div class="doc-header">
+  <div class="breadcrumb">
+    <a href="index.html">CMDSolver Docs</a>
+    ›
+    ›
+  </div>
+  <div class="doc-header-right"><div class="lang-switch"><button class="lang-btn" data-lang="de">DE</button><button class="lang-btn" data-lang="en">EN</button></div><span class="doc-badge solver">SolverType.ARC_LENGTH</span></div></div>
+
+<div class="hero">
+  <div class="hero-sub"><span data-lang="de">Experimentell</span><span data-lang="en">Experimental</span></div>
+  <h1 data-lang="de">Arc-Length Continuation<br>Bogen-Längen-Verfolgung</h1><h1 data-lang="en">Arc-Length Continuation<br>Path Tracking by Arc Length</h1>
+  <p class="tagline" data-lang="de">Erweiterter Continuation-Solver mit zusätzlicher Pfad-Parametrisierung — konzeptionell für Pfade mit Wendepunkten oder Bifurkationen (z.B. echte Schallübergänge bei Ma=1). Nutzt erweiterten Zustand y=(x,t) und sphärische Bogen-Norm. <strong>Aktuell experimentell</strong> — auf NozzleSystem nicht produktiv konvergent (siehe <a href="#status" data-lang="de">Status</a><a href="#status" data-lang="en">Status</a>).</p>
+  <p class="tagline" data-lang="en">Extended continuation solver with additional path parametrization — designed for paths with turning points or bifurcations (e.g., genuine sonic transitions at Ma=1). Uses extended state y=(x,t) and spherical arc norm. <strong>Currently experimental</strong> — does not converge productively on NozzleSystem (see <a href="#status">Status</a>).</p>
+  <div class="hero-stats">
+    <div class="stat"><span class="stat-val">EXPERIMENTAL</span><span class="stat-lbl">Status</span></div>
+    <div class="stat"><span class="stat-val">n+1</span><span class="stat-lbl">Erweiterte Dim</span></div>
+    <div class="stat"><span class="stat-val">—</span><span class="stat-lbl">NozzleSystem-Konv.</span></div>
+    <div class="stat"><span class="stat-val">Wendepunkte</span><span class="stat-lbl">Anwendungsfall</span></div>
+  </div>
+</div>
+
+<nav>
+  <a href="#status">Status</a>
+  <a href="#theorie" data-lang="de">Theorie</a><a href="#theorie" data-lang="en">Theory</a>
+  <a href="#flussdiagramm" data-lang="de">Flussdiagramm</a><a href="#flussdiagramm" data-lang="en">Flow chart</a>
+  <a href="#pseudocode" data-lang="de">Pseudocode</a><a href="#pseudocode" data-lang="en">Pseudocode</a>
+  <a href="#dateien" data-lang="de">Dateien</a><a href="#dateien" data-lang="en">Files</a>
+  <a href="#verhalten" data-lang="de">Verhalten auf NozzleSystem</a><a href="#verhalten" data-lang="en">Behavior on NozzleSystem</a>
+  <a href="#grenzen" data-lang="de">Grenzen</a><a href="#grenzen" data-lang="en">Limits</a>
+</nav>
+
+<main>
+
+<section id="status">
+  <h2 data-lang="de">Status — wichtig zu lesen</h2><h2 data-lang="en">Status — important to read</h2>
+
+  <div class="note red" data-lang="de">
+    <strong>EXPERIMENTAL — derzeit nicht für produktive Nutzung empfohlen.</strong>
+    Dieser Solver ist mathematisch sauber implementiert, scheitert aber
+    auf dem NozzleSystem-Modell (n=303, gemischte Einheiten). Die
+    Initial-Tangente am Startpunkt ist bei stark schlecht konditionierter J₀
+    (kappa &gt; 10⁹) extrem in x-Richtung dominiert (‖ẋ‖ ≫ ṫ), was den
+    ersten Pfadschritt mathematisch in eine Sackgasse führt — selbst nach
+    ds-Reduktion. Siehe <a href="#verhalten">Verhalten auf NozzleSystem</a>.
+  </div><div class="note red" data-lang="en">
+    <strong>EXPERIMENTAL — currently not recommended for production use.</strong>
+    This solver is mathematically cleanly implemented but fails on the
+    NozzleSystem model (n=303, mixed units). At the starting point, when J₀
+    is severely ill-conditioned (kappa &gt; 10⁹), the initial tangent is
+    extremely dominated in the x direction (‖ẋ‖ ≫ ṫ), which mathematically
+    drives the first path step into a dead end — even after ds reduction.
+    See <a href="#verhalten">Behavior on NozzleSystem</a>.
+  </div>
+
+  <div class="note amber" data-lang="de">
+    <strong>Wann er funktionieren würde:</strong> Auf Modellen mit moderater
+    Konditionszahl (kappa &lt; 10⁵) und normalisierten Variablen-Skalen
+    (alle in [0.1, 10]) sollte der Solver mathematisch korrekt durchlaufen.
+    Solche Modelle haben wir aktuell nicht im Test-Repository.
+  </div><div class="note amber" data-lang="en">
+    <strong>When it would work:</strong> on models with moderate condition
+    number (kappa &lt; 10⁵) and normalized variable scales (all in [0.1, 10])
+    the solver should run mathematically correctly. We currently have no such
+    models in the test repository.
+  </div>
+
+  <div class="note blue" data-lang="de">
+    <strong>Empfehlung für jetzt:</strong> Verwende stattdessen
+    <a href="solver_newton_armijo.html">NEWTON_ARMIJO</a> mit
+    <code>-SC:EQUILIBRATE</code> oder <a href="solver_lm.html">LEVENBERG_MARQUARDT</a>
+    (v2.12 Newton-Direkt-Hybrid). Beide konvergieren auf NozzleSystem in 5 Iter.
+  </div><div class="note blue" data-lang="en">
+    <strong>Recommendation for now:</strong> use
+    <a href="solver_newton_armijo.html">NEWTON_ARMIJO</a> with
+    <code>-SC:EQUILIBRATE</code> or <a href="solver_lm.html">LEVENBERG_MARQUARDT</a>
+    (v2.12 Newton-direct hybrid) instead. Both converge on NozzleSystem in 5 iterations.
+  </div>
+</section>
+
+<section id="theorie">
+  <h2 data-lang="de">Theoretischer Kontext</h2><h2 data-lang="en">Theoretical context</h2>
+
+  <h3 data-lang="de">Warum Arc-Length statt t-Parametrisierung?</h3><h3 data-lang="en">Why arc length instead of t parametrization?</h3>
+  <p data-lang="de">
+    Klassisches Continuation parametrisiert den Pfad mit <code>t ∈ [0, 1]</code>
+    von einer trivialen Startlösung zur Zielwertung. <strong>Problem:</strong>
+    wenn der Lösungspfad einen Wendepunkt hat (<code>dx/dt → ∞</code>, t kehrt
+    sich um), bricht t-Parametrisierung zusammen.
+  </p><p data-lang="en">
+    Classical continuation parametrizes the path with <code>t ∈ [0, 1]</code>
+    from a trivial starting solution to the target evaluation. <strong>Problem:</strong>
+    when the solution path has a turning point (<code>dx/dt → ∞</code>, t reverses),
+    t parametrization breaks down.
+  </p>
+  <p data-lang="de">
+    Bei einem Schallübergang im Düsenmodell gibt es typischerweise zwei
+    Lösungen für gegebenes Druckverhältnis (subsonic + supersonic), und der
+    Pfad zwischen ihnen läuft durch Ma=1 wo die Jacobi exakt singulär wird.
+    t-Parametrisierung kann diese Stelle nicht passieren, Bogen-Länge schon.
+  </p><p data-lang="en">
+    A sonic transition in a nozzle model typically has two solutions for a
+    given pressure ratio (subsonic + supersonic), and the path between them
+    passes through Ma=1 where the Jacobian becomes exactly singular.
+    t parametrization cannot cross this point — arc length can.
+  </p>
+
+  <h3 data-lang="de">Mathematisches Setup</h3><h3 data-lang="en">Mathematical setup</h3>
+  <div class="math-block">
+    <div class="eq"><span class="hi" data-lang="de">Erweiterter Zustand:</span><span class="hi" data-lang="en">Extended state:</span>  y = (x₁, ..., xₙ, t) ∈ ℝⁿ⁺¹</div>
+    <div class="eq"></div>
+    <div class="eq"><span class="hi" data-lang="de">Erweitertes System G(y) = 0:</span><span class="hi" data-lang="en">Extended system G(y) = 0:</span></div>
+    <div class="eq">  H(x, t) = (1-t)·J₀·(x-x₀) + t·F(x) = 0   <span class="cmt" data-lang="de">← n Gleichungen</span><span class="cmt" data-lang="en">← n equations</span></div>
+    <div class="eq">  N(y)    = ‖w ∘ (y - y_prev)‖² - ds² = 0   <span class="cmt" data-lang="de">← Bogen-Gleichung</span><span class="cmt" data-lang="en">← arc equation</span></div>
+    <div class="eq"></div>
+    <div class="eq"><span class="hi" data-lang="de">Skalierungs-Vektor w:</span><span class="hi" data-lang="en">Scaling vector w:</span></div>
+    <div class="eq">  w[i] = 1 / max(|x_prev[i]|, range/10, 1)   <span class="cmt" data-lang="de">für x-Komponenten</span><span class="cmt" data-lang="en">for x components</span></div>
+    <div class="eq">  w[t] = 1                                    <span class="cmt" data-lang="de">für t</span><span class="cmt" data-lang="en">for t</span></div>
+  </div>
+
+  <p data-lang="de">
+    Die sphärische Bogen-Norm <code>‖w∘(y-y_prev)‖² = ds²</code> ist robuster
+    bei großem n als die einfachere Crisfield-Variante (linear in y), weil
+    sie auch bei ungenauer Tangente sinnvoll bleibt.
+  </p><p data-lang="en">
+    The spherical arc norm <code>‖w∘(y-y_prev)‖² = ds²</code> is more robust
+    at large n than the simpler Crisfield variant (linear in y) because it
+    remains meaningful even with an inaccurate tangent.
+  </p>
+
+  <h3 data-lang="de">Predictor mit Vorzeichenwahl</h3><h3 data-lang="en">Predictor with sign selection</h3>
+  <p data-lang="de">
+    Tangente am Pfadpunkt y wird aus dem erweiterten System gelöst:
+  </p><p data-lang="en">
+    The tangent at path point y is obtained by solving the extended system:
+  </p>
+  <div class="math-block">
+    <div class="eq">∂H/∂y · ẏ = 0     <span class="cmt" data-lang="de">← n Gleichungen für n+1 Unbekannte</span><span class="cmt" data-lang="en">← n equations for n+1 unknowns</span></div>
+    <div class="eq">tangent_prev · ẏ = 1   <span class="cmt" data-lang="de">← Normierung + Vorzeichen</span><span class="cmt" data-lang="en">← normalization + sign</span></div>
+    <div class="eq"></div>
+    <div class="eq">y_pred = y + ds · ẏ_normalisiert</div>
+  </div>
+
+  <p data-lang="de">
+    Die letzte Gleichung wählt die Tangente in der Richtung der vorherigen —
+    verhindert Vorzeichen-Sprünge wenn der Pfad einen Wendepunkt überquert.
+  </p><p data-lang="en">
+    The last equation picks the tangent in the direction of the previous one —
+    preventing sign jumps when the path crosses a turning point.
+  </p>
+
+  <h3 data-lang="de">Korrektor — Newton im erweiterten Raum</h3><h3 data-lang="en">Corrector — Newton in the extended space</h3>
+  <p data-lang="de">
+    Klassisches Newton-Verfahren auf G(y)=0 mit (n+1)×(n+1) erweiterte Jacobi:
+  </p><p data-lang="en">
+    Classical Newton method on G(y)=0 with the (n+1)×(n+1) extended Jacobian:
+  </p>
+  <div class="math-block">
+    <div class="eq">∂G/∂y = [ ∂H/∂x       ∂H/∂t  ]    <span class="cmt" data-lang="de">n Zeilen</span><span class="cmt" data-lang="en">n rows</span></div>
+    <div class="eq">        [ 2·w² ∘ (y-y_prev)ᵀ ]   <span class="cmt" data-lang="de">1 Zeile</span><span class="cmt" data-lang="en">1 row</span></div>
+    <div class="eq"></div>
+    <div class="eq">∂H/∂x = (1-t)·J₀ + t·J(x)</div>
+    <div class="eq">∂H/∂t = F(x) - J₀·(x-x₀)</div>
+    <div class="eq"></div>
+    <div class="eq">dy = -[∂G/∂y]⁻¹ · G   <span class="cmt" data-lang="de">direkte Inversion (Lehre aus LM v3b)</span><span class="cmt" data-lang="en">direct inversion (lesson from LM v3b)</span></div>
+    <div class="eq">y ← y + α · dy        <span class="cmt" data-lang="de">Armijo im erweiterten Raum</span><span class="cmt" data-lang="en">Armijo in extended space</span></div>
+  </div>
+
+  <div class="note blue" data-lang="de">
+    <strong>Direkte Inversion:</strong> Bei (n+1)×(n+1) Matrizen mit moderatem
+    n nutzen wir <code>MatrixSimple.inverse()</code> direkt — Lehre aus der
+    LM-Episode wo die Normalengleichung kappa quadrierte. Direkte Lösung
+    ist numerisch deutlich stabiler.
+  </div><div class="note blue" data-lang="en">
+    <strong>Direct inversion:</strong> for (n+1)×(n+1) matrices at moderate n
+    we use <code>MatrixSimple.inverse()</code> directly — a lesson from the LM
+    episode where the normal equation squared kappa. Direct solution is
+    significantly more numerically stable.
+  </div>
+</section>
+
+<section id="flussdiagramm">
+  <h2 data-lang="de">Flussdiagramm</h2><h2 data-lang="en">Flow chart</h2>
+  <div data-lang="de"><div class="flowchart">
+  <svg width="100%" viewBox="0 0 700 600" xmlns="http://www.w3.org/2000/svg"
+       font-family="IBM Plex Sans, sans-serif" font-size="12">
+    <defs>
+      <marker id="arr" viewBox="0 0 10 10" refX="8" refY="5"
+              markerWidth="6" markerHeight="6" orient="auto">
+        <path d="M2 1L8 5L2 9" fill="none" stroke="#4a9eff" stroke-width="1.5"/>
+      </marker>
+      <marker id="arr-ok" viewBox="0 0 10 10" refX="8" refY="5"
+              markerWidth="6" markerHeight="6" orient="auto">
+        <path d="M2 1L8 5L2 9" fill="none" stroke="#3ecf8e" stroke-width="1.5"/>
+      </marker>
+      <marker id="arr-warn" viewBox="0 0 10 10" refX="8" refY="5"
+              markerWidth="6" markerHeight="6" orient="auto">
+        <path d="M2 1L8 5L2 9" fill="none" stroke="#f0a030" stroke-width="1.5"/>
+      </marker>
+    </defs>
+
+    <rect x="250" y="10" width="200" height="38" rx="19" fill="#1a2535" stroke="#4a9eff" stroke-width="1.5"/>
+    <text x="350" y="34" text-anchor="middle" fill="#4a9eff" font-weight="600">START  y₀=(x₀, 0)</text>
+    <line x1="350" y1="48" x2="350" y2="76" stroke="#4a9eff" stroke-width="1.5" marker-end="url(#arr)"/>
+
+    <rect x="170" y="78" width="360" height="44" rx="6" fill="#13161b" stroke="#2e3540"/>
+    <text x="350" y="97" text-anchor="middle" fill="#c8cdd6">J₀ via FD + Skalierungs-Vektor w</text>
+    <text x="350" y="113" text-anchor="middle" fill="#4a5568" font-size="10">Initial-Tangente am Startpunkt</text>
+    <line x1="350" y1="122" x2="350" y2="148" stroke="#4a9eff" stroke-width="1.5" marker-end="url(#arr)"/>
+
+    <text x="350" y="144" text-anchor="middle" fill="#4a5568" font-size="10">── Pfad-Schleife ──</text>
+
+    <polygon points="350,150 470,176 350,202 230,176"
+             fill="#1a1e25" stroke="#3ecf8e" stroke-width="1.5"/>
+    <text x="350" y="180" text-anchor="middle" fill="#3ecf8e" font-size="11">t ≥ 1?</text>
+
+    <line x1="470" y1="176" x2="580" y2="176" stroke="#3ecf8e" stroke-width="1.5" marker-end="url(#arr-ok)"/>
+    <rect x="582" y="156" width="110" height="40" rx="20" fill="#0f2a1e" stroke="#3ecf8e" stroke-width="1.5"/>
+    <text x="637" y="180" text-anchor="middle" fill="#3ecf8e" font-weight="600">CONVERGED</text>
+    <text x="480" y="166" fill="#3ecf8e" font-size="10">ja</text>
+
+    <line x1="350" y1="202" x2="350" y2="230" stroke="#4a9eff" stroke-width="1.5" marker-end="url(#arr)"/>
+    <text x="360" y="222" fill="#4a5568" font-size="10">nein</text>
+
+    <rect x="170" y="232" width="360" height="44" rx="6" fill="#13161b" stroke="#2e3540"/>
+    <text x="350" y="251" text-anchor="middle" fill="#c8cdd6">Predictor (Tangenten-Euler)</text>
+    <text x="350" y="267" text-anchor="middle" fill="#4a5568" font-size="10">y_pred = y + ds·ẏ  · Bounds-Projection auf x</text>
+    <line x1="350" y1="276" x2="350" y2="304" stroke="#4a9eff" stroke-width="1.5" marker-end="url(#arr)"/>
+
+    <rect x="170" y="306" width="360" height="44" rx="6" fill="#13161b" stroke="#2e3540"/>
+    <text x="350" y="325" text-anchor="middle" fill="#c8cdd6">Korrektor (Newton im erweiterten Raum)</text>
+    <text x="350" y="341" text-anchor="middle" fill="#4a5568" font-size="10">G(y)=0 via Jaug⁻¹·G + Armijo</text>
+    <line x1="350" y1="350" x2="350" y2="378" stroke="#4a9eff" stroke-width="1.5" marker-end="url(#arr)"/>
+
+    <polygon points="350,380 470,406 350,432 230,406"
+             fill="#1a1e25" stroke="#a78bfa" stroke-width="1.5"/>
+    <text x="350" y="410" text-anchor="middle" fill="#a78bfa" font-size="11">‖G‖ &lt; tol?</text>
+
+    <line x1="230" y1="406" x2="120" y2="406" stroke="#f0a030" stroke-width="1.5" marker-end="url(#arr-warn)"/>
+    <rect x="10" y="386" width="110" height="40" rx="4" fill="#1a1600" stroke="#f0a030"/>
+    <text x="65" y="403" text-anchor="middle" fill="#f0a030" font-size="11">ds ← ds / 2</text>
+    <text x="65" y="418" text-anchor="middle" fill="#4a5568" font-size="10">kleinerer Schritt</text>
+    <line x1="65" y1="386" x2="65" y2="262" stroke="#f0a030" stroke-width="1"/>
+    <line x1="65" y1="262" x2="168" y2="262" stroke="#f0a030" stroke-width="1" marker-end="url(#arr-warn)"/>
+    <text x="180" y="398" fill="#f0a030" font-size="10">nein</text>
+
+    <line x1="350" y1="432" x2="350" y2="460" stroke="#4a9eff" stroke-width="1.5" marker-end="url(#arr)"/>
+    <text x="360" y="452" fill="#4a5568" font-size="10">ja</text>
+
+    <rect x="170" y="462" width="360" height="44" rx="6" fill="#13161b" stroke="#2e3540"/>
+    <text x="350" y="481" text-anchor="middle" fill="#c8cdd6">Tangente neu berechnen + Vorzeichen-Korrektur</text>
+    <text x="350" y="497" text-anchor="middle" fill="#4a5568" font-size="10">y ← y_corr  · ds adaptiv anpassen</text>
+    <line x1="170" y1="484" x2="65" y2="484" stroke="#4a9eff" stroke-width="1"/>
+    <line x1="65" y1="484" x2="65" y2="180" stroke="#4a9eff" stroke-width="1"/>
+    <line x1="65" y1="180" x2="228" y2="180" stroke="#4a9eff" stroke-width="1" marker-end="url(#arr)"/>
+  </svg>
+  </div></div><div data-lang="en"><div class="flowchart">
+  <svg width="100%" viewBox="0 0 700 600" xmlns="http://www.w3.org/2000/svg"
+       font-family="IBM Plex Sans, sans-serif" font-size="12">
+    <defs>
+      <marker id="arr" viewBox="0 0 10 10" refX="8" refY="5"
+              markerWidth="6" markerHeight="6" orient="auto">
+        <path d="M2 1L8 5L2 9" fill="none" stroke="#4a9eff" stroke-width="1.5"/>
+      </marker>
+      <marker id="arr-ok" viewBox="0 0 10 10" refX="8" refY="5"
+              markerWidth="6" markerHeight="6" orient="auto">
+        <path d="M2 1L8 5L2 9" fill="none" stroke="#3ecf8e" stroke-width="1.5"/>
+      </marker>
+      <marker id="arr-warn" viewBox="0 0 10 10" refX="8" refY="5"
+              markerWidth="6" markerHeight="6" orient="auto">
+        <path d="M2 1L8 5L2 9" fill="none" stroke="#f0a030" stroke-width="1.5"/>
+      </marker>
+    </defs>
+
+    <rect x="250" y="10" width="200" height="38" rx="19" fill="#1a2535" stroke="#4a9eff" stroke-width="1.5"/>
+    <text x="350" y="34" text-anchor="middle" fill="#4a9eff" font-weight="600">START  y₀=(x₀, 0)</text>
+    <line x1="350" y1="48" x2="350" y2="76" stroke="#4a9eff" stroke-width="1.5" marker-end="url(#arr)"/>
+
+    <rect x="170" y="78" width="360" height="44" rx="6" fill="#13161b" stroke="#2e3540"/>
+    <text x="350" y="97" text-anchor="middle" fill="#c8cdd6">J₀ via FD + scaling vector w</text>
+    <text x="350" y="113" text-anchor="middle" fill="#4a5568" font-size="10">Initial tangent at start point</text>
+    <line x1="350" y1="122" x2="350" y2="148" stroke="#4a9eff" stroke-width="1.5" marker-end="url(#arr)"/>
+
+    <text x="350" y="144" text-anchor="middle" fill="#4a5568" font-size="10">── Path loop ──</text>
+
+    <polygon points="350,150 470,176 350,202 230,176"
+             fill="#1a1e25" stroke="#3ecf8e" stroke-width="1.5"/>
+    <text x="350" y="180" text-anchor="middle" fill="#3ecf8e" font-size="11">t ≥ 1?</text>
+
+    <line x1="470" y1="176" x2="580" y2="176" stroke="#3ecf8e" stroke-width="1.5" marker-end="url(#arr-ok)"/>
+    <rect x="582" y="156" width="110" height="40" rx="20" fill="#0f2a1e" stroke="#3ecf8e" stroke-width="1.5"/>
+    <text x="637" y="180" text-anchor="middle" fill="#3ecf8e" font-weight="600">CONVERGED</text>
+    <text x="480" y="166" fill="#3ecf8e" font-size="10">yes</text>
+
+    <line x1="350" y1="202" x2="350" y2="230" stroke="#4a9eff" stroke-width="1.5" marker-end="url(#arr)"/>
+    <text x="360" y="222" fill="#4a5568" font-size="10">no</text>
+
+    <rect x="170" y="232" width="360" height="44" rx="6" fill="#13161b" stroke="#2e3540"/>
+    <text x="350" y="251" text-anchor="middle" fill="#c8cdd6">Predictor (tangent Euler)</text>
+    <text x="350" y="267" text-anchor="middle" fill="#4a5568" font-size="10">y_pred = y + ds·ẏ  · Bounds projection on x</text>
+    <line x1="350" y1="276" x2="350" y2="304" stroke="#4a9eff" stroke-width="1.5" marker-end="url(#arr)"/>
+
+    <rect x="170" y="306" width="360" height="44" rx="6" fill="#13161b" stroke="#2e3540"/>
+    <text x="350" y="325" text-anchor="middle" fill="#c8cdd6">Corrector (Newton in extended space)</text>
+    <text x="350" y="341" text-anchor="middle" fill="#4a5568" font-size="10">G(y)=0 via Jaug⁻¹·G + Armijo</text>
+    <line x1="350" y1="350" x2="350" y2="378" stroke="#4a9eff" stroke-width="1.5" marker-end="url(#arr)"/>
+
+    <polygon points="350,380 470,406 350,432 230,406"
+             fill="#1a1e25" stroke="#a78bfa" stroke-width="1.5"/>
+    <text x="350" y="410" text-anchor="middle" fill="#a78bfa" font-size="11">‖G‖ &lt; tol?</text>
+
+    <line x1="230" y1="406" x2="120" y2="406" stroke="#f0a030" stroke-width="1.5" marker-end="url(#arr-warn)"/>
+    <rect x="10" y="386" width="110" height="40" rx="4" fill="#1a1600" stroke="#f0a030"/>
+    <text x="65" y="403" text-anchor="middle" fill="#f0a030" font-size="11">ds ← ds / 2</text>
+    <text x="65" y="418" text-anchor="middle" fill="#4a5568" font-size="10">smaller step</text>
+    <line x1="65" y1="386" x2="65" y2="262" stroke="#f0a030" stroke-width="1"/>
+    <line x1="65" y1="262" x2="168" y2="262" stroke="#f0a030" stroke-width="1" marker-end="url(#arr-warn)"/>
+    <text x="180" y="398" fill="#f0a030" font-size="10">no</text>
+
+    <line x1="350" y1="432" x2="350" y2="460" stroke="#4a9eff" stroke-width="1.5" marker-end="url(#arr)"/>
+    <text x="360" y="452" fill="#4a5568" font-size="10">yes</text>
+
+    <rect x="170" y="462" width="360" height="44" rx="6" fill="#13161b" stroke="#2e3540"/>
+    <text x="350" y="481" text-anchor="middle" fill="#c8cdd6">Recompute tangent + sign correction</text>
+    <text x="350" y="497" text-anchor="middle" fill="#4a5568" font-size="10">y ← y_corr  · adapt ds</text>
+    <line x1="170" y1="484" x2="65" y2="484" stroke="#4a9eff" stroke-width="1"/>
+    <line x1="65" y1="484" x2="65" y2="180" stroke="#4a9eff" stroke-width="1"/>
+    <line x1="65" y1="180" x2="228" y2="180" stroke="#4a9eff" stroke-width="1" marker-end="url(#arr)"/>
+  </svg>
+  </div></div>
+</section>
+
+<section id="pseudocode">
+  <h2 data-lang="de">Pseudocode</h2><h2 data-lang="en">Pseudocode</h2>
+<div data-lang="de"><pre><code>solve():
+  y = (x₀, 0)
+  J₀ = FD-Jacobi am Startpunkt
+  w  = Skalierungs-Vektor [1/scale_x, ..., 1]
+  tangent = computeInitialTangent(J₀, F(x₀))    // (-J₀⁻¹·F, 1) normiert
+
+  while t &lt; 1:
+    y_pred = y + ds · tangent
+    projectBoundsOnX(y_pred)                     // x-Anteil clampen, t soft
+
+    cr = corrector(y_pred, J₀, x₀, w, ds):
+      while ‖G(y)‖ &gt; tol:
+        Jaug = computeAugmentedJacobian(y, J₀, w, y_prev)
+        dy   = -Jaug⁻¹ · G(y)                    // direkte Inversion
+        α    = armijoStep(y, dy, G)              // ‖G‖²-Akzeptanz
+        y   += α·dy
+        projectBoundsOnX(y)
+
+    if cr.converged:
+      tangent = computeTangent(y, J₀, x₀, tangent_prev, w)
+      // Vorzeichen aus dem akzeptierten Schritt prüfen
+      y = cr.y
+    else:
+      ds = ds / 2
+      if ds &lt; ds_min: abort
+</code></pre></div><div data-lang="en"><pre><code>solve():
+  y = (x₀, 0)
+  J₀ = FD Jacobian at start point
+  w  = scaling vector [1/scale_x, ..., 1]
+  tangent = computeInitialTangent(J₀, F(x₀))    // (-J₀⁻¹·F, 1) normalized
+
+  while t &lt; 1:
+    y_pred = y + ds · tangent
+    projectBoundsOnX(y_pred)                     // clamp x part, t soft
+
+    cr = corrector(y_pred, J₀, x₀, w, ds):
+      while ‖G(y)‖ &gt; tol:
+        Jaug = computeAugmentedJacobian(y, J₀, w, y_prev)
+        dy   = -Jaug⁻¹ · G(y)                    // direct inversion
+        α    = armijoStep(y, dy, G)              // ‖G‖² acceptance
+        y   += α·dy
+        projectBoundsOnX(y)
+
+    if cr.converged:
+      tangent = computeTangent(y, J₀, x₀, tangent_prev, w)
+      // verify sign from the accepted step
+      y = cr.y
+    else:
+      ds = ds / 2
+      if ds &lt; ds_min: abort
+</code></pre></div>
+</section>
+
+<section id="dateien">
+  <h2 data-lang="de">Dateien</h2><h2 data-lang="en">Files</h2>
+  <div class="file-list">
+    <div class="file-icon">📄</div>
+    <div>
+      <code>src/apps/eqnParser/solver/ArcLengthHomotopySolver.java</code>
+      <span class="file-desc" data-lang="de">Hauptklasse, 712 Zeilen — Phase 1 Implementierung</span><span class="file-desc" data-lang="en">Main class, 712 lines — phase 1 implementation</span>
+    </div>
+  </div>
+  <div class="file-list">
+    <div class="file-icon">⚙️</div>
+    <div>
+      <code>src/apps/eqnParser/solver/HomotopyConfig.java</code>
+      <span class="file-desc" data-lang="de">Wiederverwendet (steps, dsInit, dsMin, dsMax, iterTarget)</span><span class="file-desc" data-lang="en">Reused (steps, dsInit, dsMin, dsMax, iterTarget)</span>
+    </div>
+  </div>
+  <div class="file-list">
+    <div class="file-icon">📐</div>
+    <div>
+      <code>src/apps/eqnParser/solver/PhysicalProjector.java</code>
+      <span class="file-desc" data-lang="de">Bounds-Projection auf x-Anteil von y</span><span class="file-desc" data-lang="en">Bounds projection on the x part of y</span>
+    </div>
+  </div>
+</section>
+
+<section id="verhalten">
+  <h2 data-lang="de">Verhalten auf NozzleSystem (n=303)</h2><h2 data-lang="en">Behavior on NozzleSystem (n=303)</h2>
+
+  <div class="note red" data-lang="de">
+    <strong>Initial-Tangente komplett in x-Richtung dominiert:</strong>
+    Aus dem Test-Log:
+    <pre>Initial tangent: ṫ=2.67e-07  ‖ẋ‖_max=5.33e+04
+Path step 1: ds=1.00e-01  predict t=0.0000  ‖ẋ‖_max=5.33e+04
+Corrector failed at path step 1, reducing ds to 5.00e-02
+Path step 2: ds=5.00e-02  predict t=0.0000  ‖ẋ‖_max=5.33e+04
+Corrector failed at path step 2, reducing ds to 2.50e-02
+...</pre>
+  </div><div class="note red" data-lang="en">
+    <strong>Initial tangent completely dominated in the x direction:</strong>
+    From the test log:
+    <pre>Initial tangent: ṫ=2.67e-07  ‖ẋ‖_max=5.33e+04
+Path step 1: ds=1.00e-01  predict t=0.0000  ‖ẋ‖_max=5.33e+04
+Corrector failed at path step 1, reducing ds to 5.00e-02
+Path step 2: ds=5.00e-02  predict t=0.0000  ‖ẋ‖_max=5.33e+04
+Corrector failed at path step 2, reducing ds to 2.50e-02
+...</pre>
+  </div>
+
+  <h3 data-lang="de">Ursache</h3><h3 data-lang="en">Root cause</h3>
+  <p data-lang="de">
+    Die Initial-Tangente kommt aus <code>J₀·ẋ = -F(x₀)</code> mit ṫ=1.
+    Bei NozzleSystem ist <code>‖F(x₀)‖ ≈ 1.35·10⁷</code> und kappa(J₀) ≈ 5·10¹¹ — daher
+    sind die ẋ-Komponenten extrem groß. Nach Normierung
+    <code>‖w∘ẏ‖=1</code> dominiert ẋ den gesamten Tangentenvektor, und ṫ
+    wird auf 2.67·10⁻⁷ verschoben.
+  </p><p data-lang="en">
+    The initial tangent comes from <code>J₀·ẋ = -F(x₀)</code> with ṫ=1.
+    On NozzleSystem <code>‖F(x₀)‖ ≈ 1.35·10⁷</code> and kappa(J₀) ≈ 5·10¹¹ —
+    so the ẋ components are extremely large. After normalization
+    <code>‖w∘ẏ‖=1</code> ẋ dominates the entire tangent vector, and ṫ is
+    pushed down to 2.67·10⁻⁷.
+  </p>
+  <p data-lang="de">
+    Predictor <code>y + ds·tangent</code> mit ds=0.1 bewegt sich daher fast
+    ausschließlich in x-Richtung — t bleibt bei 0. Bounds-Projection clampt
+    viele x-Komponenten an ihre Grenzen, danach ist die Bogen-Constraint
+    <code>‖w∘(y-y_prev)‖² = ds²</code> nicht mehr erfüllbar, und der
+    Korrektor scheitert auch nach ds-Halbierungen.
+  </p><p data-lang="en">
+    The predictor <code>y + ds·tangent</code> with ds=0.1 therefore moves
+    almost entirely in the x direction — t stays at 0. Bounds projection
+    clamps many x components to their limits, after which the arc constraint
+    <code>‖w∘(y-y_prev)‖² = ds²</code> can no longer be satisfied, and the
+    corrector fails even after ds halvings.
+  </p>
+
+  <h3 data-lang="de">Was helfen würde (theoretisch)</h3><h3 data-lang="en">What would help (theoretically)</h3>
+  <ul data-lang="de">
+    <li>Andere Tangenten-Skalierung mit erzwungenem ṫ-Mindestbetrag</li>
+    <li>Equilibrator-Integration auf der ∂H/∂x-Submatrix</li>
+    <li>Soft-Bogen-Constraint (Slack-Variable) im Korrektor</li>
+  </ul><ul data-lang="en">
+    <li>Different tangent scaling with an enforced minimum on ṫ</li>
+    <li>Equilibrator integration on the ∂H/∂x submatrix</li>
+    <li>Soft arc constraint (slack variable) in the corrector</li>
+  </ul>
+  <p data-lang="de">
+    Diese Verbesserungen sind nicht implementiert weil kein Test-Modell mit
+    Wendepunkt verfügbar ist — Verbesserungen wären spekulativ ohne
+    Validierungsmöglichkeit.
+  </p><p data-lang="en">
+    These improvements are not implemented because no test model with a
+    turning point is available — they would be speculative without a way to
+    validate them.
+  </p>
+</section>
+
+<section id="grenzen">
+  <h2 data-lang="de">Grenzen — wann nicht verwenden</h2><h2 data-lang="en">Limits — when not to use</h2>
+
+  <ul data-lang="de">
+    <li>
+      <strong>Modelle mit kappa(J₀) &gt; 10⁹ und stark gemischten Skalen</strong> —
+      Initial-Tangente wird unbrauchbar (siehe NozzleSystem-Beispiel oben).
+    </li>
+    <li>
+      <strong>Modelle ohne tatsächliche Wendepunkte</strong> — t-Parametrisierte
+      Methoden (HOMOTOPY, ADAPTIVE_LAMBDA) sind einfacher und genauso
+      gut für reguläre Pfade.
+    </li>
+    <li>
+      <strong>Wenn Newton-Armijo direkt konvergiert</strong> — der einfachere
+      Solver ist schneller (5 Iter, 0.4 s auf NozzleSystem) und numerisch
+      stabiler.
+    </li>
+  </ul><ul data-lang="en">
+    <li>
+      <strong>Models with kappa(J₀) &gt; 10⁹ and strongly mixed scales</strong> —
+      the initial tangent becomes unusable (see NozzleSystem example above).
+    </li>
+    <li>
+      <strong>Models without actual turning points</strong> — t-parametrized
+      methods (HOMOTOPY, ADAPTIVE_LAMBDA) are simpler and equally good for
+      regular paths.
+    </li>
+    <li>
+      <strong>When Newton-Armijo converges directly</strong> — the simpler
+      solver is faster (5 iter, 0.4 s on NozzleSystem) and more numerically
+      stable.
+    </li>
+  </ul>
+
+  <h3 data-lang="de">Wann er gedacht ist</h3><h3 data-lang="en">When it is intended for use</h3>
+  <ul data-lang="de">
+    <li>Modelle mit echten Wendepunkten oder Bifurkationen (z.B. Schallübergang)</li>
+    <li>Pfade die t-Parametrisierung topologisch nicht passieren kann</li>
+    <li>Forschungsanwendungen mit normalisierten dimensionslosen Größen</li>
+  </ul><ul data-lang="en">
+    <li>Models with real turning points or bifurcations (e.g., sonic transition)</li>
+    <li>Paths that t parametrization cannot topologically traverse</li>
+    <li>Research applications with normalized dimensionless quantities</li>
+  </ul>
+
+  <h3 data-lang="de">Roadmap</h3><h3 data-lang="en">Roadmap</h3>
+  <p data-lang="de">
+    Eine Phase 2 mit Equilibrator-Integration und Tangenten-Reskalierung ist
+    konzeptionell skizziert aber nicht implementiert. Ohne Modell mit
+    Wendepunkt zum Validieren wäre die Implementierung blind. Die aktuelle
+    Phase 1 dient als mathematisches Skelett und kann später ausgebaut
+    werden wenn ein passendes Test-Modell vorliegt.
+  </p><p data-lang="en">
+    A phase 2 with equilibrator integration and tangent rescaling is
+    conceptually sketched but not implemented. Without a model with a turning
+    point to validate against, the implementation would be blind. The current
+    phase 1 serves as a mathematical skeleton and can be extended later when
+    a suitable test model becomes available.
+  </p>
+</section>
+
+</main>
+
+<footer>
+  <span data-lang="de">CMDSolver Docs · ArcLength-Homotopie (experimental) · v2.12</span><span data-lang="en">CMDSolver Docs · Arc-Length Homotopy (experimental) · v2.12</span>
+  <span>
+    <a href="solver_homotopy.html" data-lang="de">← Homotopie</a><a href="solver_homotopy.html" data-lang="en">← Homotopy</a>
+    &nbsp;|&nbsp;
+    <a href="solver_adaptive_lambda.html" data-lang="de">Adaptive-Lambda →</a><a href="solver_adaptive_lambda.html" data-lang="en">Adaptive-Lambda →</a>
+  </span>
+</footer>
+
+</body>
+</html>

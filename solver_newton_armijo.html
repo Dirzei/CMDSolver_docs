@@ -4,11 +4,310 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>CMDSolver Docs — Newton-Raphson + Armijo</title>
-<link rel="stylesheet" href="docs.css">
+<style>
+/* CMDSolver Documentation — Shared Stylesheet */
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;1,400&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap');
+
+:root {
+  --bg:      #0d0f12;
+  --bg2:     #13161b;
+  --bg3:     #1a1e25;
+  --bg4:     #20252f;
+  --border:  #252a33;
+  --border2: #2e3540;
+  --text:    #c8cdd6;
+  --text2:   #7a8496;
+  --text3:   #4a5568;
+  --accent:  #4a9eff;
+  --ok:      #3ecf8e;
+  --warn:    #f0a030;
+  --err:     #ff5c5c;
+  --purple:  #a78bfa;
+  --teal:    #2dd4bf;
+  --mono:    'IBM Plex Mono', monospace;
+  --sans:    'IBM Plex Sans', sans-serif;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: var(--sans);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 13.5px;
+  line-height: 1.75;
+}
+
+/* ── Header ── */
+.doc-header {
+  border-bottom: 1px solid var(--border);
+  padding: 1.2rem 3rem;
+  display: flex; align-items: center;
+  justify-content: space-between; flex-wrap: wrap; gap: 1rem;
+}
+
+.breadcrumb {
+  font-family: var(--mono); font-size: 11px; color: var(--text3);
+  letter-spacing: .08em; text-transform: uppercase;
+  display: flex; align-items: center; gap: .5rem;
+}
+.breadcrumb a { color: var(--accent); text-decoration: none; }
+.breadcrumb span { color: var(--text3); }
+
+.doc-badge {
+  font-family: var(--mono); font-size: 11px;
+  padding: 3px 10px; border-radius: 4px;
+}
+.doc-badge.solver {
+  background: rgba(74,158,255,.1); border: 1px solid rgba(74,158,255,.25);
+  color: var(--accent);
+}
+.doc-badge.overview {
+  background: rgba(167,139,250,.1); border: 1px solid rgba(167,139,250,.25);
+  color: var(--purple);
+}
+.doc-badge.comparison {
+  background: rgba(62,207,142,.1); border: 1px solid rgba(62,207,142,.25);
+  color: var(--ok);
+}
+
+/* ── Hero ── */
+.hero {
+  padding: 2.5rem 3rem 2rem;
+  border-bottom: 1px solid var(--border);
+  background: linear-gradient(135deg, var(--bg) 0%, #0f1520 100%);
+}
+.hero-sub {
+  font-family: var(--mono); font-size: 11px; color: var(--text3);
+  letter-spacing: .15em; text-transform: uppercase; margin-bottom: .5rem;
+}
+h1 {
+  font-size: 28px; font-weight: 600; color: #e8ecf4;
+  letter-spacing: -.03em; margin-bottom: .5rem; line-height: 1.2;
+}
+.tagline {
+  font-size: 14px; color: var(--text2); margin-bottom: 1.5rem;
+  max-width: 680px;
+}
+.hero-stats { display: flex; gap: 2rem; flex-wrap: wrap; }
+.stat { display: flex; flex-direction: column; gap: .2rem; }
+.stat-val {
+  font-family: var(--mono); font-size: 18px; font-weight: 500; color: var(--ok);
+}
+.stat-lbl {
+  font-size: 11px; color: var(--text3);
+  text-transform: uppercase; letter-spacing: .08em;
+}
+
+/* ── Nav ── */
+nav {
+  position: sticky; top: 0; z-index: 10;
+  background: rgba(13,15,18,.95); backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--border);
+  padding: .6rem 3rem;
+  display: flex; gap: 1.5rem; flex-wrap: wrap;
+}
+nav a {
+  font-family: var(--mono); font-size: 11px; color: var(--text3);
+  text-decoration: none; letter-spacing: .08em;
+  text-transform: uppercase; transition: color .15s;
+}
+nav a:hover { color: var(--accent); }
+
+/* ── Main ── */
+main { padding: 2rem 3rem 4rem; max-width: 1040px; }
+
+section { margin-bottom: 3.5rem; scroll-margin-top: 3rem; }
+
+section > h2 {
+  font-size: 12px; font-family: var(--mono);
+  letter-spacing: .12em; text-transform: uppercase;
+  color: var(--text3); margin-bottom: 1.4rem;
+  padding-bottom: .5rem; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: .6rem;
+}
+section > h2::before {
+  content: ''; display: inline-block;
+  width: 8px; height: 8px; border-radius: 50%; background: var(--accent);
+}
+
+h3 { font-size: 14px; font-weight: 500; color: #e8ecf4; margin: 1.6rem 0 .6rem; }
+h4 { font-size: 13px; font-weight: 500; color: var(--text2); margin: 1.2rem 0 .4rem; }
+
+p { color: var(--text); margin-bottom: .9rem; max-width: 780px; }
+
+/* ── Math ── */
+.math-block {
+  background: var(--bg3); border: 1px solid var(--border);
+  border-radius: 8px; padding: 1rem 1.2rem;
+  margin: 1rem 0 1.2rem; font-family: var(--mono);
+  font-size: 12px; line-height: 1.7; white-space: pre;
+  color: #c8cdd6;
+}
+.math-block .eq  { color: #e8ecf4; }
+.math-block .cmt { color: var(--text3); font-style: italic; }
+.math-block .hi  { color: var(--teal); }
+.math-block .hi2 { color: var(--warn); }
+
+/* ── Notes ── */
+.note {
+  border-radius: 6px; padding: .85rem 1.1rem;
+  font-size: 13px; line-height: 1.7; margin-bottom: 1.2rem;
+}
+.note.blue   { background: rgba(74,158,255,.06);  border-left: 3px solid var(--accent); }
+.note.green  { background: rgba(62,207,142,.06);  border-left: 3px solid var(--ok); }
+.note.amber  { background: rgba(240,160,48,.06);  border-left: 3px solid var(--warn); }
+.note.red    { background: rgba(255,92,92,.06);   border-left: 3px solid var(--err); }
+.note.purple { background: rgba(167,139,250,.06); border-left: 3px solid var(--purple); }
+.note strong { color: #e8ecf4; }
+
+/* ── Code ── */
+code {
+  font-family: var(--mono); font-size: 11.5px;
+  background: rgba(255,255,255,.05); padding: 1px 5px;
+  border-radius: 3px; color: #a8c8f0;
+}
+pre {
+  font-family: var(--mono); font-size: 12px;
+  background: var(--bg3); border: 1px solid var(--border);
+  border-radius: 8px; padding: 1rem 1.2rem;
+  overflow-x: auto; line-height: 1.7; margin-bottom: 1rem; color: #c8cdd6;
+}
+.kw  { color: var(--purple); }
+.cmt { color: var(--text3); font-style: italic; }
+.fn  { color: var(--teal); }
+.num { color: var(--warn); }
+.str { color: var(--ok); }
+
+/* ── Tables ── */
+.tbl-wrap {
+  overflow-x: auto; border-radius: 8px;
+  border: 1px solid var(--border); margin-bottom: 1.5rem;
+}
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+thead th {
+  background: var(--bg3); padding: 9px 14px; text-align: left;
+  font-weight: 500; font-size: 11px; letter-spacing: .06em;
+  text-transform: uppercase; color: var(--text2);
+  border-bottom: 1px solid var(--border2); white-space: nowrap;
+}
+tbody tr { border-bottom: 1px solid var(--border); transition: background .1s; }
+tbody tr:last-child { border-bottom: none; }
+tbody tr:hover { background: var(--bg3); }
+td { padding: 9px 14px; vertical-align: top; line-height: 1.6; }
+td.center { text-align: center; }
+
+/* ── Badges ── */
+.badge {
+  display: inline-block; font-size: 11px; padding: 2px 9px;
+  border-radius: 12px; font-family: var(--mono); white-space: nowrap;
+}
+.b-ok   { background: rgba(62,207,142,.1);  color: var(--ok);     border: 1px solid rgba(62,207,142,.25); }
+.b-warn { background: rgba(240,160,48,.1);  color: var(--warn);   border: 1px solid rgba(240,160,48,.25); }
+.b-err  { background: rgba(255,92,92,.1);   color: var(--err);    border: 1px solid rgba(255,92,92,.25); }
+.b-info { background: rgba(74,158,255,.1);  color: var(--accent); border: 1px solid rgba(74,158,255,.25); }
+.b-na   { background: rgba(74,84,96,.1);    color: var(--text3);  border: 1px solid var(--border2); }
+
+/* ── Star rating ── */
+.stars { color: var(--warn); letter-spacing: -.05em; }
+.stars.dim { color: var(--border2); }
+
+/* ── File list ── */
+.file-list { list-style: none; }
+.file-list li {
+  display: flex; gap: 1rem; align-items: flex-start;
+  padding: .7rem 1rem; background: var(--bg2);
+  border: 1px solid var(--border); border-radius: 4px; margin-bottom: .4rem;
+}
+.file-icon {
+  font-family: var(--mono); font-size: 11px; color: var(--accent);
+  white-space: nowrap; margin-top: 2px; min-width: 50px;
+}
+.file-desc { font-size: 13px; color: var(--text2); }
+.file-desc strong { color: var(--text); display: block; margin-bottom: .2rem; }
+
+/* ── Flowchart ── */
+.flowchart {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 10px; padding: 1.5rem; margin: 1rem 0 1.5rem;
+  overflow-x: auto;
+}
+
+/* ── Footer ── */
+footer {
+  border-top: 1px solid var(--border); padding: 1.5rem 3rem;
+  font-family: var(--mono); font-size: 11px; color: var(--text3);
+  display: flex; justify-content: space-between; flex-wrap: wrap; gap: .5rem;
+}
+footer a { color: var(--accent); text-decoration: none; }
+
+/* ── Footnotes ── */
+.footnotes {
+  margin-top: 2rem; padding-top: 1.5rem;
+  border-top: 1px solid var(--border);
+  font-size: 12px; color: var(--text2);
+}
+.footnotes p { max-width: none; margin-bottom: .5rem; }
+sup { font-size: 10px; color: var(--accent); }
+
+/* Default: alle Sprachelemente sichtbar (kein JS-Flash) */
+/* Mit lang-Klasse auf body: nur die aktive Sprache sichtbar */
+
+/* Nur wenn body eine Sprachklasse hat, werden Elemente ausgeblendet */
+/* Sprach-Sichtbarkeit via class auf body */
+
+/* ── Solver-Num Label (war in alter docs.css nicht definiert) ── */
+.solver-num {
+  font-family: var(--mono); font-size: 11px; color: var(--accent);
+  letter-spacing: .15em; text-transform: uppercase; margin-bottom: .5rem;
+}
+</style>
+<link rel="stylesheet" href="i18n.css">
 </head>
 <body>
+<script>
+(function(){
+  var stored = '';
+  try { stored = localStorage.getItem('cmdlang') || ''; } catch(e){}
+  var lang = stored || 'de';
+
+  function apply(l) {
+    lang = l;
+    try { localStorage.setItem('cmdlang', l); } catch(e){}
+    document.documentElement.lang = l;
+    var body = document.body;
+    body.classList.remove('lang-de','lang-en');
+    body.classList.add('lang-' + l);
+    document.querySelectorAll('.lang-btn').forEach(function(b){
+      b.classList.toggle('active', b.dataset.lang === l);
+    });
+  }
+
+  // Body-Klasse sofort setzen, damit data-lang-Elemente direkt korrekt
+  // sichtbar sind (kein Flash mit unsichtbarem Header-Inhalt).
+  apply(lang);
+  document.addEventListener('DOMContentLoaded', function(){
+    apply(lang); // erneut, damit jetzt auch die Buttons gestyled werden
+    document.querySelectorAll('.lang-btn').forEach(function(b){
+      b.addEventListener('click', function(){ apply(b.dataset.lang); });
+    });
+    // Sticky-Header Schatten via IntersectionObserver
+    var sentinel = document.querySelector('.header-sentinel');
+    var header   = document.querySelector('.doc-header');
+    if (sentinel && header && 'IntersectionObserver' in window) {
+      new IntersectionObserver(function(entries){
+        header.classList.toggle('scrolled', !entries[0].isIntersecting);
+      }).observe(sentinel);
+    }
+  });
+})();
+</script>
+
+
+
 
 <!-- Header -->
+<div class="header-sentinel"></div>
 <div class="doc-header">
   <div class="breadcrumb">
     <a href="index.html">CMDSolver Docs</a>
@@ -17,17 +316,15 @@
     <span>›</span>
     <span>Newton-Armijo</span>
   </div>
-  <span class="solver-badge">SolverType.NEWTON_ARMIJO</span>
+  <div class="doc-header-right"><div class="lang-switch"><button class="lang-btn" data-lang="de">DE</button><button class="lang-btn" data-lang="en">EN</button></div><span class="doc-badge solver">SolverType.NEWTON_ARMIJO</span></div>
 </div>
 
 <!-- Hero -->
 <div class="hero">
   <div class="solver-num">Solver 1 von 7</div>
-  <h1>Newton-Raphson<br>+ Armijo Liniensuche</h1>
-  <p class="tagline">
-    Der Standard-Solver von CMDSolver. Quadratische Konvergenz in der Nähe der Lösung,
-    robuste Schrittweitenanpassung durch Armijo-Backtracking.
-  </p>
+  <h1 data-lang="de">Newton-Raphson<br>+ Armijo Liniensuche</h1><h1 data-lang="en">Newton-Raphson<br>+ Armijo Line Search</h1>
+  <p class="tagline" data-lang="de">Der Standard-Solver von CMDSolver. Quadratische Konvergenz in der Nähe der Lösung, robuste Schrittweitenanpassung durch Armijo-Backtracking.</p>
+  <p class="tagline" data-lang="en">CMDSolver's default solver. Quadratic convergence near the solution, robust step-size control via Armijo backtracking.</p>
   <div class="hero-stats">
     <div class="stat">
       <span class="stat-val">3</span>
@@ -49,81 +346,107 @@
 </div>
 
 <nav>
-  <a href="#theorie">Theorie</a>
-  <a href="#flussdiagramm">Flussdiagramm</a>
-  <a href="#pseudocode">Pseudocode</a>
-  <a href="#dateien">Dateien</a>
-  <a href="#parameter">Parameter</a>
-  <a href="#verhalten">Verhalten</a>
-  <a href="#grenzen">Grenzen</a>
-  <a href="#beispiel">Beispiel</a>
+  <a href="#theorie" data-lang="de">Theorie</a><a href="#theorie" data-lang="en">Theory</a>
+  <a href="#flussdiagramm" data-lang="de">Flussdiagramm</a><a href="#flussdiagramm" data-lang="en">Flow chart</a>
+  <a href="#pseudocode" data-lang="de">Pseudocode</a><a href="#pseudocode" data-lang="en">Pseudocode</a>
+  <a href="#dateien" data-lang="de">Dateien</a><a href="#dateien" data-lang="en">Files</a>
+  <a href="#parameter" data-lang="de">Parameter</a><a href="#parameter" data-lang="en">Parameters</a>
+  <a href="#verhalten" data-lang="de">Verhalten</a><a href="#verhalten" data-lang="en">Behavior</a>
+  <a href="#grenzen" data-lang="de">Grenzen</a><a href="#grenzen" data-lang="en">Limits</a>
+  <a href="#beispiel" data-lang="de">Beispiel</a><a href="#beispiel" data-lang="en">Example</a>
 </nav>
 
 <main>
 
 <!-- 1. Theorie -->
 <section id="theorie">
-  <h2>Theoretischer Kontext</h2>
+  <h2 data-lang="de">Theoretischer Kontext</h2><h2 data-lang="en">Theoretical context</h2>
 
-  <h3>Grundidee — allgemein verständlich</h3>
-  <p>
+  <h3 data-lang="de">Grundidee — allgemein verständlich</h3><h3 data-lang="en">Idea — in plain words</h3>
+  <p data-lang="de">
     Das Newton-Raphson-Verfahren löst ein nichtlineares Gleichungssystem
     <strong>F(x) = 0</strong> iterativ. Die Idee ist einfach: Man approximiert
     die krumme Funktion F lokal durch eine Gerade (die Tangente) und berechnet
     wo diese Gerade die Nulllinie schneidet. Dieser Schnittpunkt ist der nächste
     Versuchspunkt. Das wiederholt man bis die Funktion nahe genug an Null ist.
+  </p><p data-lang="en">
+    Newton-Raphson solves a nonlinear equation system <strong>F(x) = 0</strong>
+    iteratively. The idea is simple: locally approximate the curved function F
+    by a straight line (the tangent) and compute where that line crosses zero.
+    That intersection is the next trial point. Repeat until the function is
+    close enough to zero.
   </p>
-  <p>
+  <p data-lang="de">
     Die <strong>Armijo-Liniensuche</strong> ist eine Sicherheitsbremse: Der reine
     Newton-Schritt kann manchmal zu groß sein und die Lösung überspringen.
     Armijo testet ob der volle Schritt das Residuum tatsächlich verkleinert —
     wenn nicht, wird er halbiert und nochmal getestet, bis er "gut genug" ist.
+  </p><p data-lang="en">
+    The <strong>Armijo line search</strong> is a safety brake: the raw Newton
+    step can sometimes be too large and overshoot the solution. Armijo tests
+    whether the full step actually reduces the residual — if not, it is
+    halved and re-tested until it is "good enough".
   </p>
 
-  <h3>Mathematische Formulierung</h3>
+  <h3 data-lang="de">Mathematische Formulierung</h3><h3 data-lang="en">Mathematical formulation</h3>
 
   <div class="math-block">
-    <div class="eq"><span class="hi">Ziel:</span>   F(x) = 0   wobei F: ℝⁿ → ℝⁿ</div>
+    <div class="eq"><span class="hi" data-lang="de">Ziel:</span><span class="hi" data-lang="en">Goal:</span>   F(x) = 0   wobei F: ℝⁿ → ℝⁿ</div>
     <div class="eq"></div>
-    <div class="eq"><span class="hi">Schritt k:</span></div>
-    <div class="eq">  J(xₖ) · Δxₖ = −F(xₖ)   <span class="comment">← lineares Gleichungssystem lösen</span></div>
-    <div class="eq">  xₖ₊₁ = xₖ + α · Δxₖ     <span class="comment">← gedämpfter Update</span></div>
+    <div class="eq"><span class="hi" data-lang="de">Schritt k:</span><span class="hi" data-lang="en">Step k:</span></div>
+    <div class="eq">  J(xₖ) · Δxₖ = −F(xₖ)   <span class="cmt" data-lang="de">← lineares Gleichungssystem lösen</span><span class="cmt" data-lang="en">← solve linear system</span></div>
+    <div class="eq">  xₖ₊₁ = xₖ + α · Δxₖ     <span class="cmt" data-lang="de">← gedämpfter Update</span><span class="cmt" data-lang="en">← damped update</span></div>
     <div class="eq"></div>
-    <div class="eq"><span class="hi">Jacobi-Matrix J(x):</span></div>
-    <div class="eq">  J_ij = ∂Fᵢ/∂xⱼ           <span class="comment">← symbolisch via CASprzak</span></div>
+    <div class="eq"><span class="hi" data-lang="de">Jacobi-Matrix J(x):</span><span class="hi" data-lang="en">Jacobian J(x):</span></div>
+    <div class="eq">  J_ij = ∂Fᵢ/∂xⱼ           <span class="cmt" data-lang="de">← symbolisch via CASprzak</span><span class="cmt" data-lang="en">← symbolic via CASprzak</span></div>
     <div class="eq"></div>
-    <div class="eq"><span class="hi2">Armijo-Bedingung:</span></div>
+    <div class="eq"><span class="hi2" data-lang="de">Armijo-Bedingung:</span><span class="hi2" data-lang="en">Armijo condition:</span></div>
     <div class="eq">  ||F(xₖ + α·Δxₖ)||² ≤ ||F(xₖ)||² + c₁·α·slope</div>
-    <div class="eq">  slope = −||F(xₖ)||²        <span class="comment">← immer negativ → Abstieg garantiert</span></div>
-    <div class="eq">  α ← α · ρ                  <span class="comment">← halbieren falls Bedingung verletzt</span></div>
+    <div class="eq">  slope = −||F(xₖ)||²        <span class="cmt" data-lang="de">← immer negativ → Abstieg garantiert</span><span class="cmt" data-lang="en">← always negative → descent guaranteed</span></div>
+    <div class="eq">  α ← α · ρ                  <span class="cmt" data-lang="de">← halbieren falls Bedingung verletzt</span><span class="cmt" data-lang="en">← halve if condition violated</span></div>
   </div>
 
-  <h3>Jacobi-Matrix in CMDSolver</h3>
-  <p>
+  <h3 data-lang="de">Jacobi-Matrix in CMDSolver</h3><h3 data-lang="en">Jacobian matrix in CMDSolver</h3>
+  <p data-lang="de">
     Die Jacobi-Matrix wird <strong>symbolisch</strong> berechnet — nicht numerisch
     via finite Differenzen. CASprzak differenziert jede Gleichung analytisch nach
     jeder Variable. Das ist exakter und schneller als numerische Näherungen.
     Der Aufbau erfolgt parallel über mehrere Threads (<code>AbstractSolver.buildJacobian()</code>).
+  </p><p data-lang="en">
+    The Jacobian is computed <strong>symbolically</strong> — not numerically
+    via finite differences. CASprzak differentiates every equation analytically
+    with respect to every variable. This is more accurate and faster than
+    numerical approximations. Assembly is parallelized over several threads
+    (<code>AbstractSolver.buildJacobian()</code>).
   </p>
-  <p>
+  <p data-lang="de">
     Die Konditionszahl κ der Jacobi wird in jedem Schritt geschätzt. Bei κ > 10¹²
     wird eine Warnung ausgegeben und der Wechsel zu Levenberg-Marquardt empfohlen.
+  </p><p data-lang="en">
+    The condition number κ of the Jacobian is estimated at every step. When
+    κ > 10¹² a warning is issued and switching to Levenberg-Marquardt is
+    recommended.
   </p>
 
-  <h3>Konvergenzrate</h3>
-  <p>
+  <h3 data-lang="de">Konvergenzrate</h3><h3 data-lang="en">Convergence rate</h3>
+  <p data-lang="de">
     In der Nähe der Lösung konvergiert Newton-Raphson <strong>quadratisch</strong>:
     Wenn der Fehler im Schritt k gleich ε ist, ist er im Schritt k+1 proportional
     zu ε². Das erklärt warum typische Systeme in 3-5 Iterationen konvergieren —
     jede Iteration verdoppelt ungefähr die Anzahl korrekter Dezimalstellen.
+  </p><p data-lang="en">
+    Near the solution, Newton-Raphson converges <strong>quadratically</strong>:
+    if the error at step k is ε, then at step k+1 it is proportional to ε².
+    This is why typical systems converge in 3–5 iterations — each iteration
+    roughly doubles the number of correct decimal digits.
   </p>
 </section>
 
 <!-- 2. Flussdiagramm -->
 <section id="flussdiagramm">
-  <h2>Flussdiagramm</h2>
+  <h2 data-lang="de">Flussdiagramm</h2><h2 data-lang="en">Flow chart</h2>
 
-  <div class="flowchart">
+  <div data-lang="de"><div class="flowchart">
     <svg width="100%" viewBox="0 0 700 620" xmlns="http://www.w3.org/2000/svg"
          font-family="IBM Plex Mono, monospace" font-size="12">
       <defs>
@@ -233,14 +556,124 @@
       <text x="100" y="375" text-anchor="middle" fill="#4a5568" font-size="10"
             transform="rotate(-90,100,375)">nein → nächste Iteration</text>
     </svg>
-  </div>
+  </div></div><div data-lang="en"><div class="flowchart">
+    <svg width="100%" viewBox="0 0 700 620" xmlns="http://www.w3.org/2000/svg"
+         font-family="IBM Plex Mono, monospace" font-size="12">
+      <defs>
+        <marker id="arr" viewBox="0 0 10 10" refX="8" refY="5"
+                markerWidth="6" markerHeight="6" orient="auto">
+          <path d="M2 1L8 5L2 9" fill="none" stroke="#4a9eff"
+                stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </marker>
+        <marker id="arr-warn" viewBox="0 0 10 10" refX="8" refY="5"
+                markerWidth="6" markerHeight="6" orient="auto">
+          <path d="M2 1L8 5L2 9" fill="none" stroke="#f0a030"
+                stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </marker>
+        <marker id="arr-ok" viewBox="0 0 10 10" refX="8" refY="5"
+                markerWidth="6" markerHeight="6" orient="auto">
+          <path d="M2 1L8 5L2 9" fill="none" stroke="#3ecf8e"
+                stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </marker>
+      </defs>
+
+      <!-- START -->
+      <rect x="250" y="10" width="200" height="40" rx="20"
+            fill="#1a2535" stroke="#4a9eff" stroke-width="1.5"/>
+      <text x="350" y="35" text-anchor="middle" fill="#4a9eff" font-weight="500">START</text>
+
+      <!-- Pfeile -->
+      <line x1="350" y1="50" x2="350" y2="78" stroke="#4a9eff" stroke-width="1.5" marker-end="url(#arr)"/>
+
+      <!-- InitGuessApplier -->
+      <rect x="200" y="80" width="300" height="44" rx="6"
+            fill="#13161b" stroke="#2e3540" stroke-width="1"/>
+      <text x="350" y="99" text-anchor="middle" fill="#c8cdd6">Load starting values</text>
+      <text x="350" y="115" text-anchor="middle" fill="#4a5568" font-size="10">InitGuessApplier.apply()</text>
+
+      <line x1="350" y1="124" x2="350" y2="152" stroke="#4a9eff" stroke-width="1.5" marker-end="url(#arr)"/>
+
+      <!-- Loop Start -->
+      <text x="350" y="148" text-anchor="middle" fill="#4a5568" font-size="10">── Iteration loop ──</text>
+
+      <!-- Jacobi aufbauen -->
+      <rect x="180" y="158" width="340" height="44" rx="6"
+            fill="#13161b" stroke="#2e3540" stroke-width="1"/>
+      <text x="350" y="177" text-anchor="middle" fill="#c8cdd6">Build Jacobian matrix</text>
+      <text x="350" y="193" text-anchor="middle" fill="#4a5568" font-size="10">buildJacobian() — symbolic, parallel</text>
+
+      <line x1="350" y1="202" x2="350" y2="228" stroke="#4a9eff" stroke-width="1.5" marker-end="url(#arr)"/>
+
+      <!-- κ prüfen -->
+      <polygon points="350,230 480,258 350,286 220,258"
+               fill="#1a1e25" stroke="#a78bfa" stroke-width="1.5"/>
+      <text x="350" y="254" text-anchor="middle" fill="#a78bfa">κ > 10¹²?</text>
+      <text x="350" y="270" text-anchor="middle" fill="#4a5568" font-size="10">Condition number</text>
+
+      <!-- κ ja → Warnung -->
+      <line x1="480" y1="258" x2="560" y2="258" stroke="#f0a030" stroke-width="1.5" marker-end="url(#arr-warn)"/>
+      <rect x="562" y="238" width="120" height="40" rx="4"
+            fill="#1a1600" stroke="#f0a030" stroke-width="1"/>
+      <text x="622" y="255" text-anchor="middle" fill="#f0a030" font-size="11">LOG.warning</text>
+      <text x="622" y="270" text-anchor="middle" fill="#4a5568" font-size="10">→ consider LM</text>
+      <text x="490" y="248" fill="#f0a030" font-size="10">yes</text>
+
+      <!-- κ nein -->
+      <line x1="350" y1="286" x2="350" y2="314" stroke="#4a9eff" stroke-width="1.5" marker-end="url(#arr)"/>
+      <text x="360" y="305" fill="#4a5568" font-size="10">no</text>
+
+      <!-- Newton-Schritt -->
+      <rect x="180" y="316" width="340" height="44" rx="6"
+            fill="#13161b" stroke="#2e3540" stroke-width="1"/>
+      <text x="350" y="335" text-anchor="middle" fill="#c8cdd6">Compute Newton step</text>
+      <text x="350" y="351" text-anchor="middle" fill="#4a5568" font-size="10">Δx = −J⁻¹ · F(x)</text>
+
+      <line x1="350" y1="360" x2="350" y2="386" stroke="#4a9eff" stroke-width="1.5" marker-end="url(#arr)"/>
+
+      <!-- Armijo -->
+      <rect x="180" y="388" width="340" height="44" rx="6"
+            fill="#13161b" stroke="#2e3540" stroke-width="1"/>
+      <text x="350" y="407" text-anchor="middle" fill="#c8cdd6">Armijo line search</text>
+      <text x="350" y="423" text-anchor="middle" fill="#4a5568" font-size="10">adjust α until condition is met</text>
+
+      <line x1="350" y1="432" x2="350" y2="458" stroke="#4a9eff" stroke-width="1.5" marker-end="url(#arr)"/>
+
+      <!-- Update + Projektor -->
+      <rect x="180" y="460" width="340" height="44" rx="6"
+            fill="#13161b" stroke="#2e3540" stroke-width="1"/>
+      <text x="350" y="479" text-anchor="middle" fill="#c8cdd6">x ← x + α·Δx</text>
+      <text x="350" y="495" text-anchor="middle" fill="#4a5568" font-size="10">PhysicalProjector (bounds)</text>
+
+      <line x1="350" y1="504" x2="350" y2="530" stroke="#4a9eff" stroke-width="1.5" marker-end="url(#arr)"/>
+
+      <!-- Konvergenz? -->
+      <polygon points="350,532 480,558 350,584 220,558"
+               fill="#1a1e25" stroke="#3ecf8e" stroke-width="1.5"/>
+      <text x="350" y="554" text-anchor="middle" fill="#3ecf8e">fsum &lt; tol?</text>
+      <text x="350" y="570" text-anchor="middle" fill="#4a5568" font-size="10">||F(x)|| &lt; 1e-7</text>
+
+      <!-- Ja → Ende -->
+      <line x1="480" y1="558" x2="580" y2="558" stroke="#3ecf8e" stroke-width="1.5" marker-end="url(#arr-ok)"/>
+      <rect x="582" y="538" width="100" height="40" rx="20"
+            fill="#0f2a1e" stroke="#3ecf8e" stroke-width="1.5"/>
+      <text x="632" y="562" text-anchor="middle" fill="#3ecf8e" font-weight="500">CONVERGED</text>
+      <text x="490" y="548" fill="#3ecf8e" font-size="10">yes</text>
+
+      <!-- Nein → Zurück zur Schleife -->
+      <line x1="220" y1="558" x2="120" y2="558" stroke="#4a9eff" stroke-width="1.5"/>
+      <line x1="120" y1="558" x2="120" y2="180" stroke="#4a9eff" stroke-width="1.5"/>
+      <line x1="120" y1="180" x2="178" y2="180" stroke="#4a9eff" stroke-width="1.5" marker-end="url(#arr)"/>
+      <text x="100" y="375" text-anchor="middle" fill="#4a5568" font-size="10"
+            transform="rotate(-90,100,375)">no → next iteration</text>
+    </svg>
+  </div></div>
 </section>
 
 <!-- 3. Pseudocode -->
 <section id="pseudocode">
-  <h2>Pseudocode</h2>
+  <h2 data-lang="de">Pseudocode</h2><h2 data-lang="en">Pseudocode</h2>
 
-<pre><span class="kw">function</span> <span class="fn">newton_armijo_solve</span>(F, x₀, tol, maxIter):
+<div data-lang="de"><pre><span class="kw">function</span> <span class="fn">newton_armijo_solve</span>(F, x₀, tol, maxIter):
 
     x ← InitGuessApplier(x₀)       <span class="cmt">// Startwerte aus INITIALIZE-Block</span>
     
@@ -275,85 +708,163 @@
         <span class="kw">if</span> fsum < tol:
             <span class="kw">return</span> CONVERGED, x, k, fsum
     
-    <span class="kw">return</span> NOT_CONVERGED, x, maxIter, fsum</pre>
+    <span class="kw">return</span> NOT_CONVERGED, x, maxIter, fsum</pre></div><div data-lang="en"><pre><span class="kw">function</span> <span class="fn">newton_armijo_solve</span>(F, x₀, tol, maxIter):
 
-  <div class="note blue">
+    x ← InitGuessApplier(x₀)       <span class="cmt">// starting values from INITIALIZE block</span>
+    
+    <span class="kw">for</span> k = 0 <span class="kw">to</span> maxIter:
+    
+        <span class="cmt">// ── Build Jacobian (parallel, symbolic) ──</span>
+        J ← buildJacobian(F, x)     <span class="cmt">// ∂Fᵢ/∂xⱼ via CASprzak</span>
+        f ← F(x)                    <span class="cmt">// residual vector</span>
+        
+        <span class="cmt">// ── Estimate condition number ──</span>
+        κ ← estimateCondition(J)
+        <span class="kw">if</span> κ > 1e12: LOG.warning("ill-conditioned — consider LM")
+        
+        <span class="cmt">// ── Newton step ──</span>
+        Δx ← −J⁻¹ · f              <span class="cmt">// solve linear system</span>
+        
+        <span class="cmt">// ── Armijo line search ──</span>
+        α ← 1.0                     <span class="cmt">// full step</span>
+        slope ← −||f||²             <span class="cmt">// descent direction</span>
+        <span class="kw">while</span> α > α_min:
+            x_try ← x + α · Δx
+            <span class="kw">if</span> ||F(x_try)||² ≤ ||f||² + c₁·α·slope:
+                <span class="kw">break</span>            <span class="cmt">// Armijo condition met</span>
+            α ← α · ρ              <span class="cmt">// halve step (ρ = 0.5)</span>
+        
+        <span class="cmt">// ── Update ──</span>
+        x ← x + α · Δx
+        x ← PhysicalProjector(x)   <span class="cmt">// enforce bounds</span>
+        
+        <span class="cmt">// ── Convergence check ──</span>
+        fsum ← Σ|Fᵢ(x)|
+        <span class="kw">if</span> fsum < tol:
+            <span class="kw">return</span> CONVERGED, x, k, fsum
+    
+    <span class="kw">return</span> NOT_CONVERGED, x, maxIter, fsum</pre></div>
+
+  <div class="note blue" data-lang="de">
     <strong>Armijo-Parameter (Defaults):</strong>
     <code>α_init = 1.0</code> · <code>α_min = 1e-8</code> ·
     <code>c₁ = 1e-4</code> · <code>ρ = 0.5</code> (Halbierung)
+  </div><div class="note blue" data-lang="en">
+    <strong>Armijo parameters (defaults):</strong>
+    <code>α_init = 1.0</code> · <code>α_min = 1e-8</code> ·
+    <code>c₁ = 1e-4</code> · <code>ρ = 0.5</code> (halving)
   </div>
 </section>
 
 <!-- 4. Dateien -->
 <section id="dateien">
-  <h2>Wichtige Dateien</h2>
+  <h2 data-lang="de">Wichtige Dateien</h2><h2 data-lang="en">Key files</h2>
 
   <ul class="file-list">
     <li>
       <span class="file-icon">KERN</span>
-      <div class="file-desc">
+      <div class="file-desc" data-lang="de">
         <strong>NewtonArmijoSolver.java</strong>
         Implementiert <code>computeStep()</code> — berechnet J⁻¹·F und führt
         Armijo-Backtracking durch. Enthält auch den Startvektor-Dump
         (<code>-DV:</code> Option).
         <br><code>apps/eqnParser/solver/NewtonArmijoSolver.java</code>
+      </div><div class="file-desc" data-lang="en">
+        <strong>NewtonArmijoSolver.java</strong>
+        Implements <code>computeStep()</code> — computes J⁻¹·F and performs
+        Armijo backtracking. Also contains the starting-vector dump
+        (<code>-DV:</code> option).
+        <br><code>apps/eqnParser/solver/NewtonArmijoSolver.java</code>
       </div>
     </li>
     <li>
       <span class="file-icon">BASIS</span>
-      <div class="file-desc">
+      <div class="file-desc" data-lang="de">
         <strong>AbstractSolver.java</strong>
         Basisklasse aller Solver. Enthält die Hauptiteration:
         Jacobi aufbauen → <code>computeStep()</code> → Update → Konvergenzprüfung.
         Stagnationserkennung und PhysicalProjector-Aufruf.
         <br><code>apps/eqnParser/solver/AbstractSolver.java</code>
+      </div><div class="file-desc" data-lang="en">
+        <strong>AbstractSolver.java</strong>
+        Base class of all solvers. Contains the main iteration:
+        build Jacobian → <code>computeStep()</code> → update → convergence check.
+        Stagnation detection and PhysicalProjector call.
+        <br><code>apps/eqnParser/solver/AbstractSolver.java</code>
       </div>
     </li>
     <li>
       <span class="file-icon">JACOB</span>
-      <div class="file-desc">
+      <div class="file-desc" data-lang="de">
         <strong>DerivativeMatrix.java</strong>
         Aufbau der Jacobi-Matrix aus den CASprzak-Ableitungen.
         Wird von <code>AbstractSolver.buildJacobian()</code> parallel aufgerufen.
+        <br><code>apps/eqnParser/matrix/DerivativeMatrix.java</code>
+      </div><div class="file-desc" data-lang="en">
+        <strong>DerivativeMatrix.java</strong>
+        Builds the Jacobian from the CASprzak derivatives. Called in parallel
+        by <code>AbstractSolver.buildJacobian()</code>.
         <br><code>apps/eqnParser/matrix/DerivativeMatrix.java</code>
       </div>
     </li>
     <li>
       <span class="file-icon">MATRIX</span>
-      <div class="file-desc">
+      <div class="file-desc" data-lang="de">
         <strong>MatrixSimple.java</strong>
         Dichte Matrixklasse mit <code>inverse()</code> — Gauss-Elimination.
         Wird von Newton-Armijo für J⁻¹ verwendet. Bei großen Systemen
         ineffizient → dann GSPAR-Variante verwenden.
         <br><code>apps/eqnParser/matrix/MatrixSimple.java</code>
+      </div><div class="file-desc" data-lang="en">
+        <strong>MatrixSimple.java</strong>
+        Dense matrix class with <code>inverse()</code> — Gaussian elimination.
+        Used by Newton-Armijo for J⁻¹. Inefficient on large systems →
+        use the GSPAR variant in that case.
+        <br><code>apps/eqnParser/matrix/MatrixSimple.java</code>
       </div>
     </li>
     <li>
       <span class="file-icon">BOUNDS</span>
-      <div class="file-desc">
+      <div class="file-desc" data-lang="de">
         <strong>PhysicalProjector.java</strong>
         Projiziert Variablen nach jedem Update auf physikalisch gültige Werte
         (T ≥ 1K, p ≥ 1Pa, etc.). Verhindert dass der Solver in physikalisch
         unmögliche Bereiche läuft.
         <br><code>apps/eqnParser/solver/PhysicalProjector.java</code>
+      </div><div class="file-desc" data-lang="en">
+        <strong>PhysicalProjector.java</strong>
+        Projects variables onto physically valid values after each update
+        (T ≥ 1K, p ≥ 1Pa, etc.). Prevents the solver from drifting into
+        physically impossible regions.
+        <br><code>apps/eqnParser/solver/PhysicalProjector.java</code>
       </div>
     </li>
     <li>
       <span class="file-icon">KOND</span>
-      <div class="file-desc">
+      <div class="file-desc" data-lang="de">
         <strong>ConditionEstimator.java</strong>
         Schätzt die Konditionszahl κ der Jacobi. Klassifiziert als
         GOOD / POOR / CRITICAL. Bei CRITICAL wird LM empfohlen.
+        <br><code>apps/eqnParser/solver/ConditionEstimator.java</code>
+      </div><div class="file-desc" data-lang="en">
+        <strong>ConditionEstimator.java</strong>
+        Estimates the condition number κ of the Jacobian. Classifies as
+        GOOD / POOR / CRITICAL. On CRITICAL, LM is recommended.
         <br><code>apps/eqnParser/solver/ConditionEstimator.java</code>
       </div>
     </li>
     <li>
       <span class="file-icon">CFG</span>
-      <div class="file-desc">
+      <div class="file-desc" data-lang="de">
         <strong>SolverConfig.java</strong>
         Konfigurationsklasse — Toleranz, maxIter, Armijo-Parameter,
         Skalierungsstrategie. Wird über CLI-Argumente oder <code>SolverAPI</code>
         gesetzt.
+        <br><code>apps/eqnParser/solver/SolverConfig.java</code>
+      </div><div class="file-desc" data-lang="en">
+        <strong>SolverConfig.java</strong>
+        Configuration class — tolerance, maxIter, Armijo parameters,
+        scaling strategy. Set via CLI arguments or <code>SolverAPI</code>.
         <br><code>apps/eqnParser/solver/SolverConfig.java</code>
       </div>
     </li>
@@ -362,72 +873,72 @@
 
 <!-- 5. Parameter -->
 <section id="parameter">
-  <h2>Konfigurationsparameter</h2>
+  <h2 data-lang="de">Konfigurationsparameter</h2><h2 data-lang="en">Configuration parameters</h2>
 
-  <h3>CLI-Aufruf</h3>
+  <h3 data-lang="de">CLI-Aufruf</h3><h3 data-lang="en">CLI invocation</h3>
   <pre>java CASSolver -I:model.cas -S:NEWTON_ARMIJO</pre>
 
-  <h3>SolverAPI</h3>
+  <h3 data-lang="de">SolverAPI</h3><h3 data-lang="en">SolverAPI</h3>
   <pre>SolverAPI api = <span class="kw">new</span> <span class="fn">SolverAPI</span>();
 api.<span class="fn">loadModel</span>(<span class="str">"model.cas"</span>);
 api.<span class="fn">setSolverType</span>(SolverType.NEWTON_ARMIJO);
-api.<span class="fn">setTolerance</span>(<span class="num">1e-7</span>);        <span class="cmt">// Standard</span>
-api.<span class="fn">setMaxIterations</span>(<span class="num">100</span>);     <span class="cmt">// Standard</span>
+api.<span class="fn">setTolerance</span>(<span class="num">1e-7</span>);        <span class="cmt" data-lang="de">// Standard</span><span class="cmt" data-lang="en">// default</span>
+api.<span class="fn">setMaxIterations</span>(<span class="num">100</span>);     <span class="cmt" data-lang="de">// Standard</span><span class="cmt" data-lang="en">// default</span>
 SolverResult result = api.<span class="fn">solve</span>();</pre>
 
   <div class="tbl-wrap">
   <table>
     <thead>
-      <tr><th>Parameter</th><th>CLI</th><th>Default</th><th>Beschreibung</th></tr>
+      <tr><th>Parameter</th><th>CLI</th><th>Default</th><th data-lang="de">Beschreibung</th><th data-lang="en">Description</th></tr>
     </thead>
     <tbody>
       <tr>
         <td><code>tolerance</code></td>
         <td><code>-TOL:1e-7</code></td>
         <td><code>1e-7</code></td>
-        <td>Konvergenzschwelle für ||F(x)||</td>
+        <td data-lang="de">Konvergenzschwelle für ||F(x)||</td><td data-lang="en">Convergence threshold for ||F(x)||</td>
       </tr>
       <tr>
         <td><code>maxIter</code></td>
         <td><code>-ITER:100</code></td>
         <td><code>100</code></td>
-        <td>Maximale Iterationszahl</td>
+        <td data-lang="de">Maximale Iterationszahl</td><td data-lang="en">Maximum number of iterations</td>
       </tr>
       <tr>
         <td><code>armijoAlphaInit</code></td>
         <td>—</td>
         <td><code>1.0</code></td>
-        <td>Initialer Schrittweitenfaktor α</td>
+        <td data-lang="de">Initialer Schrittweitenfaktor α</td><td data-lang="en">Initial step-size factor α</td>
       </tr>
       <tr>
         <td><code>armijoAlphaMin</code></td>
         <td>—</td>
         <td><code>1e-8</code></td>
-        <td>Minimaler α-Wert vor Abbruch</td>
+        <td data-lang="de">Minimaler α-Wert vor Abbruch</td><td data-lang="en">Minimum α before abort</td>
       </tr>
       <tr>
         <td><code>armijoC1</code></td>
         <td>—</td>
         <td><code>1e-4</code></td>
-        <td>Armijo-Konstante c₁ (Abstiegsbedingung)</td>
+        <td data-lang="de">Armijo-Konstante c₁ (Abstiegsbedingung)</td><td data-lang="en">Armijo constant c₁ (descent condition)</td>
       </tr>
       <tr>
         <td><code>armijoRho</code></td>
         <td>—</td>
         <td><code>0.5</code></td>
-        <td>Reduktionsfaktor ρ pro Backtracking-Schritt</td>
+        <td data-lang="de">Reduktionsfaktor ρ pro Backtracking-Schritt</td><td data-lang="en">Reduction factor ρ per backtracking step</td>
       </tr>
       <tr>
         <td><code>diagnose</code></td>
         <td><code>-DI</code></td>
         <td><code>false</code></td>
-        <td>Startwertoptimierung vor dem Solve</td>
+        <td data-lang="de">Startwertoptimierung vor dem Solve</td><td data-lang="en">Starting-value optimization before solve</td>
       </tr>
       <tr>
         <td><code>startVectorDump</code></td>
         <td><code>-DV:file.txt</code></td>
         <td><code>null</code></td>
-        <td>Startvektor in Datei schreiben (für Debugging)</td>
+        <td data-lang="de">Startvektor in Datei schreiben (für Debugging)</td><td data-lang="en">Write starting vector to file (for debugging)</td>
       </tr>
     </tbody>
   </table>
@@ -436,43 +947,43 @@ SolverResult result = api.<span class="fn">solve</span>();</pre>
 
 <!-- 6. Verhalten -->
 <section id="verhalten">
-  <h2>Konvergenzverhalten</h2>
+  <h2 data-lang="de">Konvergenzverhalten</h2><h2 data-lang="en">Convergence behavior</h2>
 
-  <h3>Wann funktioniert Newton-Armijo gut?</h3>
+  <h3 data-lang="de">Wann funktioniert Newton-Armijo gut?</h3><h3 data-lang="en">When does Newton-Armijo work well?</h3>
 
   <div class="tbl-wrap">
   <table>
-    <thead><tr><th>Situation</th><th>Verhalten</th><th>Empfehlung</th></tr></thead>
+    <thead><tr><th data-lang="de">Situation</th><th data-lang="en">Situation</th><th data-lang="de">Verhalten</th><th data-lang="en">Behavior</th><th data-lang="de">Empfehlung</th><th data-lang="en">Recommendation</th></tr></thead>
     <tbody>
       <tr>
-        <td>Gut konditioniertes System (κ &lt; 10⁶)</td>
-        <td><span class="badge b-ok">✅ Optimal</span></td>
-        <td>Standard-Wahl</td>
+        <td data-lang="de">Gut konditioniertes System (κ &lt; 10⁶)</td><td data-lang="en">Well-conditioned system (κ &lt; 10⁶)</td>
+        <td><span class="badge b-ok" data-lang="de">✅ Optimal</span><span class="badge b-ok" data-lang="en">✅ Optimal</span></td>
+        <td data-lang="de">Standard-Wahl</td><td data-lang="en">Default choice</td>
       </tr>
       <tr>
-        <td>Guter Startvektor nahe der Lösung</td>
-        <td><span class="badge b-ok">✅ 3-5 Iter</span></td>
-        <td>Quadratische Konvergenz</td>
+        <td data-lang="de">Guter Startvektor nahe der Lösung</td><td data-lang="en">Good starting vector near the solution</td>
+        <td><span class="badge b-ok" data-lang="de">✅ 3-5 Iter</span><span class="badge b-ok" data-lang="en">✅ 3-5 iter</span></td>
+        <td data-lang="de">Quadratische Konvergenz</td><td data-lang="en">Quadratic convergence</td>
       </tr>
       <tr>
-        <td>Mittelgroße Systeme (n &lt; 500)</td>
-        <td><span class="badge b-ok">✅ Schnell</span></td>
-        <td>Dichte LU ist effizient</td>
+        <td data-lang="de">Mittelgroße Systeme (n &lt; 500)</td><td data-lang="en">Medium systems (n &lt; 500)</td>
+        <td><span class="badge b-ok" data-lang="de">✅ Schnell</span><span class="badge b-ok" data-lang="en">✅ Fast</span></td>
+        <td data-lang="de">Dichte LU ist effizient</td><td data-lang="en">Dense LU is efficient</td>
       </tr>
       <tr>
-        <td>Schlecht konditioniert (κ &gt; 10¹²)</td>
-        <td><span class="badge b-warn">⚠️ Instabil</span></td>
-        <td>→ Levenberg-Marquardt</td>
+        <td data-lang="de">Schlecht konditioniert (κ &gt; 10¹²)</td><td data-lang="en">Ill-conditioned (κ &gt; 10¹²)</td>
+        <td><span class="badge b-warn" data-lang="de">⚠️ Instabil</span><span class="badge b-warn" data-lang="en">⚠️ Unstable</span></td>
+        <td data-lang="de">→ Levenberg-Marquardt</td><td data-lang="en">→ Levenberg-Marquardt</td>
       </tr>
       <tr>
-        <td>Schlechter Startvektor weit von Lösung</td>
-        <td><span class="badge b-warn">⚠️ Langsam</span></td>
-        <td>→ -DI oder Homotopie</td>
+        <td data-lang="de">Schlechter Startvektor weit von Lösung</td><td data-lang="en">Bad starting vector far from solution</td>
+        <td><span class="badge b-warn" data-lang="de">⚠️ Langsam</span><span class="badge b-warn" data-lang="en">⚠️ Slow</span></td>
+        <td data-lang="de">→ -DI oder Homotopie</td><td data-lang="en">→ -DI or homotopy</td>
       </tr>
       <tr>
-        <td>Große Systeme (n &gt; 500)</td>
-        <td><span class="badge b-warn">⚠️ Langsam</span></td>
-        <td>→ NEWTON_SPARSE_ARMIJO</td>
+        <td data-lang="de">Große Systeme (n &gt; 500)</td><td data-lang="en">Large systems (n &gt; 500)</td>
+        <td><span class="badge b-warn" data-lang="de">⚠️ Langsam</span><span class="badge b-warn" data-lang="en">⚠️ Slow</span></td>
+        <td data-lang="de">→ NEWTON_SPARSE_ARMIJO</td><td data-lang="en">→ NEWTON_SPARSE_ARMIJO</td>
       </tr>
     </tbody>
   </table>
@@ -481,38 +992,55 @@ SolverResult result = api.<span class="fn">solve</span>();</pre>
 
 <!-- 7. Grenzen -->
 <section id="grenzen">
-  <h2>Bekannte Grenzen</h2>
+  <h2 data-lang="de">Bekannte Grenzen</h2><h2 data-lang="en">Known limits</h2>
 
-  <div class="note red">
+  <div class="note red" data-lang="de">
     <strong>Singuläre Jacobi:</strong> Wenn J singulär ist (κ → ∞) wirft der Solver
     eine <code>SingularJacobianException</code>. Das passiert typischerweise wenn
     zwei Gleichungen identisch sind oder eine Variable in keiner Gleichung vorkommt.
+  </div><div class="note red" data-lang="en">
+    <strong>Singular Jacobian:</strong> when J is singular (κ → ∞) the solver
+    throws a <code>SingularJacobianException</code>. This typically happens when
+    two equations are identical or a variable does not appear in any equation.
   </div>
 
-  <div class="note amber">
+  <div class="note amber" data-lang="de">
     <strong>Lokale Konvergenz:</strong> Newton-Raphson konvergiert nur lokal —
     der Startvektor muss nahe genug an der Lösung sein. Bei schlechten Startwerten
     kann der Solver divergieren oder in einer falschen Lösung stecken bleiben.
     <code>-DI</code> (Diagnose-Modus) verbessert den Startvektor automatisch.
+  </div><div class="note amber" data-lang="en">
+    <strong>Local convergence:</strong> Newton-Raphson only converges locally —
+    the starting vector must lie close enough to the solution. With poor
+    starting values the solver can diverge or get stuck in a wrong solution.
+    <code>-DI</code> (diagnostic mode) improves the starting vector automatically.
   </div>
 
-  <div class="note amber">
+  <div class="note amber" data-lang="de">
     <strong>Dichte Jacobi:</strong> Die Matrixinversion kostet O(n³) —
     für große Systeme (n &gt; 200) ist NEWTON_SPARSE_ARMIJO deutlich effizienter.
+  </div><div class="note amber" data-lang="en">
+    <strong>Dense Jacobian:</strong> the matrix inversion costs O(n³) —
+    for large systems (n &gt; 200) NEWTON_SPARSE_ARMIJO is significantly more
+    efficient.
   </div>
 
-  <div class="note blue">
+  <div class="note blue" data-lang="de">
     <strong>PhysicalProjector Interaktion:</strong> Wenn der Projektor aggressiv
     eingreift (viele Bounds-Verletzungen) kann das die Konvergenz verlangsamen,
     weil der effektive Schritt vom Newton-Schritt abweicht.
+  </div><div class="note blue" data-lang="en">
+    <strong>PhysicalProjector interaction:</strong> when the projector
+    intervenes aggressively (many bounds violations), convergence can slow
+    down because the effective step deviates from the Newton step.
   </div>
 </section>
 
 <!-- 8. Beispielausgabe -->
 <section id="beispiel">
-  <h2>Typische Ausgabe</h2>
+  <h2 data-lang="de">Typische Ausgabe</h2><h2 data-lang="en">Typical output</h2>
 
-  <pre><span class="cmt">// Erfolgreicher Lauf — SimpleSystem.cas</span>
+  <pre data-lang="de"><span class="cmt">// Erfolgreicher Lauf — SimpleSystem.cas</span>
 INFO: Starting Newton-Raphson + Armijo line search
       [n=12, maxIter=100, tol=1.00e-07]
 
@@ -520,25 +1048,38 @@ INFO: --> Iter=0: ||F||= 2.3451e+03  max f[3]= 1.2e+03
 INFO: --> Iter=1: ||F||= 4.8721e+01  max f[3]= 3.1e+01
 INFO: --> Iter=2: ||F||= 2.1043e-04  max f[7]= 1.4e-04
 INFO: --> Iter=3: ||F||= 3.1623e-11  <span class="str">← Konvergenz</span>
+INFO: Converged at iter 3: fsum=3.162e-11 &lt; tol=1.00e-07</pre><pre data-lang="en"><span class="cmt">// Successful run — SimpleSystem.cas</span>
+INFO: Starting Newton-Raphson + Armijo line search
+      [n=12, maxIter=100, tol=1.00e-07]
+
+INFO: --> Iter=0: ||F||= 2.3451e+03  max f[3]= 1.2e+03
+INFO: --> Iter=1: ||F||= 4.8721e+01  max f[3]= 3.1e+01
+INFO: --> Iter=2: ||F||= 2.1043e-04  max f[7]= 1.4e-04
+INFO: --> Iter=3: ||F||= 3.1623e-11  <span class="str">← convergence</span>
 INFO: Converged at iter 3: fsum=3.162e-11 &lt; tol=1.00e-07</pre>
 
-  <pre><span class="cmt">// Warnung bei schlechter Kondition</span>
+  <pre data-lang="de"><span class="cmt">// Warnung bei schlechter Kondition</span>
+WARN: Iter   0: condition=POOR  kappa=4.62e+11 — ill-conditioned Jacobian
+WARN: Iter   0: Frobenius kappa=5.96e+23 [CRITICAL] — consider switching to LM</pre><pre data-lang="en"><span class="cmt">// Warning on poor conditioning</span>
 WARN: Iter   0: condition=POOR  kappa=4.62e+11 — ill-conditioned Jacobian
 WARN: Iter   0: Frobenius kappa=5.96e+23 [CRITICAL] — consider switching to LM</pre>
 
-  <div class="note green">
+  <div class="note green" data-lang="de">
     <strong>Testergebnis v2.5 (SimpleSystem.cas, 12 Gleichungen):</strong>
     Status: CONVERGED · Iterationen: 3 · fsum: 3.1623e-11 · Zeit: ~40ms
+  </div><div class="note green" data-lang="en">
+    <strong>Test result v2.5 (SimpleSystem.cas, 12 equations):</strong>
+    Status: CONVERGED · Iterations: 3 · fsum: 3.1623e-11 · Time: ~40 ms
   </div>
 </section>
 
 </main>
 
 <footer>
-  <span>CMDSolver Docs · Newton-Raphson + Armijo · v2.5</span>
+  <span data-lang="de">CMDSolver Docs · Newton-Raphson + Armijo · v2.5</span><span data-lang="en">CMDSolver Docs · Newton-Raphson + Armijo · v2.5</span>
   <span>
-    <a href="index.html">← Übersicht</a> &nbsp;|&nbsp;
-    <a href="solver_newton_sparse.html">Newton-GSPAR →</a>
+    <a href="index.html" data-lang="de">← Übersicht</a><a href="index.html" data-lang="en">← Overview</a> &nbsp;|&nbsp;
+    <a href="solver_newton_sparse.html" data-lang="de">Newton-GSPAR →</a><a href="solver_newton_sparse.html" data-lang="en">Newton-GSPAR →</a>
   </span>
 </footer>
 

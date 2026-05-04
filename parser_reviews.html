@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Code Review — Parser</title>
+<style>
+/* CMDSolver Documentation — Shared Stylesheet */
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;1,400&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap');
+
+:root {
+  --bg:      #0d0f12;
+  --bg2:     #13161b;
+  --bg3:     #1a1e25;
+  --bg4:     #20252f;
+  --border:  #252a33;
+  --border2: #2e3540;
+  --text:    #c8cdd6;
+  --text2:   #7a8496;
+  --text3:   #4a5568;
+  --accent:  #4a9eff;
+  --ok:      #3ecf8e;
+  --warn:    #f0a030;
+  --err:     #ff5c5c;
+  --purple:  #a78bfa;
+  --teal:    #2dd4bf;
+  --mono:    'IBM Plex Mono', monospace;
+  --sans:    'IBM Plex Sans', sans-serif;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: var(--sans);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 13.5px;
+  line-height: 1.75;
+}
+
+/* ── Header ── */
+.doc-header {
+  border-bottom: 1px solid var(--border);
+  padding: 1.2rem 3rem;
+  display: flex; align-items: center;
+  justify-content: space-between; flex-wrap: wrap; gap: 1rem;
+}
+
+.breadcrumb {
+  font-family: var(--mono); font-size: 11px; color: var(--text3);
+  letter-spacing: .08em; text-transform: uppercase;
+  display: flex; align-items: center; gap: .5rem;
+}
+.breadcrumb a { color: var(--accent); text-decoration: none; }
+.breadcrumb span { color: var(--text3); }
+
+.doc-badge {
+  font-family: var(--mono); font-size: 11px;
+  padding: 3px 10px; border-radius: 4px;
+}
+.doc-badge.solver {
+  background: rgba(74,158,255,.1); border: 1px solid rgba(74,158,255,.25);
+  color: var(--accent);
+}
+.doc-badge.overview {
+  background: rgba(167,139,250,.1); border: 1px solid rgba(167,139,250,.25);
+  color: var(--purple);
+}
+.doc-badge.comparison {
+  background: rgba(62,207,142,.1); border: 1px solid rgba(62,207,142,.25);
+  color: var(--ok);
+}
+
+/* ── Hero ── */
+.hero {
+  padding: 2.5rem 3rem 2rem;
+  border-bottom: 1px solid var(--border);
+  background: linear-gradient(135deg, var(--bg) 0%, #0f1520 100%);
+}
+.hero-sub {
+  font-family: var(--mono); font-size: 11px; color: var(--text3);
+  letter-spacing: .15em; text-transform: uppercase; margin-bottom: .5rem;
+}
+h1 {
+  font-size: 28px; font-weight: 600; color: #e8ecf4;
+  letter-spacing: -.03em; margin-bottom: .5rem; line-height: 1.2;
+}
+.tagline {
+  font-size: 14px; color: var(--text2); margin-bottom: 1.5rem;
+  max-width: 680px;
+}
+.hero-stats { display: flex; gap: 2rem; flex-wrap: wrap; }
+.stat { display: flex; flex-direction: column; gap: .2rem; }
+.stat-val {
+  font-family: var(--mono); font-size: 18px; font-weight: 500; color: var(--ok);
+}
+.stat-lbl {
+  font-size: 11px; color: var(--text3);
+  text-transform: uppercase; letter-spacing: .08em;
+}
+
+/* ── Nav ── */
+nav {
+  position: sticky; top: 0; z-index: 10;
+  background: rgba(13,15,18,.95); backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--border);
+  padding: .6rem 3rem;
+  display: flex; gap: 1.5rem; flex-wrap: wrap;
+}
+nav a {
+  font-family: var(--mono); font-size: 11px; color: var(--text3);
+  text-decoration: none; letter-spacing: .08em;
+  text-transform: uppercase; transition: color .15s;
+}
+nav a:hover { color: var(--accent); }
+
+/* ── Main ── */
+main { padding: 2rem 3rem 4rem; max-width: 1040px; }
+
+section { margin-bottom: 3.5rem; scroll-margin-top: 3rem; }
+
+section > h2 {
+  font-size: 12px; font-family: var(--mono);
+  letter-spacing: .12em; text-transform: uppercase;
+  color: var(--text3); margin-bottom: 1.4rem;
+  padding-bottom: .5rem; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: .6rem;
+}
+section > h2::before {
+  content: ''; display: inline-block;
+  width: 8px; height: 8px; border-radius: 50%; background: var(--accent);
+}
+
+h3 { font-size: 14px; font-weight: 500; color: #e8ecf4; margin: 1.6rem 0 .6rem; }
+h4 { font-size: 13px; font-weight: 500; color: var(--text2); margin: 1.2rem 0 .4rem; }
+
+p { color: var(--text); margin-bottom: .9rem; max-width: 780px; }
+
+/* ── Math ── */
+.math-block {
+  background: var(--bg3); border: 1px solid var(--border);
+  border-left: 3px solid var(--purple);
+  border-radius: 6px; padding: 1.2rem 1.5rem;
+  margin: 1rem 0 1.2rem; font-family: var(--mono);
+  font-size: 13px; line-height: 2.1; white-space: pre;
+}
+.math-block .eq  { color: #e8ecf4; }
+.math-block .cmt { color: var(--text3); font-style: italic; }
+.math-block .hi  { color: var(--teal); }
+.math-block .hi2 { color: var(--warn); }
+
+/* ── Notes ── */
+.note {
+  border-radius: 6px; padding: .85rem 1.1rem;
+  font-size: 13px; line-height: 1.7; margin-bottom: 1.2rem;
+}
+.note.blue   { background: rgba(74,158,255,.06);  border-left: 3px solid var(--accent); }
+.note.green  { background: rgba(62,207,142,.06);  border-left: 3px solid var(--ok); }
+.note.amber  { background: rgba(240,160,48,.06);  border-left: 3px solid var(--warn); }
+.note.red    { background: rgba(255,92,92,.06);   border-left: 3px solid var(--err); }
+.note.purple { background: rgba(167,139,250,.06); border-left: 3px solid var(--purple); }
+.note strong { color: #e8ecf4; }
+
+/* ── Code ── */
+code {
+  font-family: var(--mono); font-size: 11.5px;
+  background: rgba(255,255,255,.05); padding: 1px 5px;
+  border-radius: 3px; color: #a8c8f0;
+}
+pre {
+  font-family: var(--mono); font-size: 12px;
+  background: var(--bg3); border: 1px solid var(--border);
+  border-radius: 8px; padding: 1rem 1.2rem;
+  overflow-x: auto; line-height: 1.7; margin-bottom: 1rem; color: #c8cdd6;
+}
+.kw  { color: var(--purple); }
+.cmt { color: var(--text3); font-style: italic; }
+.fn  { color: var(--teal); }
+.num { color: var(--warn); }
+.str { color: var(--ok); }
+
+/* ── Tables ── */
+.tbl-wrap {
+  overflow-x: auto; border-radius: 8px;
+  border: 1px solid var(--border); margin-bottom: 1.5rem;
+}
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+thead th {
+  background: var(--bg3); padding: 9px 14px; text-align: left;
+  font-weight: 500; font-size: 11px; letter-spacing: .06em;
+  text-transform: uppercase; color: var(--text2);
+  border-bottom: 1px solid var(--border2); white-space: nowrap;
+}
+tbody tr { border-bottom: 1px solid var(--border); transition: background .1s; }
+tbody tr:last-child { border-bottom: none; }
+tbody tr:hover { background: var(--bg3); }
+td { padding: 9px 14px; vertical-align: top; line-height: 1.6; }
+td.center { text-align: center; }
+
+/* ── Badges ── */
+.badge {
+  display: inline-block; font-size: 11px; padding: 2px 9px;
+  border-radius: 12px; font-family: var(--mono); white-space: nowrap;
+}
+.b-ok   { background: rgba(62,207,142,.1);  color: var(--ok);     border: 1px solid rgba(62,207,142,.25); }
+.b-warn { background: rgba(240,160,48,.1);  color: var(--warn);   border: 1px solid rgba(240,160,48,.25); }
+.b-err  { background: rgba(255,92,92,.1);   color: var(--err);    border: 1px solid rgba(255,92,92,.25); }
+.b-info { background: rgba(74,158,255,.1);  color: var(--accent); border: 1px solid rgba(74,158,255,.25); }
+.b-na   { background: rgba(74,84,96,.1);    color: var(--text3);  border: 1px solid var(--border2); }
+
+/* ── Star rating ── */
+.stars { color: var(--warn); letter-spacing: -.05em; }
+.stars.dim { color: var(--border2); }
+
+/* ── File list ── */
+.file-list { list-style: none; }
+.file-list li {
+  display: flex; gap: 1rem; align-items: flex-start;
+  padding: .7rem 1rem; background: var(--bg2);
+  border: 1px solid var(--border); border-radius: 4px; margin-bottom: .4rem;
+}
+.file-icon {
+  font-family: var(--mono); font-size: 11px; color: var(--accent);
+  white-space: nowrap; margin-top: 2px; min-width: 50px;
+}
+.file-desc { font-size: 13px; color: var(--text2); }
+.file-desc strong { color: var(--text); display: block; margin-bottom: .2rem; }
+
+/* ── Flowchart ── */
+.flowchart {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 10px; padding: 1.5rem; margin: 1rem 0 1.5rem;
+  overflow-x: auto;
+}
+
+/* ── Footer ── */
+footer {
+  border-top: 1px solid var(--border); padding: 1.5rem 3rem;
+  font-family: var(--mono); font-size: 11px; color: var(--text3);
+  display: flex; justify-content: space-between; flex-wrap: wrap; gap: .5rem;
+}
+footer a { color: var(--accent); text-decoration: none; }
+
+/* ── Footnotes ── */
+.footnotes {
+  margin-top: 2rem; padding-top: 1.5rem;
+  border-top: 1px solid var(--border);
+  font-size: 12px; color: var(--text2);
+}
+.footnotes p { max-width: none; margin-bottom: .5rem; }
+sup { font-size: 10px; color: var(--accent); }
+
+/* ── Language Switcher ── */
+.lang-switch {
+  display: flex; align-items: center; gap: .4rem;
+  font-family: var(--mono); font-size: 11px;
+}
+.lang-btn {
+  background: none; border: 1px solid var(--border2);
+  color: var(--text3); padding: 3px 9px; border-radius: 4px;
+  cursor: pointer; font-family: var(--mono); font-size: 11px;
+  transition: all .15s; letter-spacing: .06em;
+}
+.lang-btn:hover { border-color: var(--accent); color: var(--accent); }
+.lang-btn.active {
+  background: rgba(74,158,255,.12); border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* Default: alle Sprachelemente sichtbar (kein JS-Flash) */
+/* Mit lang-Klasse auf body: nur die aktive Sprache sichtbar */
+
+/* Nur wenn body eine Sprachklasse hat, werden Elemente ausgeblendet */
+body.lang-de [data-lang="en"],
+body.lang-en [data-lang="de"] {
+  display: none !important;
+}
+
+/* Inline spans */
+body.lang-de span[data-lang="en"],
+body.lang-en span[data-lang="de"] {
+  display: none !important;
+}
+
+
+/* Inline spans */
+span[data-lang] { display: none; }
+body.lang-de span[data-lang="de"] { display: inline; }
+body.lang-en span[data-lang="en"] { display: inline; }
+/* Block elements */
+div[data-lang], section[data-lang], p[data-lang],
+li[data-lang], td[data-lang], th[data-lang] { display: none; }
+body.lang-de div[data-lang="de"] { display: block; }
+body.lang-en div[data-lang="en"] { display: block; }
+body.lang-de p[data-lang="de"]   { display: block; }
+body.lang-en p[data-lang="en"]   { display: block; }
+body.lang-de li[data-lang="de"]  { display: list-item; }
+body.lang-en li[data-lang="en"]  { display: list-item; }
+body.lang-de td[data-lang="de"]  { display: table-cell; }
+body.lang-en td[data-lang="en"]  { display: table-cell; }
+
+/* ── Page-specific styles ──────────────────────────── */
+/* ── Review-Karten ───────────────────────────────────── */
+.review-rating { font-size: 13px; padding: 2px 10px; border-radius: 4px; font-weight: 600; }
+.rate-A { background: rgba(62,207,142,.12);  color: #3ecf8e; }
+.rate-B { background: rgba(74,158,255,.12);  color: #4a9eff; }
+.rate-C { background: rgba(240,160,48,.12);  color: #f0a030; }
+.rate-D { background: rgba(255,92,92,.12);   color: #ff5c5c; }
+
+.review-block { background: #13161b; border: 1px solid #2e3540; border-radius: 8px;
+  padding: 1.2rem 1.4rem; margin-bottom: 1.5rem; }
+.review-head { display: flex; align-items: baseline; gap: 0.8rem; flex-wrap: wrap; margin-bottom: 0.3rem; }
+.review-head h2 { margin: 0; font-size: 18px; color: #e8ecf4; border: 0; padding: 0; }
+.review-id { color: #7f8a99; font-size: 12px; font-family: 'IBM Plex Mono', monospace; }
+.review-meta { color: #7f8a99; font-size: 12px; margin-bottom: 0.8rem; }
+.review-strengths strong { color: #3ecf8e; }
+.review-weaknesses { margin-top: 0.6rem; }
+.review-weaknesses strong { color: #f0a030; }
+.review-fazit { color: #c8cdd6; margin-top: 0.6rem; font-style: italic;
+  border-top: 1px solid #2e3540; padding-top: 0.8rem; }
+
+/* Section-Wrapper schluckt das Karten-Margin so dass nichts springt */
+section.review-section { margin: 0 0 1.5rem 0; padding: 0; border: 0; }
+section.review-section .review-block { margin-bottom: 0; }
+
+/* ── Bewertungs-Legende ──────────────────────────────── */
+.rating-legend { display: flex; gap: 0.6rem; flex-wrap: wrap; align-items: center;
+  margin-top: 0.4rem; }
+.rating-legend .review-rating { font-size: 12px; }
+
+/* ── Quick-Jump-Tabelle ──────────────────────────────── */
+.review-jump-table { margin-bottom: 0.8rem; }
+.review-jump-table td { padding: 6px 10px; vertical-align: middle; }
+.review-jump-table td:first-child { color: #7f8a99; font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px; white-space: nowrap; }
+.review-jump-table td:nth-child(2) a { color: #e8ecf4; font-weight: 500; text-decoration: none; }
+.review-jump-table td:nth-child(2) a:hover { color: var(--accent); }
+.review-jump-table td:nth-child(3) { color: #7f8a99; font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px; }
+.review-jump-table td:nth-child(4) { color: #7f8a99; font-size: 12px; text-align: right;
+  white-space: nowrap; }
+.review-jump-table td:last-child { text-align: right; white-space: nowrap; }
+.review-counter { color: #7f8a99; font-size: 12px; margin-top: 0.6rem; }
+
+/* ── i18n Language Switcher ──────────────────────────── */
+.lang-switch { display: flex; align-items: center; gap: .4rem;
+  font-family: var(--mono); font-size: 11px; }
+.lang-btn { background: none; border: 1px solid var(--border2);
+  color: var(--text3); padding: 3px 9px; border-radius: 4px;
+  cursor: pointer; font-family: var(--mono); font-size: 11px;
+  transition: all .15s; letter-spacing: .06em; }
+.lang-btn:hover { border-color: var(--accent); color: var(--accent); }
+.lang-btn.active { background: rgba(74,158,255,.12); border-color: var(--accent);
+  color: var(--accent); font-weight: 600; }
+</style>
+<link rel="stylesheet" href="i18n.css">
+</head>
+<body>
+<script>
+(function(){
+  var stored = '';
+  try { stored = localStorage.getItem('cmdlang') || ''; } catch(e){}
+  var lang = stored || 'de';
+
+  function apply(l) {
+    lang = l;
+    try { localStorage.setItem('cmdlang', l); } catch(e){}
+    document.documentElement.lang = l;
+    var body = document.body;
+    body.classList.remove('lang-de','lang-en');
+    body.classList.add('lang-' + l);
+    document.querySelectorAll('.lang-btn').forEach(function(b){
+      b.classList.toggle('active', b.dataset.lang === l);
+    });
+  }
+
+  // Body-Klasse sofort setzen, damit data-lang-Elemente direkt korrekt
+  // sichtbar sind (kein Flash mit unsichtbarem Header-Inhalt).
+  apply(lang);
+  document.addEventListener('DOMContentLoaded', function(){
+    apply(lang); // erneut, damit jetzt auch die Buttons gestyled werden
+    document.querySelectorAll('.lang-btn').forEach(function(b){
+      b.addEventListener('click', function(){ apply(b.dataset.lang); });
+    });
+    // Sticky-Header Schatten via IntersectionObserver
+    var sentinel = document.querySelector('.header-sentinel');
+    var header   = document.querySelector('.doc-header');
+    if (sentinel && header && 'IntersectionObserver' in window) {
+      new IntersectionObserver(function(entries){
+        header.classList.toggle('scrolled', !entries[0].isIntersecting);
+      }).observe(sentinel);
+    }
+  });
+})();
+</script>
+
+
+
+
+<div class="header-sentinel"></div>
+<div class="doc-header">
+  <div class="breadcrumb">
+    <a href="../index.html">CMDSolver Docs</a>
+    <span>›</span><a href="index.html">Code Review</a>
+    ›
+  </div>
+  <div class="doc-header-right"><div class="lang-switch"><button class="lang-btn" data-lang="de">DE</button><button class="lang-btn" data-lang="en">EN</button></div><span class="doc-badge solver">PARSER REVIEWS</span></div></div>
+
+<div class="hero">
+  <div class="hero-sub"><span data-lang="de">Code Review</span><span data-lang="en">Code Review</span></div>
+  <h1 data-lang="de">Parser-Komponenten<br>Code Review</h1><h1 data-lang="en">Parser Components<br>Code Review</h1>
+  <p class="tagline" data-lang="de">Detail-Bewertungen aller Parser- und CAS-Datenstruktur-Komponenten. Diese sind über mehrere Versionen hinweg gereift und bilden das stabile Fundament des Solvers.</p>
+  <p class="tagline" data-lang="en">Detailed evaluations of all parser and CAS data-structure components. These have matured across several versions and form the stable foundation of the solver.</p>
+  </div>
+
+<nav>
+  <a href="#uebersicht" data-lang="de">Übersicht</a><a href="#uebersicht" data-lang="en">Overview</a>
+    <a href="#eqnsysreader">EqnSysReader</a>
+  <a href="#eqndata">EqnData</a>
+  <a href="#bifunctions">BIfunctions</a>
+  <a href="#systemdata">SystemData</a>
+</nav>
+
+<main>
+
+
+<div class="note blue" data-lang="de">
+    <strong>Bewertungsskala:</strong>
+    <div class="rating-legend"><span class="review-rating rate-A">A — Exzellent</span> <span class="review-rating rate-B">B — Gut</span> <span class="review-rating rate-C">C — Verbesserungspotential</span> <span class="review-rating rate-D">D — Refactoring nötig</span></div>
+  </div>
+  <div class="note blue" data-lang="en">
+    <strong>Rating scale:</strong>
+    <div class="rating-legend"><span class="review-rating rate-A">A — Excellent</span> <span class="review-rating rate-B">B — Good</span> <span class="review-rating rate-C">C — Room for improvement</span> <span class="review-rating rate-D">D — Refactoring needed</span></div>
+  </div>
+
+<section id="uebersicht">
+  <h2 data-lang="de">Übersicht</h2><h2 data-lang="en">Overview</h2>
+
+  <div class="tbl-wrap">
+  <table class="review-jump-table">
+    <thead><tr>
+      <th>ID</th>
+      <th data-lang="de">Komponente</th><th data-lang="en">Component</th>
+      <th data-lang="de">Datei</th><th data-lang="en">File</th>
+      <th data-lang="de">Zeilen</th><th data-lang="en">Lines</th>
+      <th data-lang="de">Bewertung</th><th data-lang="en">Rating</th>
+    </tr></thead>
+    <tbody>
+      <tr>
+        <td>PARSER-01</td>
+        <td><a href="#eqnsysreader">EqnSysReader</a></td>
+        <td><code>EqnSysReader.java</code></td>
+        <td>~1200</td>
+        <td><span class="review-rating rate-B" data-lang="de">B — Gut</span><span class="review-rating rate-B" data-lang="en">B — Good</span></td>
+      </tr>
+      <tr>
+        <td>PARSER-02</td>
+        <td><a href="#eqndata">EqnData &amp; Conditional-Logik</a></td>
+        <td><code>EqnData.java</code></td>
+        <td>~800</td>
+        <td><span class="review-rating rate-B" data-lang="de">B — Gut</span><span class="review-rating rate-B" data-lang="en">B — Good</span></td>
+      </tr>
+      <tr>
+        <td>PARSER-03</td>
+        <td><a href="#bifunctions">BIfunctions (Built-in Funktionen)</a></td>
+        <td><code>BIfunctions.java</code></td>
+        <td>~600</td>
+        <td><span class="review-rating rate-A" data-lang="de">A — Exzellent</span><span class="review-rating rate-A" data-lang="en">A — Excellent</span></td>
+      </tr>
+      <tr>
+        <td>PARSER-04</td>
+        <td><a href="#systemdata">SystemData &amp; Variable</a></td>
+        <td><code>SystemData.java + Variable.java</code></td>
+        <td>~500</td>
+        <td><span class="review-rating rate-A" data-lang="de">A — Exzellent</span><span class="review-rating rate-A" data-lang="en">A — Excellent</span></td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="review-counter" data-lang="de">4 Reviews · 2× A · 2× B</div>
+  <div class="review-counter" data-lang="en">4 reviews · 2× A · 2× B</div>
+</section>
+
+<!-- ─────────────────────── PARSER-01: EqnSysReader ─────────────────────── -->
+<section id="eqnsysreader" class="review-section">
+  <div class="review-block">
+  <div class="review-head">
+    <span class="review-id">PARSER-01</span>
+    <h2>EqnSysReader</h2>
+    <span class="review-rating rate-B">B — Gut</span>
+  </div>
+  <div class="review-meta">
+    <code>EqnSysReader.java</code> · ~1200 Zeilen · stabil seit v2.6
+  </div>
+
+  <div class="review-strengths">
+    <strong>Stärken</strong>
+    <ul>
+      <li><strong>Robust nach mehreren Bugfix-Runden:</strong> v2.3 (B19,
+        B20: INITIALIZE-Bounds für Mehrfach-Punktnamen), v2.5 (try-finally-Block
+        Cleanup), v2.6 (FUNC_MAP Wortgrenzen via Regex). Kein neuer Parser-Bug
+        seit v2.7.</li>
+      <li><strong>Klare Trennung in Datenblöcke:</strong>
+        <code>EqnSysReaderDataBlock</code> kapselt Block-Parsing.
+        VARIABLES, EQUATIONS, INITIALIZE jeweils in eigenen Methoden.</li>
+      <li><strong>Defensive Validierung:</strong> Warnings für unbenutzte
+        Variablen, unerwartete INITIALIZE-Optionen, doppelte Definitionen.
+        Hilft bei Modell-Debugging.</li>
+      <li><strong>Strukturschalter-Behandlung:</strong> IF(VAR.SPEC==FIXED)-Blöcke
+        werden korrekt aufgelöst — sowohl in eqnData (Solver) als auch in
+        initData (InitGuessApplier).</li>
+    </ul>
+  </div>
+
+  <div class="review-weaknesses">
+    <strong>Verbesserungspotential</strong>
+    <ul>
+      <li><strong>Größe:</strong> ~1200 Zeilen ist viel für einen Parser.
+        Block-Parser sind teilweise inline mit komplexer State-Maschine.
+        Eine ANTLR/JavaCC-basierte Lösung wäre formaler, aber Migrationsaufwand
+        wäre erheblich.</li>
+      <li><strong>Manuelle Regex-Pattern:</strong> FUNC_MAP-Substitution mit
+        Regex ist v2.6 robust gemacht, aber ein parser-basierter Ansatz
+        wäre eleganter.</li>
+      <li><strong>Fehlende Unit-Tests:</strong> Edge Cases (verschachtelte
+        IF-Blöcke, korrupte Bounds) werden nur durch Modelle entdeckt — wenn
+        überhaupt. Phase-0-Test-Bundle existiert (parser-tests-phase0.zip),
+        aber nicht aktiviert.</li>
+    </ul>
+  </div>
+
+  <div class="review-fazit">
+    Funktional ausgereift, aber Größe begrenzt Wartbarkeit. Empfehlung: Phase-0-
+    Tests aktivieren bevor weitere Parser-Erweiterungen kommen — als Sicherheitsnetz
+    für künftiges Refactoring.
+  </div>
+</div>
+</section>
+
+<!-- ─────────────────────── PARSER-02: EqnData ─────────────────────── -->
+<section id="eqndata" class="review-section">
+  <div class="review-block">
+  <div class="review-head">
+    <span class="review-id">PARSER-02</span>
+    <h2>EqnData &amp; Conditional-Logik</h2>
+    <span class="review-rating rate-B">B — Gut</span>
+  </div>
+  <div class="review-meta">
+    <code>EqnData.java</code> · ~800 Zeilen · seit v2.5 mit kontinuierlichen Updates
+  </div>
+
+  <div class="review-strengths">
+    <strong>Stärken</strong>
+    <ul>
+      <li><strong>Klare Schnittstelle:</strong> <code>calcFunc(values)</code>
+        liefert F_i(x), <code>calcDeriv(values, varIdx)</code> liefert ∂F_i/∂x_j.
+        Solver abstrahiert vollständig vom Parsing.</li>
+      <li><strong>CASprzak-Integration:</strong> Symbolische Ableitungen exakt
+        — kein FD-Fehler bei algebraischen Gleichungen. Eliminierter eine ganze
+        Klasse von Konvergenzproblemen die in v2.0 noch da waren.</li>
+      <li><strong>Conditional-Branching mit Strukturschaltern:</strong>
+        IF(...)-Blöcke werden zur Ladezeit aufgelöst (statt zur Laufzeit) —
+        Ableitung bleibt durchgehend differenzierbar.</li>
+      <li><strong>Anonyme Subklasse für H_λ-Wrapping:</strong> HomotopySolver's
+        <code>buildHomotopySystem</code> wickelt EqnData mit Lambda-Override —
+        eleganter Polymorphismus, kein Sondercode in EqnData selbst.</li>
+    </ul>
+  </div>
+
+  <div class="review-weaknesses">
+    <strong>Verbesserungspotential</strong>
+    <ul>
+      <li><strong>Built-in Funktionen via FunctionParser:</strong> Erkennung
+        von <code>cpOfT</code>, <code>htofTTref</code> etc. läuft über
+        Pattern-Matching im Parser. Eleganter wäre eine Tabellen-basierte
+        Registrierung mit Plugin-Stil.</li>
+      <li><strong>Mehrere Code-Pfade für getDerivatives:</strong>
+        <code>getDerivatives()</code> und <code>getDerivatives(valMap)</code>
+        teilen viel Logik aber sind nicht DRY. Wartung erfordert Updates an
+        beiden Stellen.</li>
+    </ul>
+  </div>
+
+  <div class="review-fazit">
+    Solide Schnittstelle zum Solver. CASprzak-Integration ist ein Highlight.
+    Kleinere Code-Duplikate könnten irgendwann aufgeräumt werden — kein dringender Fix.
+  </div>
+</div>
+</section>
+
+<!-- ─────────────────────── PARSER-03: BIfunctions ─────────────────────── -->
+<section id="bifunctions" class="review-section">
+  <div class="review-block">
+  <div class="review-head">
+    <span class="review-id">PARSER-03</span>
+    <h2>BIfunctions (Built-in Funktionen)</h2>
+    <span class="review-rating rate-A">A — Exzellent</span>
+  </div>
+  <div class="review-meta">
+    <code>BIfunctions.java</code> · ~600 Zeilen · 18 thermodynamische Funktionen
+  </div>
+
+  <div class="review-strengths">
+    <strong>Stärken</strong>
+    <ul>
+      <li><strong>18 Built-in Funktionen sauber implementiert:</strong>
+        cpOfT, htofTTref, ttofhTref, sofTPRef, ... Alle thermodynamischen
+        Helfer-Funktionen für die Düsen- und Kompressor-Modelle.</li>
+      <li><strong>Analytische Ableitungen wo möglich:</strong> Für Funktionen
+        mit algebraischer Form sind die Ableitungen exakt. Für komplexere
+        (z.B. Tabellen-Interpolationen) wird 5-Punkte-Stencil O(h⁴) genutzt
+        mit adaptivem h = max(10⁻⁵·|x|, 10⁻⁸).</li>
+      <li><strong>Genauigkeit ausreichend für Newton-Konvergenz:</strong>
+        FD-Ableitungen erreichen ~10⁻⁹ Genauigkeit, Solver konvergiert auf
+        fsum &lt; 10⁻⁹.</li>
+      <li><strong>Klare Code-Struktur:</strong> Eine Methode pro Funktion,
+        Lookup über Funktionsname. Erweiterung trivial: neue Methode + Eintrag.</li>
+    </ul>
+  </div>
+
+  <div class="review-weaknesses">
+    <strong>Beobachtungen (kein Handlungsbedarf)</strong>
+    <ul>
+      <li>Konstanten (Bezugswerte für Enthalpie, Entropie) sind hard-coded.
+        Bei Modell-Erweiterung auf andere Fluide müssten sie parametrisierbar
+        werden — aber das ist Modell-Domäne, nicht Code-Issue.</li>
+    </ul>
+  </div>
+
+  <div class="review-fazit">
+    Sehr saubere Implementierung. Die Mischung aus analytischen und numerischen
+    Ableitungen ist pragmatisch und mathematisch korrekt für den Anwendungsbereich.
+    Vorbild für ähnliche Plug-in-Architekturen.
+  </div>
+</div>
+</section>
+
+<!-- ─────────────────────── PARSER-04: SystemData ─────────────────────── -->
+<section id="systemdata" class="review-section">
+  <div class="review-block">
+  <div class="review-head">
+    <span class="review-id">PARSER-04</span>
+    <h2>SystemData &amp; Variable</h2>
+    <span class="review-rating rate-A">A — Exzellent</span>
+  </div>
+  <div class="review-meta">
+    <code>SystemData.java</code> + <code>Variable.java</code> · ~500 Zeilen total
+  </div>
+
+  <div class="review-strengths">
+    <strong>Stärken</strong>
+    <ul>
+      <li><strong>Klare Datentrennung:</strong> SystemData ist reiner Container
+        für Variablen-Liste, Equations-Liste, ValMap. Keine Solver-Logik darin.</li>
+      <li><strong>Variable-Klasse minimal und korrekt:</strong> name, alias,
+        value, status, bounds. Copy-Konstruktor für HomotopySolver
+        (verhindert dass H_λ-System den Original-Zustand überschreibt).</li>
+      <li><strong>ValMap als HashMap:</strong> Lookup-Geschwindigkeit O(1)
+        für die ständigen calcFunc/calcDeriv-Aufrufe. Keine spürbare
+        Performance-Limitierung selbst bei n=300+.</li>
+      <li><strong>Extraktion freier Werte als double[]:</strong> Solver
+        arbeitet mit primitiven Arrays — JIT-freundlich, keine Auto-Boxing-Kosten.</li>
+    </ul>
+  </div>
+
+  <div class="review-weaknesses">
+    <strong>Beobachtungen (kein Handlungsbedarf)</strong>
+    <ul>
+      <li>Variable.status ist boolean (fixed=true/false). Bei zukünftiger
+        Erweiterung (z.B. INTEGER-Variablen, R-09) müsste das ein Enum werden.
+        Derzeit aber ausreichend.</li>
+    </ul>
+  </div>
+
+  <div class="review-fazit">
+    Datenklassen sind oft trivial — diese sind es auf die richtige Art:
+    klar, minimal, dokumentiert. Kein Handlungsbedarf.
+  </div>
+</div>
+</section>
+
+</main>
+
+<footer>
+  <span data-lang="de">CMDSolver Docs · Code Review · Parser · v2.12</span><span data-lang="en">CMDSolver Docs · Code Review · Parser · v2.12</span>
+  <span>
+    <a href="infra_reviews.html" data-lang="de">← Infra Review</a><a href="infra_reviews.html" data-lang="en">← Infra Review</a>
+    &nbsp;|&nbsp;
+    <a href="solver_reviews.html" data-lang="de">Solver Review →</a><a href="solver_reviews.html" data-lang="en">Solver Review →</a>
+  </span>
+</footer>
+
+</body>
+</html>

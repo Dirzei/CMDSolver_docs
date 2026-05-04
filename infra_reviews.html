@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Code Review — Solver-Infrastruktur</title>
+<style>
+/* CMDSolver Documentation — Shared Stylesheet */
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;1,400&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap');
+
+:root {
+  --bg:      #0d0f12;
+  --bg2:     #13161b;
+  --bg3:     #1a1e25;
+  --bg4:     #20252f;
+  --border:  #252a33;
+  --border2: #2e3540;
+  --text:    #c8cdd6;
+  --text2:   #7a8496;
+  --text3:   #4a5568;
+  --accent:  #4a9eff;
+  --ok:      #3ecf8e;
+  --warn:    #f0a030;
+  --err:     #ff5c5c;
+  --purple:  #a78bfa;
+  --teal:    #2dd4bf;
+  --mono:    'IBM Plex Mono', monospace;
+  --sans:    'IBM Plex Sans', sans-serif;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: var(--sans);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 13.5px;
+  line-height: 1.75;
+}
+
+/* ── Header ── */
+.doc-header {
+  border-bottom: 1px solid var(--border);
+  padding: 1.2rem 3rem;
+  display: flex; align-items: center;
+  justify-content: space-between; flex-wrap: wrap; gap: 1rem;
+}
+
+.breadcrumb {
+  font-family: var(--mono); font-size: 11px; color: var(--text3);
+  letter-spacing: .08em; text-transform: uppercase;
+  display: flex; align-items: center; gap: .5rem;
+}
+.breadcrumb a { color: var(--accent); text-decoration: none; }
+.breadcrumb span { color: var(--text3); }
+
+.doc-badge {
+  font-family: var(--mono); font-size: 11px;
+  padding: 3px 10px; border-radius: 4px;
+}
+.doc-badge.solver {
+  background: rgba(74,158,255,.1); border: 1px solid rgba(74,158,255,.25);
+  color: var(--accent);
+}
+.doc-badge.overview {
+  background: rgba(167,139,250,.1); border: 1px solid rgba(167,139,250,.25);
+  color: var(--purple);
+}
+.doc-badge.comparison {
+  background: rgba(62,207,142,.1); border: 1px solid rgba(62,207,142,.25);
+  color: var(--ok);
+}
+
+/* ── Hero ── */
+.hero {
+  padding: 2.5rem 3rem 2rem;
+  border-bottom: 1px solid var(--border);
+  background: linear-gradient(135deg, var(--bg) 0%, #0f1520 100%);
+}
+.hero-sub {
+  font-family: var(--mono); font-size: 11px; color: var(--text3);
+  letter-spacing: .15em; text-transform: uppercase; margin-bottom: .5rem;
+}
+h1 {
+  font-size: 28px; font-weight: 600; color: #e8ecf4;
+  letter-spacing: -.03em; margin-bottom: .5rem; line-height: 1.2;
+}
+.tagline {
+  font-size: 14px; color: var(--text2); margin-bottom: 1.5rem;
+  max-width: 680px;
+}
+.hero-stats { display: flex; gap: 2rem; flex-wrap: wrap; }
+.stat { display: flex; flex-direction: column; gap: .2rem; }
+.stat-val {
+  font-family: var(--mono); font-size: 18px; font-weight: 500; color: var(--ok);
+}
+.stat-lbl {
+  font-size: 11px; color: var(--text3);
+  text-transform: uppercase; letter-spacing: .08em;
+}
+
+/* ── Nav ── */
+nav {
+  position: sticky; top: 0; z-index: 10;
+  background: rgba(13,15,18,.95); backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--border);
+  padding: .6rem 3rem;
+  display: flex; gap: 1.5rem; flex-wrap: wrap;
+}
+nav a {
+  font-family: var(--mono); font-size: 11px; color: var(--text3);
+  text-decoration: none; letter-spacing: .08em;
+  text-transform: uppercase; transition: color .15s;
+}
+nav a:hover { color: var(--accent); }
+
+/* ── Main ── */
+main { padding: 2rem 3rem 4rem; max-width: 1040px; }
+
+section { margin-bottom: 3.5rem; scroll-margin-top: 3rem; }
+
+section > h2 {
+  font-size: 12px; font-family: var(--mono);
+  letter-spacing: .12em; text-transform: uppercase;
+  color: var(--text3); margin-bottom: 1.4rem;
+  padding-bottom: .5rem; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: .6rem;
+}
+section > h2::before {
+  content: ''; display: inline-block;
+  width: 8px; height: 8px; border-radius: 50%; background: var(--accent);
+}
+
+h3 { font-size: 14px; font-weight: 500; color: #e8ecf4; margin: 1.6rem 0 .6rem; }
+h4 { font-size: 13px; font-weight: 500; color: var(--text2); margin: 1.2rem 0 .4rem; }
+
+p { color: var(--text); margin-bottom: .9rem; max-width: 780px; }
+
+/* ── Math ── */
+.math-block {
+  background: var(--bg3); border: 1px solid var(--border);
+  border-left: 3px solid var(--purple);
+  border-radius: 6px; padding: 1.2rem 1.5rem;
+  margin: 1rem 0 1.2rem; font-family: var(--mono);
+  font-size: 13px; line-height: 2.1; white-space: pre;
+}
+.math-block .eq  { color: #e8ecf4; }
+.math-block .cmt { color: var(--text3); font-style: italic; }
+.math-block .hi  { color: var(--teal); }
+.math-block .hi2 { color: var(--warn); }
+
+/* ── Notes ── */
+.note {
+  border-radius: 6px; padding: .85rem 1.1rem;
+  font-size: 13px; line-height: 1.7; margin-bottom: 1.2rem;
+}
+.note.blue   { background: rgba(74,158,255,.06);  border-left: 3px solid var(--accent); }
+.note.green  { background: rgba(62,207,142,.06);  border-left: 3px solid var(--ok); }
+.note.amber  { background: rgba(240,160,48,.06);  border-left: 3px solid var(--warn); }
+.note.red    { background: rgba(255,92,92,.06);   border-left: 3px solid var(--err); }
+.note.purple { background: rgba(167,139,250,.06); border-left: 3px solid var(--purple); }
+.note strong { color: #e8ecf4; }
+
+/* ── Code ── */
+code {
+  font-family: var(--mono); font-size: 11.5px;
+  background: rgba(255,255,255,.05); padding: 1px 5px;
+  border-radius: 3px; color: #a8c8f0;
+}
+pre {
+  font-family: var(--mono); font-size: 12px;
+  background: var(--bg3); border: 1px solid var(--border);
+  border-radius: 8px; padding: 1rem 1.2rem;
+  overflow-x: auto; line-height: 1.7; margin-bottom: 1rem; color: #c8cdd6;
+}
+.kw  { color: var(--purple); }
+.cmt { color: var(--text3); font-style: italic; }
+.fn  { color: var(--teal); }
+.num { color: var(--warn); }
+.str { color: var(--ok); }
+
+/* ── Tables ── */
+.tbl-wrap {
+  overflow-x: auto; border-radius: 8px;
+  border: 1px solid var(--border); margin-bottom: 1.5rem;
+}
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+thead th {
+  background: var(--bg3); padding: 9px 14px; text-align: left;
+  font-weight: 500; font-size: 11px; letter-spacing: .06em;
+  text-transform: uppercase; color: var(--text2);
+  border-bottom: 1px solid var(--border2); white-space: nowrap;
+}
+tbody tr { border-bottom: 1px solid var(--border); transition: background .1s; }
+tbody tr:last-child { border-bottom: none; }
+tbody tr:hover { background: var(--bg3); }
+td { padding: 9px 14px; vertical-align: top; line-height: 1.6; }
+td.center { text-align: center; }
+
+/* ── Badges ── */
+.badge {
+  display: inline-block; font-size: 11px; padding: 2px 9px;
+  border-radius: 12px; font-family: var(--mono); white-space: nowrap;
+}
+.b-ok   { background: rgba(62,207,142,.1);  color: var(--ok);     border: 1px solid rgba(62,207,142,.25); }
+.b-warn { background: rgba(240,160,48,.1);  color: var(--warn);   border: 1px solid rgba(240,160,48,.25); }
+.b-err  { background: rgba(255,92,92,.1);   color: var(--err);    border: 1px solid rgba(255,92,92,.25); }
+.b-info { background: rgba(74,158,255,.1);  color: var(--accent); border: 1px solid rgba(74,158,255,.25); }
+.b-na   { background: rgba(74,84,96,.1);    color: var(--text3);  border: 1px solid var(--border2); }
+
+/* ── Star rating ── */
+.stars { color: var(--warn); letter-spacing: -.05em; }
+.stars.dim { color: var(--border2); }
+
+/* ── File list ── */
+.file-list { list-style: none; }
+.file-list li {
+  display: flex; gap: 1rem; align-items: flex-start;
+  padding: .7rem 1rem; background: var(--bg2);
+  border: 1px solid var(--border); border-radius: 4px; margin-bottom: .4rem;
+}
+.file-icon {
+  font-family: var(--mono); font-size: 11px; color: var(--accent);
+  white-space: nowrap; margin-top: 2px; min-width: 50px;
+}
+.file-desc { font-size: 13px; color: var(--text2); }
+.file-desc strong { color: var(--text); display: block; margin-bottom: .2rem; }
+
+/* ── Flowchart ── */
+.flowchart {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 10px; padding: 1.5rem; margin: 1rem 0 1.5rem;
+  overflow-x: auto;
+}
+
+/* ── Footer ── */
+footer {
+  border-top: 1px solid var(--border); padding: 1.5rem 3rem;
+  font-family: var(--mono); font-size: 11px; color: var(--text3);
+  display: flex; justify-content: space-between; flex-wrap: wrap; gap: .5rem;
+}
+footer a { color: var(--accent); text-decoration: none; }
+
+/* ── Footnotes ── */
+.footnotes {
+  margin-top: 2rem; padding-top: 1.5rem;
+  border-top: 1px solid var(--border);
+  font-size: 12px; color: var(--text2);
+}
+.footnotes p { max-width: none; margin-bottom: .5rem; }
+sup { font-size: 10px; color: var(--accent); }
+
+/* ── Language Switcher ── */
+.lang-switch {
+  display: flex; align-items: center; gap: .4rem;
+  font-family: var(--mono); font-size: 11px;
+}
+.lang-btn {
+  background: none; border: 1px solid var(--border2);
+  color: var(--text3); padding: 3px 9px; border-radius: 4px;
+  cursor: pointer; font-family: var(--mono); font-size: 11px;
+  transition: all .15s; letter-spacing: .06em;
+}
+.lang-btn:hover { border-color: var(--accent); color: var(--accent); }
+.lang-btn.active {
+  background: rgba(74,158,255,.12); border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* Default: alle Sprachelemente sichtbar (kein JS-Flash) */
+/* Mit lang-Klasse auf body: nur die aktive Sprache sichtbar */
+
+/* Nur wenn body eine Sprachklasse hat, werden Elemente ausgeblendet */
+body.lang-de [data-lang="en"],
+body.lang-en [data-lang="de"] {
+  display: none !important;
+}
+
+/* Inline spans */
+body.lang-de span[data-lang="en"],
+body.lang-en span[data-lang="de"] {
+  display: none !important;
+}
+
+
+/* Inline spans */
+span[data-lang] { display: none; }
+body.lang-de span[data-lang="de"] { display: inline; }
+body.lang-en span[data-lang="en"] { display: inline; }
+/* Block elements */
+div[data-lang], section[data-lang], p[data-lang],
+li[data-lang], td[data-lang], th[data-lang] { display: none; }
+body.lang-de div[data-lang="de"] { display: block; }
+body.lang-en div[data-lang="en"] { display: block; }
+body.lang-de p[data-lang="de"]   { display: block; }
+body.lang-en p[data-lang="en"]   { display: block; }
+body.lang-de li[data-lang="de"]  { display: list-item; }
+body.lang-en li[data-lang="en"]  { display: list-item; }
+body.lang-de td[data-lang="de"]  { display: table-cell; }
+body.lang-en td[data-lang="en"]  { display: table-cell; }
+
+/* ── Page-specific styles ──────────────────────────── */
+/* ── Review-Karten ───────────────────────────────────── */
+.review-rating { font-size: 13px; padding: 2px 10px; border-radius: 4px; font-weight: 600; }
+.rate-A { background: rgba(62,207,142,.12);  color: #3ecf8e; }
+.rate-B { background: rgba(74,158,255,.12);  color: #4a9eff; }
+.rate-C { background: rgba(240,160,48,.12);  color: #f0a030; }
+.rate-D { background: rgba(255,92,92,.12);   color: #ff5c5c; }
+
+.review-block { background: #13161b; border: 1px solid #2e3540; border-radius: 8px;
+  padding: 1.2rem 1.4rem; margin-bottom: 1.5rem; }
+.review-head { display: flex; align-items: baseline; gap: 0.8rem; flex-wrap: wrap; margin-bottom: 0.3rem; }
+.review-head h2 { margin: 0; font-size: 18px; color: #e8ecf4; border: 0; padding: 0; }
+.review-id { color: #7f8a99; font-size: 12px; font-family: 'IBM Plex Mono', monospace; }
+.review-meta { color: #7f8a99; font-size: 12px; margin-bottom: 0.8rem; }
+.review-strengths strong { color: #3ecf8e; }
+.review-weaknesses { margin-top: 0.6rem; }
+.review-weaknesses strong { color: #f0a030; }
+.review-fazit { color: #c8cdd6; margin-top: 0.6rem; font-style: italic;
+  border-top: 1px solid #2e3540; padding-top: 0.8rem; }
+
+/* Section-Wrapper schluckt das Karten-Margin so dass nichts springt */
+section.review-section { margin: 0 0 1.5rem 0; padding: 0; border: 0; }
+section.review-section .review-block { margin-bottom: 0; }
+
+/* ── Bewertungs-Legende ──────────────────────────────── */
+.rating-legend { display: flex; gap: 0.6rem; flex-wrap: wrap; align-items: center;
+  margin-top: 0.4rem; }
+.rating-legend .review-rating { font-size: 12px; }
+
+/* ── Quick-Jump-Tabelle ──────────────────────────────── */
+.review-jump-table { margin-bottom: 0.8rem; }
+.review-jump-table td { padding: 6px 10px; vertical-align: middle; }
+.review-jump-table td:first-child { color: #7f8a99; font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px; white-space: nowrap; }
+.review-jump-table td:nth-child(2) a { color: #e8ecf4; font-weight: 500; text-decoration: none; }
+.review-jump-table td:nth-child(2) a:hover { color: var(--accent); }
+.review-jump-table td:nth-child(3) { color: #7f8a99; font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px; }
+.review-jump-table td:nth-child(4) { color: #7f8a99; font-size: 12px; text-align: right;
+  white-space: nowrap; }
+.review-jump-table td:last-child { text-align: right; white-space: nowrap; }
+.review-counter { color: #7f8a99; font-size: 12px; margin-top: 0.6rem; }
+
+/* ── i18n Language Switcher ──────────────────────────── */
+.lang-switch { display: flex; align-items: center; gap: .4rem;
+  font-family: var(--mono); font-size: 11px; }
+.lang-btn { background: none; border: 1px solid var(--border2);
+  color: var(--text3); padding: 3px 9px; border-radius: 4px;
+  cursor: pointer; font-family: var(--mono); font-size: 11px;
+  transition: all .15s; letter-spacing: .06em; }
+.lang-btn:hover { border-color: var(--accent); color: var(--accent); }
+.lang-btn.active { background: rgba(74,158,255,.12); border-color: var(--accent);
+  color: var(--accent); font-weight: 600; }
+</style>
+<link rel="stylesheet" href="i18n.css">
+</head>
+<body>
+<script>
+(function(){
+  var stored = '';
+  try { stored = localStorage.getItem('cmdlang') || ''; } catch(e){}
+  var lang = stored || 'de';
+
+  function apply(l) {
+    lang = l;
+    try { localStorage.setItem('cmdlang', l); } catch(e){}
+    document.documentElement.lang = l;
+    var body = document.body;
+    body.classList.remove('lang-de','lang-en');
+    body.classList.add('lang-' + l);
+    document.querySelectorAll('.lang-btn').forEach(function(b){
+      b.classList.toggle('active', b.dataset.lang === l);
+    });
+  }
+
+  // Body-Klasse sofort setzen, damit data-lang-Elemente direkt korrekt
+  // sichtbar sind (kein Flash mit unsichtbarem Header-Inhalt).
+  apply(lang);
+  document.addEventListener('DOMContentLoaded', function(){
+    apply(lang); // erneut, damit jetzt auch die Buttons gestyled werden
+    document.querySelectorAll('.lang-btn').forEach(function(b){
+      b.addEventListener('click', function(){ apply(b.dataset.lang); });
+    });
+    // Sticky-Header Schatten via IntersectionObserver
+    var sentinel = document.querySelector('.header-sentinel');
+    var header   = document.querySelector('.doc-header');
+    if (sentinel && header && 'IntersectionObserver' in window) {
+      new IntersectionObserver(function(entries){
+        header.classList.toggle('scrolled', !entries[0].isIntersecting);
+      }).observe(sentinel);
+    }
+  });
+})();
+</script>
+
+
+
+
+<div class="header-sentinel"></div>
+<div class="doc-header">
+  <div class="breadcrumb">
+    <a href="../index.html">CMDSolver Docs</a>
+    <span>›</span><a href="index.html">Code Review</a>
+    ›
+  </div>
+  <div class="doc-header-right"><div class="lang-switch"><button class="lang-btn" data-lang="de">DE</button><button class="lang-btn" data-lang="en">EN</button></div><span class="doc-badge solver">INFRA REVIEWS</span></div></div>
+
+<div class="hero">
+  <div class="hero-sub"><span data-lang="de">Code Review</span><span data-lang="en">Code Review</span></div>
+  <h1 data-lang="de">Solver-Infrastruktur<br>Code Review</h1><h1 data-lang="en">Solver Infrastructure<br>Code Review</h1>
+  <p class="tagline" data-lang="de">Detail-Bewertungen der Solver-Basisklasse, Skalierung, Bounds-Projection und Konfigurations-Klassen. Diese Komponenten werden von allen Solvern geteilt.</p>
+  <p class="tagline" data-lang="en">Detailed evaluations of the solver base class, scaling, bounds projection, and configuration classes. These components are shared by all solvers.</p>
+  </div>
+
+<nav>
+  <a href="#uebersicht" data-lang="de">Übersicht</a><a href="#uebersicht" data-lang="en">Overview</a>
+    <a href="#abstractsolver">AbstractSolver</a>
+  <a href="#equilibrator">JacobiEquilibrator</a>
+  <a href="#projector-scaler">PhysicalProjector &amp; VariableScaler</a>
+  <a href="#config">Config-Klassen</a>
+</nav>
+
+<main>
+
+
+<div class="note blue" data-lang="de">
+    <strong>Bewertungsskala:</strong>
+    <div class="rating-legend"><span class="review-rating rate-A">A — Exzellent</span> <span class="review-rating rate-B">B — Gut</span> <span class="review-rating rate-C">C — Verbesserungspotential</span> <span class="review-rating rate-D">D — Refactoring nötig</span></div>
+  </div>
+  <div class="note blue" data-lang="en">
+    <strong>Rating scale:</strong>
+    <div class="rating-legend"><span class="review-rating rate-A">A — Excellent</span> <span class="review-rating rate-B">B — Good</span> <span class="review-rating rate-C">C — Room for improvement</span> <span class="review-rating rate-D">D — Refactoring needed</span></div>
+  </div>
+
+<section id="uebersicht">
+  <h2 data-lang="de">Übersicht</h2><h2 data-lang="en">Overview</h2>
+
+  <div class="tbl-wrap">
+  <table class="review-jump-table">
+    <thead><tr>
+      <th>ID</th>
+      <th data-lang="de">Komponente</th><th data-lang="en">Component</th>
+      <th data-lang="de">Datei</th><th data-lang="en">File</th>
+      <th data-lang="de">Zeilen</th><th data-lang="en">Lines</th>
+      <th data-lang="de">Bewertung</th><th data-lang="en">Rating</th>
+    </tr></thead>
+    <tbody>
+      <tr>
+        <td>INFRA-01</td>
+        <td><a href="#abstractsolver">AbstractSolver</a></td>
+        <td><code>AbstractSolver.java</code></td>
+        <td>828</td>
+        <td><span class="review-rating rate-A" data-lang="de">A — Exzellent</span><span class="review-rating rate-A" data-lang="en">A — Excellent</span></td>
+      </tr>
+      <tr>
+        <td>INFRA-02</td>
+        <td><a href="#equilibrator">JacobiEquilibrator</a></td>
+        <td><code>JacobiEquilibrator.java</code></td>
+        <td>212</td>
+        <td><span class="review-rating rate-A" data-lang="de">A — Exzellent</span><span class="review-rating rate-A" data-lang="en">A — Excellent</span></td>
+      </tr>
+      <tr>
+        <td>INFRA-03</td>
+        <td><a href="#projector-scaler">PhysicalProjector &amp; VariableScaler</a></td>
+        <td><code>PhysicalProjector.java + VariableScaler.java</code></td>
+        <td>333 + 248</td>
+        <td><span class="review-rating rate-B" data-lang="de">B — Gut</span><span class="review-rating rate-B" data-lang="en">B — Good</span></td>
+      </tr>
+      <tr>
+        <td>INFRA-04</td>
+        <td><a href="#config">SolverConfig, SolverFactory, HomotopyConfig, SolverType</a></td>
+        <td><code>SolverConfig + SolverFactory + HomotopyConfig + SolverType</code></td>
+        <td>299 + 89 + 231 + 89</td>
+        <td><span class="review-rating rate-B" data-lang="de">B — Gut</span><span class="review-rating rate-B" data-lang="en">B — Good</span></td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="review-counter" data-lang="de">4 Reviews · 2× A · 2× B</div>
+  <div class="review-counter" data-lang="en">4 reviews · 2× A · 2× B</div>
+</section>
+
+<!-- ─────────────────────── INFRA-01: AbstractSolver ─────────────────────── -->
+<section id="abstractsolver" class="review-section">
+  <div class="review-block">
+  <div class="review-head">
+    <span class="review-id">INFRA-01</span>
+    <h2>AbstractSolver</h2>
+    <span class="review-rating rate-A">A — Exzellent</span>
+  </div>
+  <div class="review-meta">
+    <code>AbstractSolver.java</code> · 828 Zeilen · seit v2.5, mit v2.12-Equilibrator-Integration
+  </div>
+
+  <div class="review-strengths">
+    <strong>Stärken</strong>
+    <ul>
+      <li><strong>Zentrale Solver-Orchestrierung:</strong> Ein einziger
+        Lifecycle (loadInitGuess → iterate → checkConvergence → log) für alle
+        Solver. Subklassen implementieren nur computeStep und armijoStep.</li>
+      <li><strong>Hook-Architektur sauber:</strong> Die abstrakten Methoden
+        sind exakt das was variiert (Schritt-Berechnung, Liniensuche).
+        Alles andere (Equilibrator-Refresh, Stagnations-Erkennung,
+        Norm-Berechnung) ist hier zentralisiert — kein Code-Duplikat über Solver.</li>
+      <li><strong>weightedNormSq als Standard:</strong> Die Akzeptanz-Norm
+        passt zur LGS-Norm (R·F bei aktivem Equilibrator). Verhindert die
+        klassischen Räume-Bugs ("Armijo akzeptiert in einer Norm, LGS löst
+        in einer anderen").</li>
+      <li><strong>Equilibrator-Refresh-Logik:</strong> Bei großen
+        ‖F‖-Änderungen oder kappa-Sprung wird der Equilibrator neu berechnet.
+        Verhindert Skalen-Drift über viele Iterationen.</li>
+      <li><strong>Detailliertes Logging:</strong> DEBUG-Level zeigt
+        fsum(resNorm) vs fsum(direct) und ‖dx‖ — extrem wertvoll bei
+        der Diagnose schwieriger Modelle (z.B. unsere γ-Singularität-Suche).</li>
+    </ul>
+  </div>
+
+  <div class="review-weaknesses">
+    <strong>Beobachtungen (kein Handlungsbedarf)</strong>
+    <ul>
+      <li>828 Zeilen ist viel, aber alles davon hat Berechtigung:
+        Lifecycle (200), Equilibrator-Logik (150), Norm-Helpers (100),
+        Logging (150), Stagnations-Erkennung (100), Rest. Modular zerlegt
+        wäre artificial.</li>
+      <li>Frobenius-kappa-Schätzung ist O(n²) — bei n=303 ~90k Operationen
+        pro Iter. Optisch in den DEBUG-Logs sichtbar, aber nicht
+        Performance-relevant. Auf Wunsch deaktivierbar via SolverConfig.</li>
+    </ul>
+  </div>
+
+  <div class="review-fazit">
+    Eine der besten Klassen im Projekt. Architektonisch sauber, gut
+    dokumentiert, robust durch viele Solver-Varianten validiert.
+    Kein Refactoring nötig.
+  </div>
+</div>
+</section>
+
+<!-- ─────────────────────── INFRA-02: JacobiEquilibrator ─────────────────────── -->
+<section id="equilibrator" class="review-section">
+  <div class="review-block">
+  <div class="review-head">
+    <span class="review-id">INFRA-02</span>
+    <h2>JacobiEquilibrator (Sinkhorn-Knopp R·J·C)</h2>
+    <span class="review-rating rate-A">A — Exzellent</span>
+  </div>
+  <div class="review-meta">
+    <code>JacobiEquilibrator.java</code> · 212 Zeilen · v2.12 (R-01)
+  </div>
+
+  <div class="review-strengths">
+    <strong>Stärken</strong>
+    <ul>
+      <li><strong>Klassischer Algorithmus, sauber implementiert:</strong>
+        Sinkhorn-Knopp iteriert wechselnd Zeilen- und Spalten-Skalierung
+        bis ‖row‖_∞ und ‖col‖_∞ alle ≈ 1 sind. Konvergiert geometrisch
+        in 5-10 Iterationen.</li>
+      <li><strong>Numerisch stabil:</strong> Schutz gegen Zeilen/Spalten von
+        0 (skip), gegen NaN/Inf (early abort). Equilibrator wird "fail-safe"
+        angesetzt — wenn Skalierung scheitert, läuft Solver halt mit kappa wie zuvor.</li>
+      <li><strong>Kompakte API:</strong> <code>equilibrate(J)</code> liefert
+        rowScale, colScale. AbstractSolver wendet sie an. Keine Magie,
+        keine versteckten Seiteneffekte.</li>
+      <li><strong>Macht den Unterschied auf NozzleSystem:</strong> kappa(J)=4.6×10¹¹
+        wird durch R·J·C zu kappa(J̃)≈4. Praktisch alle Solver-Konvergenzprobleme
+        bei diesem Modell waren in Wirklichkeit Skalen-Probleme.</li>
+    </ul>
+  </div>
+
+  <div class="review-weaknesses">
+    <strong>Beobachtungen (kein Handlungsbedarf)</strong>
+    <ul>
+      <li>Sinkhorn-Knopp konvergiert nicht garantiert — bei pathologischen
+        Matrizen (z.B. exakt singulär) kann es divergieren. In der Praxis
+        nie beobachtet. Frühe-Abbruch-Heuristik vorhanden.</li>
+    </ul>
+  </div>
+
+  <div class="review-fazit">
+    Eine Klasse die "einfach funktioniert". 212 Zeilen für eine fundamentale
+    Verbesserung der numerischen Robustheit aller Solver — exzellentes
+    Aufwand-Nutzen-Verhältnis.
+  </div>
+</div>
+</section>
+
+<!-- ─────────────────────── INFRA-03: PhysicalProjector & VariableScaler ─────────────────────── -->
+<section id="projector-scaler" class="review-section">
+  <div class="review-block">
+  <div class="review-head">
+    <span class="review-id">INFRA-03</span>
+    <h2>PhysicalProjector &amp; VariableScaler</h2>
+    <span class="review-rating rate-B">B — Gut</span>
+  </div>
+  <div class="review-meta">
+    <code>PhysicalProjector.java</code> · 333 Zeilen ·
+    <code>VariableScaler.java</code> · 248 Zeilen
+  </div>
+
+  <div class="review-strengths">
+    <strong>Stärken</strong>
+    <ul>
+      <li><strong>PhysicalProjector klar fokussiert:</strong> Bounds-Verletzungen
+        werden nach jedem Schritt korrigiert. Logging zeigt welche Variablen
+        getroffen werden — kritisch für Modell-Debugging (siehe γ-Bound-Story).</li>
+      <li><strong>VariableScaler bietet Alternativen:</strong> DIAGONAL und
+        UNIT_INTERVAL-Skalierung als Alternative zu EQUILIBRATE. Funktionieren
+        seit v2.12 endlich korrekt (Inline-Armijo-Bug behoben).</li>
+      <li><strong>Saubere Trennung:</strong> Projector und Scaler kennen
+        sich nicht — saubere Single-Responsibility.</li>
+      <li><strong>Silent-Variante (v2.12):</strong> PhysicalProjector kann
+        WARNING-Spam in HomotopySolver-Inner-Schleifen unterdrücken (FD-Probe-Punkte
+        treffen normal Bounds, das sollte nicht den Log fluten).</li>
+    </ul>
+  </div>
+
+  <div class="review-weaknesses">
+    <strong>Verbesserungspotential</strong>
+    <ul>
+      <li><strong>Projection-Strategie ist hard:</strong> Bei Verletzung
+        wird Variable auf <code>1e-10</code> oder die Lower-Bound geclamped.
+        Eine "Soft-Projection" (Variable bleibt frei aber Penalty in der
+        Norm) wäre mathematisch eleganter, aber komplexer.</li>
+      <li><strong>VariableScaler kaum genutzt:</strong> Seit EQUILIBRATE
+        verfügbar ist, sind DIAGONAL und UNIT_INTERVAL praktisch obsolet.
+        Könnten irgendwann gestrichen werden — sind aber harmlos drin.</li>
+      <li><strong>PhysicalProjector arbeitet mit ValMap-Lookups:</strong>
+        Bei n=303 mehrfach pro Iter. Cache-freundliche Variante mit
+        Variable[]-Array wäre schneller, aber kein Hotspot.</li>
+    </ul>
+  </div>
+
+  <div class="review-fazit">
+    Funktional korrekt, aber VariableScaler ist mit EQUILIBRATE redundant
+    geworden. Konsolidierung wäre nett, ist aber kein Performance- oder
+    Korrektheits-Issue.
+  </div>
+</div>
+</section>
+
+<!-- ─────────────────────── INFRA-04: Config-Klassen ─────────────────────── -->
+<section id="config" class="review-section">
+  <div class="review-block">
+  <div class="review-head">
+    <span class="review-id">INFRA-04</span>
+    <h2>SolverConfig, SolverFactory, HomotopyConfig, SolverType</h2>
+    <span class="review-rating rate-B">B — Gut</span>
+  </div>
+  <div class="review-meta">
+    <code>SolverConfig.java</code> (299) +
+    <code>SolverFactory.java</code> (89) +
+    <code>HomotopyConfig.java</code> (231) +
+    <code>SolverType.java</code> (106) ·
+    Total 619 Zeilen
+  </div>
+
+  <div class="review-strengths">
+    <strong>Stärken</strong>
+    <ul>
+      <li><strong>Builder-Muster konsequent:</strong> Sowohl SolverConfig
+        als auch HomotopyConfig haben Builder mit fluentem API. Einfach zu
+        nutzen, einfach zu erweitern.</li>
+      <li><strong>SolverType als Enum mit Description:</strong>
+        Selbsterklärend bei Logs ("Solver set to: Newton-Raphson + Armijo
+        line search"). Switch-Statements bleiben übersichtlich.</li>
+      <li><strong>Defaults sinnvoll:</strong> SolverConfig.defaultNewton(),
+        HomotopyConfig.defaultConfig() erzeugen direkt funktionierende
+        Konfigurationen — kein Boilerplate für Standardfälle.</li>
+      <li><strong>Factory wirft klare Exceptions für Sondertypen:</strong>
+        HOMOTOPY, ARC_LENGTH, ADAPTIVE_LAMBDA werden nicht über die Factory
+        instanziiert (brauchen extra Config) — die Exception-Message zeigt
+        was zu tun ist.</li>
+    </ul>
+  </div>
+
+  <div class="review-weaknesses">
+    <strong>Verbesserungspotential</strong>
+    <ul>
+      <li><strong>Wachsende Config-Klasse:</strong> SolverConfig hat 299 Zeilen,
+        25+ Felder. Für ein Tuning-Konfigurations-Objekt langsam viel.
+        Aufspaltung in SolverConfig + ArmijoConfig + ScalingConfig wäre
+        denkbar — aktuell nicht nötig.</li>
+      <li><strong>SolverFactory if-else statt Map:</strong> Bei 9 SolverTypes
+        läuft die Factory durch eine Switch-Cascade. Eine
+        <code>Map&lt;SolverType, Function&lt;SolverConfig, SolverStrategy&gt;&gt;</code>
+        wäre eleganter (Open-Closed-Principle). Aber bei 9 Einträgen
+        nicht dringend.</li>
+      <li><strong>HomotopyConfig wird für drei Solver geteilt:</strong>
+        HOMOTOPY, ARC_LENGTH, ADAPTIVE_LAMBDA nutzen alle dieselbe Config-Klasse.
+        Felder wie <code>useArcLength</code> sind nur für einen relevant,
+        <code>tryDirectFirst</code> nur für einen anderen. Felder werden
+        ignoriert wo sie nicht passen — funktioniert aber nicht ideal.</li>
+    </ul>
+  </div>
+
+  <div class="review-fazit">
+    Konfigurations-Schicht skaliert mit den 9 SolverTypes mit. Refactoring
+    auf Factory-Map und Config-Aufspaltung wäre nett, aber kein dringender
+    Fix. Wachstum bleibt in Grenzen weil neue Solver selten kommen.
+  </div>
+</div>
+</section>
+
+</main>
+
+<footer>
+  <span data-lang="de">CMDSolver Docs · Code Review · Infrastruktur · v2.12</span><span data-lang="en">CMDSolver Docs · Code Review · Infrastructure · v2.12</span>
+  <span>
+    <a href="index.html" data-lang="de">← Übersicht</a><a href="index.html" data-lang="en">← Overview</a>
+    &nbsp;|&nbsp;
+    <a href="parser_reviews.html" data-lang="de">Parser Review →</a><a href="parser_reviews.html" data-lang="en">Parser Review →</a>
+  </span>
+</footer>
+
+</body>
+</html>

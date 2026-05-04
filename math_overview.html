@@ -4,102 +4,400 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>CMDSolver Docs — Mathematischer Überblick</title>
-<link rel="stylesheet" href="docs.css">
+<style>
+/* CMDSolver Documentation — Shared Stylesheet */
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;1,400&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap');
+
+:root {
+  --bg:      #0d0f12;
+  --bg2:     #13161b;
+  --bg3:     #1a1e25;
+  --bg4:     #20252f;
+  --border:  #252a33;
+  --border2: #2e3540;
+  --text:    #c8cdd6;
+  --text2:   #7a8496;
+  --text3:   #4a5568;
+  --accent:  #4a9eff;
+  --ok:      #3ecf8e;
+  --warn:    #f0a030;
+  --err:     #ff5c5c;
+  --purple:  #a78bfa;
+  --teal:    #2dd4bf;
+  --mono:    'IBM Plex Mono', monospace;
+  --sans:    'IBM Plex Sans', sans-serif;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: var(--sans);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 13.5px;
+  line-height: 1.75;
+}
+
+/* ── Header ── */
+.doc-header {
+  border-bottom: 1px solid var(--border);
+  padding: 1.2rem 3rem;
+  display: flex; align-items: center;
+  justify-content: space-between; flex-wrap: wrap; gap: 1rem;
+}
+
+.breadcrumb {
+  font-family: var(--mono); font-size: 11px; color: var(--text3);
+  letter-spacing: .08em; text-transform: uppercase;
+  display: flex; align-items: center; gap: .5rem;
+}
+.breadcrumb a { color: var(--accent); text-decoration: none; }
+.breadcrumb span { color: var(--text3); }
+
+.doc-badge {
+  font-family: var(--mono); font-size: 11px;
+  padding: 3px 10px; border-radius: 4px;
+}
+.doc-badge.solver {
+  background: rgba(74,158,255,.1); border: 1px solid rgba(74,158,255,.25);
+  color: var(--accent);
+}
+.doc-badge.overview {
+  background: rgba(167,139,250,.1); border: 1px solid rgba(167,139,250,.25);
+  color: var(--purple);
+}
+.doc-badge.comparison {
+  background: rgba(62,207,142,.1); border: 1px solid rgba(62,207,142,.25);
+  color: var(--ok);
+}
+
+/* ── Hero ── */
+.hero {
+  padding: 2.5rem 3rem 2rem;
+  border-bottom: 1px solid var(--border);
+  background: linear-gradient(135deg, var(--bg) 0%, #0f1520 100%);
+}
+.hero-sub {
+  font-family: var(--mono); font-size: 11px; color: var(--text3);
+  letter-spacing: .15em; text-transform: uppercase; margin-bottom: .5rem;
+}
+h1 {
+  font-size: 28px; font-weight: 600; color: #e8ecf4;
+  letter-spacing: -.03em; margin-bottom: .5rem; line-height: 1.2;
+}
+.tagline {
+  font-size: 14px; color: var(--text2); margin-bottom: 1.5rem;
+  max-width: 680px;
+}
+.hero-stats { display: flex; gap: 2rem; flex-wrap: wrap; }
+.stat { display: flex; flex-direction: column; gap: .2rem; }
+.stat-val {
+  font-family: var(--mono); font-size: 18px; font-weight: 500; color: var(--ok);
+}
+.stat-lbl {
+  font-size: 11px; color: var(--text3);
+  text-transform: uppercase; letter-spacing: .08em;
+}
+
+/* ── Nav ── */
+nav {
+  position: sticky; top: 0; z-index: 10;
+  background: rgba(13,15,18,.95); backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--border);
+  padding: .6rem 3rem;
+  display: flex; gap: 1.5rem; flex-wrap: wrap;
+}
+nav a {
+  font-family: var(--mono); font-size: 11px; color: var(--text3);
+  text-decoration: none; letter-spacing: .08em;
+  text-transform: uppercase; transition: color .15s;
+}
+nav a:hover { color: var(--accent); }
+
+/* ── Main ── */
+main { padding: 2rem 3rem 4rem; max-width: 1040px; }
+
+section { margin-bottom: 3.5rem; scroll-margin-top: 3rem; }
+
+section > h2 {
+  font-size: 12px; font-family: var(--mono);
+  letter-spacing: .12em; text-transform: uppercase;
+  color: var(--text3); margin-bottom: 1.4rem;
+  padding-bottom: .5rem; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: .6rem;
+}
+section > h2::before {
+  content: ''; display: inline-block;
+  width: 8px; height: 8px; border-radius: 50%; background: var(--accent);
+}
+
+h3 { font-size: 14px; font-weight: 500; color: #e8ecf4; margin: 1.6rem 0 .6rem; }
+h4 { font-size: 13px; font-weight: 500; color: var(--text2); margin: 1.2rem 0 .4rem; }
+
+p { color: var(--text); margin-bottom: .9rem; max-width: 780px; }
+
+/* ── Math ── */
+.math-block {
+  background: var(--bg3); border: 1px solid var(--border);
+  border-left: 3px solid var(--purple);
+  border-radius: 6px; padding: 1.2rem 1.5rem;
+  margin: 1rem 0 1.2rem; font-family: var(--mono);
+  font-size: 13px; line-height: 2.1; white-space: pre;
+}
+.math-block .eq  { color: #e8ecf4; }
+.math-block .cmt { color: var(--text3); font-style: italic; }
+.math-block .hi  { color: var(--teal); }
+.math-block .hi2 { color: var(--warn); }
+
+/* ── Notes ── */
+.note {
+  border-radius: 6px; padding: .85rem 1.1rem;
+  font-size: 13px; line-height: 1.7; margin-bottom: 1.2rem;
+}
+.note.blue   { background: rgba(74,158,255,.06);  border-left: 3px solid var(--accent); }
+.note.green  { background: rgba(62,207,142,.06);  border-left: 3px solid var(--ok); }
+.note.amber  { background: rgba(240,160,48,.06);  border-left: 3px solid var(--warn); }
+.note.red    { background: rgba(255,92,92,.06);   border-left: 3px solid var(--err); }
+.note.purple { background: rgba(167,139,250,.06); border-left: 3px solid var(--purple); }
+.note strong { color: #e8ecf4; }
+
+/* ── Code ── */
+code {
+  font-family: var(--mono); font-size: 11.5px;
+  background: rgba(255,255,255,.05); padding: 1px 5px;
+  border-radius: 3px; color: #a8c8f0;
+}
+pre {
+  font-family: var(--mono); font-size: 12px;
+  background: var(--bg3); border: 1px solid var(--border);
+  border-radius: 8px; padding: 1rem 1.2rem;
+  overflow-x: auto; line-height: 1.7; margin-bottom: 1rem; color: #c8cdd6;
+}
+.kw  { color: var(--purple); }
+.cmt { color: var(--text3); font-style: italic; }
+.fn  { color: var(--teal); }
+.num { color: var(--warn); }
+.str { color: var(--ok); }
+
+/* ── Tables ── */
+.tbl-wrap {
+  overflow-x: auto; border-radius: 8px;
+  border: 1px solid var(--border); margin-bottom: 1.5rem;
+}
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+thead th {
+  background: var(--bg3); padding: 9px 14px; text-align: left;
+  font-weight: 500; font-size: 11px; letter-spacing: .06em;
+  text-transform: uppercase; color: var(--text2);
+  border-bottom: 1px solid var(--border2); white-space: nowrap;
+}
+tbody tr { border-bottom: 1px solid var(--border); transition: background .1s; }
+tbody tr:last-child { border-bottom: none; }
+tbody tr:hover { background: var(--bg3); }
+td { padding: 9px 14px; vertical-align: top; line-height: 1.6; }
+td.center { text-align: center; }
+
+/* ── Badges ── */
+.badge {
+  display: inline-block; font-size: 11px; padding: 2px 9px;
+  border-radius: 12px; font-family: var(--mono); white-space: nowrap;
+}
+.b-ok   { background: rgba(62,207,142,.1);  color: var(--ok);     border: 1px solid rgba(62,207,142,.25); }
+.b-warn { background: rgba(240,160,48,.1);  color: var(--warn);   border: 1px solid rgba(240,160,48,.25); }
+.b-err  { background: rgba(255,92,92,.1);   color: var(--err);    border: 1px solid rgba(255,92,92,.25); }
+.b-info { background: rgba(74,158,255,.1);  color: var(--accent); border: 1px solid rgba(74,158,255,.25); }
+.b-na   { background: rgba(74,84,96,.1);    color: var(--text3);  border: 1px solid var(--border2); }
+
+/* ── Star rating ── */
+.stars { color: var(--warn); letter-spacing: -.05em; }
+.stars.dim { color: var(--border2); }
+
+/* ── File list ── */
+.file-list { list-style: none; }
+.file-list li {
+  display: flex; gap: 1rem; align-items: flex-start;
+  padding: .7rem 1rem; background: var(--bg2);
+  border: 1px solid var(--border); border-radius: 4px; margin-bottom: .4rem;
+}
+.file-icon {
+  font-family: var(--mono); font-size: 11px; color: var(--accent);
+  white-space: nowrap; margin-top: 2px; min-width: 50px;
+}
+.file-desc { font-size: 13px; color: var(--text2); }
+.file-desc strong { color: var(--text); display: block; margin-bottom: .2rem; }
+
+/* ── Flowchart ── */
+.flowchart {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 10px; padding: 1.5rem; margin: 1rem 0 1.5rem;
+  overflow-x: auto;
+}
+
+/* ── Footer ── */
+footer {
+  border-top: 1px solid var(--border); padding: 1.5rem 3rem;
+  font-family: var(--mono); font-size: 11px; color: var(--text3);
+  display: flex; justify-content: space-between; flex-wrap: wrap; gap: .5rem;
+}
+footer a { color: var(--accent); text-decoration: none; }
+
+/* ── Footnotes ── */
+.footnotes {
+  margin-top: 2rem; padding-top: 1.5rem;
+  border-top: 1px solid var(--border);
+  font-size: 12px; color: var(--text2);
+}
+.footnotes p { max-width: none; margin-bottom: .5rem; }
+sup { font-size: 10px; color: var(--accent); }
+
+/* Default: alle Sprachelemente sichtbar (kein JS-Flash) */
+/* Mit lang-Klasse auf body: nur die aktive Sprache sichtbar */
+
+/* Nur wenn body eine Sprachklasse hat, werden Elemente ausgeblendet */
+/* Sprach-Sichtbarkeit via class auf body */
+</style>
+<link rel="stylesheet" href="i18n.css">
 </head>
 <body>
+<script>
+(function(){
+  var stored = '';
+  try { stored = localStorage.getItem('cmdlang') || ''; } catch(e){}
+  var lang = stored || 'de';
 
+  function apply(l) {
+    lang = l;
+    try { localStorage.setItem('cmdlang', l); } catch(e){}
+    document.documentElement.lang = l;
+    var body = document.body;
+    body.classList.remove('lang-de','lang-en');
+    body.classList.add('lang-' + l);
+    document.querySelectorAll('.lang-btn').forEach(function(b){
+      b.classList.toggle('active', b.dataset.lang === l);
+    });
+  }
+
+  // Body-Klasse sofort setzen, damit data-lang-Elemente direkt korrekt
+  // sichtbar sind (kein Flash mit unsichtbarem Header-Inhalt).
+  apply(lang);
+  document.addEventListener('DOMContentLoaded', function(){
+    apply(lang); // erneut, damit jetzt auch die Buttons gestyled werden
+    document.querySelectorAll('.lang-btn').forEach(function(b){
+      b.addEventListener('click', function(){ apply(b.dataset.lang); });
+    });
+    // Sticky-Header Schatten via IntersectionObserver
+    var sentinel = document.querySelector('.header-sentinel');
+    var header   = document.querySelector('.doc-header');
+    if (sentinel && header && 'IntersectionObserver' in window) {
+      new IntersectionObserver(function(entries){
+        header.classList.toggle('scrolled', !entries[0].isIntersecting);
+      }).observe(sentinel);
+    }
+  });
+})();
+</script>
+
+
+
+
+<div class="header-sentinel"></div>
 <div class="doc-header">
   <div class="breadcrumb">
     <a href="index.html">CMDSolver Docs</a>
     <span>›</span>
-    <span>Mathematischer Überblick</span>
+    <span data-lang="de">Mathematischer Überblick</span><span data-lang="en">Mathematical Overview</span>
   </div>
-  <span class="doc-badge overview">Grundlagen</span>
-</div>
+  <div class="doc-header-right"><div class="lang-switch"><button class="lang-btn" data-lang="de">DE</button><button class="lang-btn" data-lang="en">EN</button></div><span class="doc-badge overview">Grundlagen</span></div></div>
 
 <div class="hero">
-  <div class="hero-sub">Kapitel 1</div>
-  <h1>Mathematische Grundlagen<br>Nichtlineare Gleichungssysteme</h1>
-  <p class="tagline">
-    Überblick über numerische Lösungsverfahren für Systeme der Form F(x) = 0 —
-    implementierte und nicht implementierte Methoden im Kontext thermodynamischer Modelle.
-  </p>
-</div>
+  <div class="hero-sub"><span data-lang="de">Mathematik</span><span data-lang="en">Mathematics</span></div>
+  <h1 data-lang="de">Mathematische Grundlagen<br>Nichtlineare Gleichungssysteme</h1><h1 data-lang="en">Mathematical Foundations<br>Nonlinear Equation Systems</h1>
+  <p class="tagline" data-lang="de">Überblick über numerische Lösungsverfahren für Systeme der Form F(x) = 0 — implementierte und nicht implementierte Methoden im Kontext thermodynamischer Modelle.</p>
+  <p class="tagline" data-lang="en">Overview of numerical solution methods for systems of the form F(x) = 0 — implemented and unimplemented methods in the context of thermodynamic models.</p>
+  </div>
 
 <nav>
-  <a href="#problem">Das Problem</a>
-  <a href="#klassifikation">Klassifikation</a>
-  <a href="#implementiert">Implementiert</a>
-  <a href="#nicht-implementiert">Weitere Verfahren</a>
-  <a href="#wahl">Verfahrenswahl</a>
+  <a href="#problem" data-lang="de">Das Problem</a><a href="#problem" data-lang="en">The Problem</a>
+  <a href="#klassifikation" data-lang="de">Klassifikation</a><a href="#klassifikation" data-lang="en">Classification</a>
+  <a href="#implementiert" data-lang="de">Implementiert</a><a href="#implementiert" data-lang="en">Implemented</a>
+  <a href="#nicht-implementiert" data-lang="de">Weitere Verfahren</a><a href="#nicht-implementiert" data-lang="en">Other Methods</a>
+  <a href="#wahl" data-lang="de">Verfahrenswahl</a><a href="#wahl" data-lang="en">Method Selection</a>
 </nav>
 
 <main>
 
 <!-- 1. Das Problem -->
 <section id="problem">
-  <h2>Das Problem — F(x) = 0</h2>
+  <h2 data-lang="de">Das Problem — F(x) = 0</h2><h2 data-lang="en">The Problem — F(x) = 0</h2>
 
-  <p>
+  <p data-lang="de">
     In thermodynamischen Modellen wie den Triebwerks- und Düsenmodellen von CMDSolver
     entstehen <strong>nichtlineare algebraische Gleichungssysteme</strong>. Jede Gleichung
     beschreibt eine physikalische Beziehung zwischen Variablen wie Druck, Temperatur,
     Massenstrom oder Geometriegrößen.
+  </p><p data-lang="en">
+    Thermodynamic models such as CMDSolver's engine and nozzle models give rise to
+    <strong>nonlinear algebraic equation systems</strong>. Every equation describes
+    a physical relationship between variables such as pressure, temperature,
+    mass flow, or geometric quantities.
   </p>
 
   <div class="math-block">
-    <div class="eq"><span class="hi">Gesucht:</span> x* ∈ ℝⁿ  so dass  F(x*) = 0</div>
+    <div class="eq"><span class="hi" data-lang="de">Gesucht:</span><span class="hi" data-lang="en">Find:</span> x* ∈ ℝⁿ  so dass  F(x*) = 0</div>
     <div class="eq"></div>
-    <div class="eq"><span class="hi">wobei:</span></div>
-    <div class="eq">  F: ℝⁿ → ℝⁿ    <span class="cmt">// n Gleichungen, n Unbekannte</span></div>
-    <div class="eq">  x = (x₁, …, xₙ)ᵀ  <span class="cmt">// freie Variablen (Druck, Temp, ...)</span></div>
-    <div class="eq">  Fᵢ(x) = 0     <span class="cmt">// i-te Gleichung als Residuum</span></div>
+    <div class="eq"><span class="hi" data-lang="de">wobei:</span><span class="hi" data-lang="en">where:</span></div>
+    <div class="eq">  F: ℝⁿ → ℝⁿ    <span class="cmt" data-lang="de">// n Gleichungen, n Unbekannte</span><span class="cmt" data-lang="en">// n equations, n unknowns</span></div>
+    <div class="eq">  x = (x₁, …, xₙ)ᵀ  <span class="cmt" data-lang="de">// freie Variablen (Druck, Temp, ...)</span><span class="cmt" data-lang="en">// free variables (pressure, temp, ...)</span></div>
+    <div class="eq">  Fᵢ(x) = 0     <span class="cmt" data-lang="de">// i-te Gleichung als Residuum</span><span class="cmt" data-lang="en">// i-th equation as residual</span></div>
     <div class="eq"></div>
-    <div class="eq"><span class="hi">Beispiel (Düsengleichung):</span></div>
-    <div class="eq">  F₁: FULLM.F080.W − FULLM.F060.W = 0      <span class="cmt">// Massenerhaltung</span></div>
-    <div class="eq">  F₂: FULLM.F080.PT − FULLM.F060.PT·η = 0  <span class="cmt">// Druckverhältnis</span></div>
-    <div class="eq">  F₃: FULLM.HTMAX − f(PT, TT, W, ...) = 0  <span class="cmt">// Thermodynamik</span></div>
+    <div class="eq"><span class="hi" data-lang="de">Beispiel (Düsengleichung):</span><span class="hi" data-lang="en">Example (nozzle equation):</span></div>
+    <div class="eq">  F₁: FULLM.F080.W − FULLM.F060.W = 0      <span class="cmt" data-lang="de">// Massenerhaltung</span><span class="cmt" data-lang="en">// mass conservation</span></div>
+    <div class="eq">  F₂: FULLM.F080.PT − FULLM.F060.PT·η = 0  <span class="cmt" data-lang="de">// Druckverhältnis</span><span class="cmt" data-lang="en">// pressure ratio</span></div>
+    <div class="eq">  F₃: FULLM.HTMAX − f(PT, TT, W, ...) = 0  <span class="cmt" data-lang="de">// Thermodynamik</span><span class="cmt" data-lang="en">// thermodynamics</span></div>
   </div>
 
-  <h3>Eigenschaften thermodynamischer Systeme</h3>
-  <p>
+  <h3 data-lang="de">Eigenschaften thermodynamischer Systeme</h3><h3 data-lang="en">Properties of Thermodynamic Systems</h3>
+  <p data-lang="de">
     Die Gleichungssysteme in CMDSolver haben spezifische Eigenschaften die
     die Wahl des Lösungsverfahrens stark beeinflussen:
+  </p><p data-lang="en">
+    The equation systems in CMDSolver have specific properties that strongly
+    influence the choice of solution method:
   </p>
 
   <div class="tbl-wrap">
   <table>
-    <thead><tr><th>Eigenschaft</th><th>Typischer Wert</th><th>Auswirkung</th></tr></thead>
+    <thead><tr><th data-lang="de">Eigenschaft</th><th data-lang="en">Property</th><th data-lang="de">Typischer Wert</th><th data-lang="en">Typical Value</th><th data-lang="de">Auswirkung</th><th data-lang="en">Implication</th></tr></thead>
     <tbody>
       <tr>
-        <td>Systemgröße n</td>
+        <td data-lang="de">Systemgröße n</td><td data-lang="en">System size n</td>
         <td>12 – 500+</td>
-        <td>Kleine Systeme: dichte LU. Große: Sparse-Methoden</td>
+        <td data-lang="de">Kleine Systeme: dichte LU. Große: Sparse-Methoden</td><td data-lang="en">Small systems: dense LU. Large: sparse methods</td>
       </tr>
       <tr>
-        <td>Nichtlinearitätsgrad</td>
-        <td>Mittel bis hoch</td>
-        <td>Startvektornähe entscheidend für Konvergenz</td>
+        <td data-lang="de">Nichtlinearitätsgrad</td><td data-lang="en">Degree of nonlinearity</td>
+        <td data-lang="de">Mittel bis hoch</td><td data-lang="en">Moderate to high</td>
+        <td data-lang="de">Startvektornähe entscheidend für Konvergenz</td><td data-lang="en">Starting-vector proximity is decisive for convergence</td>
       </tr>
       <tr>
-        <td>Konditionszahl κ</td>
+        <td data-lang="de">Konditionszahl κ</td><td data-lang="en">Condition number κ</td>
         <td>10⁶ – 10²⁵</td>
-        <td>Hohe κ → Newton instabil → LM oder Homotopie</td>
+        <td data-lang="de">Hohe κ → Newton instabil → LM oder Homotopie</td><td data-lang="en">High κ → Newton unstable → LM or homotopy</td>
       </tr>
       <tr>
-        <td>Physikalische Bounds</td>
+        <td data-lang="de">Physikalische Bounds</td><td data-lang="en">Physical bounds</td>
         <td>T ≥ 1K, p ≥ 1Pa</td>
-        <td>PhysicalProjector nach jedem Update nötig</td>
+        <td data-lang="de">PhysicalProjector nach jedem Update nötig</td><td data-lang="en">PhysicalProjector needed after every update</td>
       </tr>
       <tr>
-        <td>Jacobi-Besetzung</td>
-        <td>Dünn besetzt (sparse)</td>
-        <td>Sparse-LU bis zu 10× schneller als dichte LU</td>
+        <td data-lang="de">Jacobi-Besetzung</td><td data-lang="en">Jacobian fill</td>
+        <td data-lang="de">Dünn besetzt (sparse)</td><td data-lang="en">Sparsely populated</td>
+        <td data-lang="de">Sparse-LU bis zu 10× schneller als dichte LU</td><td data-lang="en">Sparse LU up to 10× faster than dense LU</td>
       </tr>
       <tr>
-        <td>Ableitungen</td>
-        <td>Symbolisch (CASprzak)</td>
-        <td>Exakt, kein Finite-Differenzen-Fehler</td>
+        <td data-lang="de">Ableitungen</td><td data-lang="en">Derivatives</td>
+        <td data-lang="de">Symbolisch (CASprzak)</td><td data-lang="en">Symbolic (CASprzak)</td>
+        <td data-lang="de">Exakt, kein Finite-Differenzen-Fehler</td><td data-lang="en">Exact, no finite-difference error</td>
       </tr>
     </tbody>
   </table>
@@ -108,9 +406,9 @@
 
 <!-- 2. Klassifikation -->
 <section id="klassifikation">
-  <h2>Klassifikation der Verfahren</h2>
+  <h2 data-lang="de">Klassifikation der Verfahren</h2><h2 data-lang="en">Classification of Methods</h2>
 
-  <div class="flowchart">
+  <div data-lang="de"><div class="flowchart">
     <svg width="100%" viewBox="0 0 800 380" xmlns="http://www.w3.org/2000/svg"
          font-family="IBM Plex Sans, sans-serif" font-size="12">
 
@@ -205,226 +503,388 @@
       <text x="720" y="243" text-anchor="middle" fill="#f0a030" font-size="10">○ nicht impl.</text>
 
     </svg>
-  </div>
+  </div></div><div data-lang="en"><div class="flowchart">
+    <svg width="100%" viewBox="0 0 800 380" xmlns="http://www.w3.org/2000/svg"
+         font-family="IBM Plex Sans, sans-serif" font-size="12">
+
+      <!-- Root -->
+      <rect x="300" y="10" width="200" height="40" rx="8"
+            fill="#1a1e25" stroke="#4a9eff" stroke-width="1.5"/>
+      <text x="400" y="35" text-anchor="middle" fill="#4a9eff" font-weight="600">Solve F(x) = 0</text>
+
+      <!-- Pfeile nach unten -->
+      <line x1="400" y1="50" x2="400" y2="78" stroke="#4a5568" stroke-width="1"/>
+
+      <!-- Hauptzweige -->
+      <line x1="150" y1="80" x2="650" y2="80" stroke="#2e3540" stroke-width="1"/>
+      <line x1="150" y1="80" x2="150" y2="108" stroke="#4a5568" stroke-width="1"/>
+      <line x1="400" y1="80" x2="400" y2="108" stroke="#4a5568" stroke-width="1"/>
+      <line x1="650" y1="80" x2="650" y2="108" stroke="#4a5568" stroke-width="1"/>
+
+      <!-- Kategorie 1: Newton-type -->
+      <rect x="50" y="110" width="200" height="40" rx="6"
+            fill="#13161b" stroke="#a78bfa" stroke-width="1.5"/>
+      <text x="150" y="135" text-anchor="middle" fill="#a78bfa">Newton-type</text>
+
+      <!-- Kategorie 2: Quasi-Newton -->
+      <rect x="300" y="110" width="200" height="40" rx="6"
+            fill="#13161b" stroke="#4a9eff" stroke-width="1.5"/>
+      <text x="400" y="135" text-anchor="middle" fill="#4a9eff">Quasi-Newton</text>
+
+      <!-- Kategorie 3: Globalization -->
+      <rect x="550" y="110" width="200" height="40" rx="6"
+            fill="#13161b" stroke="#3ecf8e" stroke-width="1.5"/>
+      <text x="650" y="135" text-anchor="middle" fill="#3ecf8e">Globalization</text>
+
+      <!-- Newton Untergruppen -->
+      <line x1="150" y1="150" x2="150" y2="178" stroke="#4a5568" stroke-width="1"/>
+      <line x1="80" y1="180" x2="220" y2="180" stroke="#2e3540" stroke-width="1"/>
+      <line x1="80" y1="180" x2="80" y2="208" stroke="#4a5568" stroke-width="1"/>
+      <line x1="220" y1="180" x2="220" y2="208" stroke="#4a5568" stroke-width="1"/>
+
+      <rect x="20" y="210" width="120" height="36" rx="4"
+            fill="#0f1520" stroke="#a78bfa" stroke-width="1"/>
+      <text x="80" y="230" text-anchor="middle" fill="#c8cdd6" font-size="11">Newton-Raphson</text>
+      <text x="80" y="243" text-anchor="middle" fill="#3ecf8e" font-size="10">✅ implemented</text>
+
+      <rect x="160" y="210" width="120" height="36" rx="4"
+            fill="#0f1520" stroke="#a78bfa" stroke-width="1"/>
+      <text x="220" y="230" text-anchor="middle" fill="#c8cdd6" font-size="11">LM / Gauss-Newton</text>
+      <text x="220" y="243" text-anchor="middle" fill="#3ecf8e" font-size="10">✅ implemented</text>
+
+      <!-- Newton Weitere -->
+      <line x1="150" y1="246" x2="150" y2="274" stroke="#4a5568" stroke-width="1"/>
+      <line x1="80" y1="276" x2="220" y2="276" stroke="#2e3540" stroke-width="1"/>
+      <line x1="80" y1="276" x2="80" y2="304" stroke="#4a5568" stroke-width="1"/>
+      <line x1="220" y1="276" x2="220" y2="304" stroke="#4a5568" stroke-width="1"/>
+
+      <rect x="20" y="306" width="120" height="36" rx="4"
+            fill="#0f1520" stroke="#2e3540" stroke-width="1"/>
+      <text x="80" y="326" text-anchor="middle" fill="#7a8496" font-size="11">Trust-Region</text>
+      <text x="80" y="339" text-anchor="middle" fill="#f0a030" font-size="10">○ not impl.</text>
+
+      <rect x="160" y="306" width="120" height="36" rx="4"
+            fill="#0f1520" stroke="#2e3540" stroke-width="1"/>
+      <text x="220" y="326" text-anchor="middle" fill="#7a8496" font-size="11">GMRES/Krylov</text>
+      <text x="220" y="339" text-anchor="middle" fill="#f0a030" font-size="10">○ not impl.</text>
+
+      <!-- Quasi-Newton -->
+      <line x1="400" y1="150" x2="400" y2="208" stroke="#4a5568" stroke-width="1"/>
+      <rect x="340" y="210" width="120" height="36" rx="4"
+            fill="#0f1520" stroke="#4a9eff" stroke-width="1"/>
+      <text x="400" y="230" text-anchor="middle" fill="#c8cdd6" font-size="11">Broyden</text>
+      <text x="400" y="243" text-anchor="middle" fill="#3ecf8e" font-size="10">✅ implemented</text>
+
+      <line x1="400" y1="246" x2="400" y2="304" stroke="#4a5568" stroke-width="1"/>
+      <rect x="340" y="306" width="120" height="36" rx="4"
+            fill="#0f1520" stroke="#2e3540" stroke-width="1"/>
+      <text x="400" y="326" text-anchor="middle" fill="#7a8496" font-size="11">Anderson Acc.</text>
+      <text x="400" y="339" text-anchor="middle" fill="#f0a030" font-size="10">○ not impl.</text>
+
+      <!-- Globalization -->
+      <line x1="650" y1="150" x2="650" y2="178" stroke="#4a5568" stroke-width="1"/>
+      <line x1="590" y1="180" x2="710" y2="180" stroke="#2e3540" stroke-width="1"/>
+      <line x1="590" y1="180" x2="590" y2="208" stroke="#4a5568" stroke-width="1"/>
+      <line x1="710" y1="180" x2="710" y2="208" stroke="#4a5568" stroke-width="1"/>
+
+      <rect x="530" y="210" width="120" height="36" rx="4"
+            fill="#0f1520" stroke="#3ecf8e" stroke-width="1"/>
+      <text x="590" y="230" text-anchor="middle" fill="#c8cdd6" font-size="11">Homotopy</text>
+      <text x="590" y="243" text-anchor="middle" fill="#3ecf8e" font-size="10">✅ implemented</text>
+
+      <rect x="660" y="210" width="120" height="36" rx="4"
+            fill="#0f1520" stroke="#2e3540" stroke-width="1"/>
+      <text x="720" y="230" text-anchor="middle" fill="#7a8496" font-size="11">Fixed-point iter.</text>
+      <text x="720" y="243" text-anchor="middle" fill="#f0a030" font-size="10">○ not impl.</text>
+
+    </svg>
+  </div></div>
 </section>
 
 <!-- 3. Implementierte Verfahren -->
 <section id="implementiert">
-  <h2>Implementierte Verfahren</h2>
+  <h2 data-lang="de">Implementierte Verfahren</h2><h2 data-lang="en">Implemented Methods</h2>
 
-  <h3>1. Newton-Raphson (mit Varianten)</h3>
-  <p>
+  <h3 data-lang="de">1. Newton-Raphson (mit Varianten)</h3><h3 data-lang="en">1. Newton-Raphson (with Variants)</h3>
+  <p data-lang="de">
     Die Familie der Newton-Verfahren linearisiert F lokal durch die Jacobi-Matrix J
     und löst das entstehende lineare System. Unterschiede liegen in der Lösung
     des linearen Systems (dicht vs. sparse) und der Schrittdämpfung.
+  </p><p data-lang="en">
+    The Newton family linearizes F locally via the Jacobian matrix J and solves
+    the resulting linear system. Variants differ in how the linear system is
+    solved (dense vs. sparse) and in step damping.
   </p>
 
   <div class="tbl-wrap">
   <table>
-    <thead><tr><th>Variante</th><th>Lineares System</th><th>Dämpfung</th><th>Stärke</th></tr></thead>
+    <thead><tr><th data-lang="de">Variante</th><th data-lang="en">Variant</th><th data-lang="de">Lineares System</th><th data-lang="en">Linear System</th><th data-lang="de">Dämpfung</th><th data-lang="en">Damping</th><th data-lang="de">Stärke</th><th data-lang="en">Strength</th></tr></thead>
     <tbody>
       <tr>
         <td><code>NEWTON_ARMIJO</code></td>
-        <td>Dichte LU (MatrixSimple)</td>
-        <td>Armijo-Backtracking</td>
-        <td>Robustheit bei nichtlinearen Systemen</td>
+        <td data-lang="de">Dichte LU (MatrixSimple)</td><td data-lang="en">Dense LU (MatrixSimple)</td>
+        <td data-lang="de">Armijo-Backtracking</td><td data-lang="en">Armijo backtracking</td>
+        <td data-lang="de">Robustheit bei nichtlinearen Systemen</td><td data-lang="en">Robustness on nonlinear systems</td>
       </tr>
       <tr>
         <td><code>NEWTON_SPARSE</code></td>
-        <td>GSPAR Sparse-LU</td>
-        <td>Keine</td>
-        <td>Geschwindigkeit bei großen Systemen</td>
+        <td data-lang="de">GSPAR Sparse-LU</td><td data-lang="en">GSPAR sparse LU</td>
+        <td data-lang="de">Keine</td><td data-lang="en">None</td>
+        <td data-lang="de">Geschwindigkeit bei großen Systemen</td><td data-lang="en">Speed on large systems</td>
       </tr>
       <tr>
         <td><code>NEWTON_SPARSE_ARMIJO</code></td>
         <td>GSPAR Sparse-LU</td>
         <td>Armijo-Backtracking</td>
-        <td>Beste Kombination: schnell + robust</td>
+        <td data-lang="de">Beste Kombination: schnell + robust</td><td data-lang="en">Best combination: fast + robust</td>
       </tr>
     </tbody>
   </table>
   </div>
 
-  <h3>2. Levenberg-Marquardt</h3>
-  <p>
+  <h3 data-lang="de">2. Levenberg-Marquardt</h3><h3 data-lang="en">2. Levenberg-Marquardt</h3>
+  <p data-lang="de">
     LM kombiniert Newton-Raphson mit Gradientenabstieg über einen adaptiven
     Dämpfungsparameter λ. Bei großem λ verhält sich LM wie Gradientenabstieg
     (robust, langsam), bei kleinem λ wie Newton (schnell, lokal). Besonders
     geeignet für schlecht konditionierte Systeme.
+  </p><p data-lang="en">
+    LM combines Newton-Raphson with gradient descent via an adaptive damping
+    parameter λ. For large λ, LM behaves like gradient descent (robust, slow);
+    for small λ, like Newton (fast, local). Especially well-suited for
+    ill-conditioned systems.
   </p>
 
   <div class="math-block">
-    <div class="eq"><span class="hi">LM-System:</span>  (JᵀJ + λI) · Δx = −Jᵀ F(x)</div>
-    <div class="eq"><span class="cmt">// λ groß → Gradientenabstieg (stabiler)</span></div>
-    <div class="eq"><span class="cmt">// λ klein → Newton-Schritt (schneller)</span></div>
-    <div class="eq"><span class="cmt">// λ wird adaptiv nach Fortschritt angepasst</span></div>
+    <div class="eq"><span class="hi" data-lang="de">LM-System:</span><span class="hi" data-lang="en">LM system:</span>  (JᵀJ + λI) · Δx = −Jᵀ F(x)</div>
+    <div class="eq"><span class="cmt" data-lang="de">// λ groß → Gradientenabstieg (stabiler)</span><span class="cmt" data-lang="en">// λ large → gradient descent (more stable)</span></div>
+    <div class="eq"><span class="cmt" data-lang="de">// λ klein → Newton-Schritt (schneller)</span><span class="cmt" data-lang="en">// λ small → Newton step (faster)</span></div>
+    <div class="eq"><span class="cmt" data-lang="de">// λ wird adaptiv nach Fortschritt angepasst</span><span class="cmt" data-lang="en">// λ is adapted based on progress</span></div>
   </div>
 
-  <h3>3. Broyden Quasi-Newton</h3>
-  <p>
+  <h3 data-lang="de">3. Broyden Quasi-Newton</h3><h3 data-lang="en">3. Broyden Quasi-Newton</h3>
+  <p data-lang="de">
     Broyden aktualisiert die Jacobi-Approximation durch einen Rang-1-Update
     statt sie neu aufzubauen. Das spart Rechenzeit pro Iteration — besonders
     vorteilhaft wenn die Jacobi-Berechnung teuer ist. Zwei Varianten:
     mit dichter und mit GSPAR Sparse-LU.
+  </p><p data-lang="en">
+    Broyden updates the Jacobian approximation via a rank-1 update instead
+    of rebuilding it. This saves computation per iteration — especially
+    advantageous when Jacobian assembly is expensive. Two variants:
+    with dense and with GSPAR sparse LU.
   </p>
 
   <div class="math-block">
-    <div class="eq"><span class="hi">Broyden-Update:</span></div>
+    <div class="eq"><span class="hi" data-lang="de">Broyden-Update:</span><span class="hi" data-lang="en">Broyden update:</span></div>
     <div class="eq">  Jₖ₊₁ = Jₖ + (Δf − Jₖ·Δx) · ΔxᵀT / ||Δx||²</div>
-    <div class="eq"><span class="cmt">// Rang-1-Korrektur — O(n²) statt O(n³) für Neuaufbau</span></div>
+    <div class="eq"><span class="cmt" data-lang="de">// Rang-1-Korrektur — O(n²) statt O(n³) für Neuaufbau</span><span class="cmt" data-lang="en">// Rank-1 correction — O(n²) instead of O(n³) for full rebuild</span></div>
   </div>
 
-  <h3>4. Homotopie (Arc-Length Continuation)</h3>
-  <p>
+  <h3 data-lang="de">4. Homotopie (Arc-Length Continuation)</h3><h3 data-lang="en">4. Homotopy (Arc-Length Continuation)</h3>
+  <p data-lang="de">
     Homotopie löst nicht direkt F(x) = 0, sondern konstruiert einen glatten Pfad
     von einem einfachen Startproblem H(x,0) = 0 zum Zielproblem H(x,1) = F(x) = 0.
     Besonders geeignet wenn der Startvektor weit von der Lösung entfernt ist
     oder bei stark nichtlinearen Systemen.
+  </p><p data-lang="en">
+    Homotopy does not solve F(x) = 0 directly but constructs a smooth path
+    from a simple starting problem H(x,0) = 0 to the target H(x,1) = F(x) = 0.
+    Especially useful when the starting vector is far from the solution or
+    on strongly nonlinear systems.
   </p>
 
   <div class="math-block">
-    <div class="eq"><span class="hi">Homotopie-Funktion:</span></div>
+    <div class="eq"><span class="hi" data-lang="de">Homotopie-Funktion:</span><span class="hi" data-lang="en">Homotopy function:</span></div>
     <div class="eq">  H(x, t) = t·F(x) + (1−t)·F₀(x) = 0,   t ∈ [0, 1]</div>
-    <div class="eq"><span class="cmt">// t=0: einfaches Startproblem (Startwerte)</span></div>
-    <div class="eq"><span class="cmt">// t=1: Original-Problem F(x) = 0</span></div>
-    <div class="eq"><span class="cmt">// Arc-Length: Pfad wird nach Bogenlänge parametrisiert</span></div>
+    <div class="eq"><span class="cmt" data-lang="de">// t=0: einfaches Startproblem (Startwerte)</span><span class="cmt" data-lang="en">// t=0: simple starting problem (initial values)</span></div>
+    <div class="eq"><span class="cmt" data-lang="de">// t=1: Original-Problem F(x) = 0</span><span class="cmt" data-lang="en">// t=1: original problem F(x) = 0</span></div>
+    <div class="eq"><span class="cmt" data-lang="de">// Arc-Length: Pfad wird nach Bogenlänge parametrisiert</span><span class="cmt" data-lang="en">// Arc-length: path is parametrized by arc length</span></div>
   </div>
 </section>
 
 <!-- 4. Nicht implementierte Verfahren -->
 <section id="nicht-implementiert">
-  <h2>Weitere Verfahren (nicht implementiert)</h2>
+  <h2 data-lang="de">Weitere Verfahren (nicht implementiert)</h2><h2 data-lang="en">Other Methods (not implemented)</h2>
 
-  <div class="note blue">
+  <div class="note blue" data-lang="de">
     <strong>Hinweis:</strong> Die folgenden Verfahren sind für thermodynamische
     Gleichungssysteme prinzipiell geeignet. Sie sind in CMDSolver nicht implementiert,
     könnten aber für spezielle Anwendungsfälle relevant sein.
+  </div><div class="note blue" data-lang="en">
+    <strong>Note:</strong> The following methods are in principle suitable for
+    thermodynamic equation systems. They are not implemented in CMDSolver,
+    but could be relevant for special use cases.
   </div>
 
-  <h3>Trust-Region Methoden</h3>
-  <p>
+  <h3 data-lang="de">Trust-Region Methoden</h3><h3 data-lang="en">Trust-Region Methods</h3>
+  <p data-lang="de">
     Ähnlich wie LM, aber mit expliziter Schrittweitenkontrolle über einen
     "Vertrauensbereich" (Trust-Region) Δ. Der Newton-Schritt wird auf eine
     Kugel mit Radius Δ beschränkt. Δ wird adaptiv angepasst basierend auf
     dem Verhältnis von vorhergesagtem zu tatsächlichem Fortschritt.
+  </p><p data-lang="en">
+    Similar to LM but with explicit step-size control via a "trust region" Δ.
+    The Newton step is restricted to a ball of radius Δ. Δ is adapted based
+    on the ratio of predicted to actual progress.
   </p>
-  <p>
+  <p data-lang="de">
     <strong>Vorteil gegenüber LM:</strong> Geometrisch intuitiveres Modell,
     bessere theoretische Konvergenzeigenschaften. Standard in modernen
     Optimierungsbibliotheken (z.B. MINPACK, SciPy).
+  </p><p data-lang="en">
+    <strong>Advantage over LM:</strong> Geometrically more intuitive model,
+    better theoretical convergence properties. Standard in modern optimization
+    libraries (e.g., MINPACK, SciPy).
   </p>
 
-  <h3>Dogleg-Verfahren</h3>
-  <p>
+  <h3 data-lang="de">Dogleg-Verfahren</h3><h3 data-lang="en">Dogleg Method</h3>
+  <p data-lang="de">
     Kombination aus Newton-Schritt und Cauchy-Punkt (steilstem Abstieg) innerhalb
     der Trust-Region. Berechnet einen "geknickten" Pfad (Dogleg) zwischen beiden.
     Effizienter als reines Trust-Region bei gut konditionierten Systemen.
+  </p><p data-lang="en">
+    Combination of the Newton step and the Cauchy point (steepest descent)
+    inside the trust region. Computes a "bent" path (dogleg) between the two.
+    More efficient than pure trust-region on well-conditioned systems.
   </p>
 
-  <h3>GMRES / Krylov-Unterraum Methoden</h3>
-  <p>
+  <h3 data-lang="de">GMRES / Krylov-Unterraum Methoden</h3><h3 data-lang="en">GMRES / Krylov Subspace Methods</h3>
+  <p data-lang="de">
     Für sehr große Systeme (n > 10.000) ist selbst GSPAR Sparse-LU zu teuer.
     GMRES (Generalized Minimal Residual) löst das lineare System J·Δx = −F
     iterativ ohne die Jacobi explizit zu faktorisieren. Benötigt nur
     Matrix-Vektor-Produkte J·v.
+  </p><p data-lang="en">
+    For very large systems (n > 10,000), even GSPAR sparse LU becomes too
+    expensive. GMRES (Generalized Minimal Residual) solves the linear system
+    J·Δx = −F iteratively without explicitly factorizing the Jacobian. It
+    only requires matrix-vector products J·v.
   </p>
-  <p>
+  <p data-lang="de">
     <strong>Relevanz für CMDSolver:</strong> Bei den aktuellen Modellgrößen
     (bis ~500 Gleichungen) nicht nötig. Interessant wenn Netzwerke aus vielen
     Modulen zu sehr großen Systemen zusammengesetzt werden.
+  </p><p data-lang="en">
+    <strong>Relevance for CMDSolver:</strong> Not needed at current model
+    sizes (up to ~500 equations). Becomes interesting when networks of many
+    modules combine into very large systems.
   </p>
 
-  <h3>Anderson Acceleration</h3>
-  <p>
+  <h3 data-lang="de">Anderson Acceleration</h3><h3 data-lang="en">Anderson Acceleration</h3>
+  <p data-lang="de">
     Beschleunigt Fixpunkt-Iterationen x ← G(x) durch Extrapolation aus mehreren
     vergangenen Iterationswerten. Besonders effektiv bei Systemen die natürlich
     als Fixpunkt-Iteration formuliert werden können — z.B. bei schwacher Kopplung
     zwischen Modulen in einer modularen Stream-Architektur.
+  </p><p data-lang="en">
+    Accelerates fixed-point iterations x ← G(x) by extrapolating from several
+    past iteration values. Especially effective for systems that can be naturally
+    formulated as a fixed-point iteration — e.g., when there is weak coupling
+    between modules in a modular stream architecture.
   </p>
 
-  <h3>Fixpunkt-Iteration (Gauss-Seidel für Gleichungssysteme)</h3>
-  <p>
+  <h3 data-lang="de">Fixpunkt-Iteration (Gauss-Seidel für Gleichungssysteme)</h3><h3 data-lang="en">Fixed-Point Iteration (Gauss-Seidel for Equation Systems)</h3>
+  <p data-lang="de">
     Löst jede Gleichung sequenziell nach einer Variablen auf und iteriert.
     Konvergiert nur bei kontraktiven Abbildungen — für allgemeine
     thermodynamische Systeme meist nicht geeignet. War der klassische Ansatz
     in frühen Prozesssimulatoren (ASPEN, gPROMS vor Version 3).
+  </p><p data-lang="en">
+    Solves each equation sequentially for one variable and iterates.
+    Converges only for contractive mappings — usually unsuitable for general
+    thermodynamic systems. Was the classical approach in early process
+    simulators (ASPEN, gPROMS before version 3).
   </p>
 
-  <h3>Globales Newton mit Regularisierung</h3>
-  <p>
+  <h3 data-lang="de">Globales Newton mit Regularisierung</h3><h3 data-lang="en">Global Newton with Regularization</h3>
+  <p data-lang="de">
     Fügt der Jacobi eine Regularisierungsmatrix hinzu: J_reg = J + εI.
     Einfacher als LM aber weniger theoretisch fundiert. Kann bei sehr
     schlecht konditionierten Systemen als erster Schritt vor LM nützlich sein.
+  </p><p data-lang="en">
+    Adds a regularization matrix to the Jacobian: J_reg = J + εI.
+    Simpler than LM but less theoretically grounded. Can be useful as a
+    first step before LM on very ill-conditioned systems.
   </p>
 
-  <h3>Parallele / Verteilte Newton-Verfahren</h3>
-  <p>
+  <h3 data-lang="de">Parallele / Verteilte Newton-Verfahren</h3><h3 data-lang="en">Parallel / Distributed Newton Methods</h3>
+  <p data-lang="de">
     Für zukünftige modulare Architekturen: Wenn das System in Teilsysteme
     (Mixer, Jetpipe, Nozzle) aufgeteilt wird, kann jedes Teilsystem parallel
     gelöst werden. Block-Newton-Verfahren lösen die Teilsysteme und iterieren
     über die Kopplung (Stream-Variablen). Relevant für die geplante
     Stream-Architektur.
+  </p><p data-lang="en">
+    For future modular architectures: when the system is split into subsystems
+    (mixer, jet pipe, nozzle), each subsystem can be solved in parallel.
+    Block-Newton methods solve the subsystems and iterate over the coupling
+    (stream variables). Relevant for the planned stream architecture.
   </p>
 </section>
 
 <!-- 5. Verfahrenswahl -->
 <section id="wahl">
-  <h2>Leitfaden zur Verfahrenswahl</h2>
+  <h2 data-lang="de">Leitfaden zur Verfahrenswahl</h2><h2 data-lang="en">Method Selection Guide</h2>
 
   <div class="tbl-wrap">
   <table>
     <thead>
-      <tr><th>Situation</th><th>Empfehlung</th><th>Begründung</th></tr>
+      <tr><th data-lang="de">Situation</th><th data-lang="en">Situation</th><th data-lang="de">Empfehlung</th><th data-lang="en">Recommendation</th><th data-lang="de">Begründung</th><th data-lang="en">Reason</th></tr>
     </thead>
     <tbody>
       <tr>
-        <td>Standardfall, guter Startvektor</td>
+        <td data-lang="de">Standardfall, guter Startvektor</td><td data-lang="en">Default case, good starting vector</td>
         <td><span class="badge b-ok">NEWTON_SPARSE_ARMIJO</span></td>
-        <td>Beste Kombination aus Geschwindigkeit und Robustheit</td>
+        <td data-lang="de">Beste Kombination aus Geschwindigkeit und Robustheit</td><td data-lang="en">Best combination of speed and robustness</td>
       </tr>
       <tr>
-        <td>Kleines System (n &lt; 50)</td>
+        <td data-lang="de">Kleines System (n &lt; 50)</td><td data-lang="en">Small system (n &lt; 50)</td>
         <td><span class="badge b-info">NEWTON_ARMIJO</span></td>
-        <td>Dichte LU schnell genug, einfache Implementierung</td>
+        <td data-lang="de">Dichte LU schnell genug, einfache Implementierung</td><td data-lang="en">Dense LU fast enough, simple implementation</td>
       </tr>
       <tr>
-        <td>Schlechte Kondition (κ &gt; 10¹²)</td>
+        <td data-lang="de">Schlechte Kondition (κ &gt; 10¹²)</td><td data-lang="en">Poor conditioning (κ &gt; 10¹²)</td>
         <td><span class="badge b-warn">LEVENBERG_MARQUARDT</span></td>
-        <td>Robuster gegenüber nahezu singulärer Jacobi</td>
+        <td data-lang="de">Robuster gegenüber nahezu singulärer Jacobi</td><td data-lang="en">More robust against near-singular Jacobian</td>
       </tr>
       <tr>
-        <td>Schlechter Startvektor / weit von Lösung</td>
+        <td data-lang="de">Schlechter Startvektor / weit von Lösung</td><td data-lang="en">Bad starting vector / far from solution</td>
         <td><span class="badge b-warn">HOMOTOPY</span></td>
-        <td>Verfolgt Lösungspfad von einfachem Start</td>
+        <td data-lang="de">Verfolgt Lösungspfad von einfachem Start</td><td data-lang="en">Tracks the solution path from a simple start</td>
       </tr>
       <tr>
-        <td>Viele ähnliche Runs (Parameterstudie)</td>
+        <td data-lang="de">Viele ähnliche Runs (Parameterstudie)</td><td data-lang="en">Many similar runs (parameter study)</td>
         <td><span class="badge b-info">BROYDEN_SPARSE</span></td>
-        <td>Jacobi-Update günstiger als Neuberechnung</td>
+        <td data-lang="de">Jacobi-Update günstiger als Neuberechnung</td><td data-lang="en">Jacobian update cheaper than recomputation</td>
       </tr>
       <tr>
-        <td>Debugging / Analyse</td>
-        <td><span class="badge b-info">-TEST Modus</span></td>
-        <td>Alle 7 Solver vergleichen</td>
+        <td data-lang="de">Debugging / Analyse</td><td data-lang="en">Debugging / analysis</td>
+        <td><span class="badge b-info" data-lang="de">-TEST Modus</span><span class="badge b-info" data-lang="en">-TEST Mode</span></td>
+        <td data-lang="de">Alle 7 Solver vergleichen</td><td data-lang="en">Compare all 7 solvers</td>
       </tr>
     </tbody>
   </table>
   </div>
 
-  <div class="note green">
+  <div class="note green" data-lang="de">
     <strong>Faustregel:</strong> Beginne immer mit <code>NEWTON_SPARSE_ARMIJO</code>.
     Wechsle zu LM wenn κ-Warnungen auftreten. Verwende Homotopie nur wenn
     Newton und LM nicht konvergieren — Homotopie ist langsamer aber robuster.
+  </div><div class="note green" data-lang="en">
+    <strong>Rule of thumb:</strong> Always start with <code>NEWTON_SPARSE_ARMIJO</code>.
+    Switch to LM when κ warnings appear. Use homotopy only when Newton and LM
+    fail to converge — homotopy is slower but more robust.
   </div>
 </section>
 
 </main>
 
 <footer>
-  <span>CMDSolver Docs · Mathematischer Überblick · v2.5</span>
+  <span data-lang="de">CMDSolver Docs · Mathematischer Überblick · v2.5</span><span data-lang="en">CMDSolver Docs · Mathematical Overview · v2.5</span>
   <span>
-    <a href="index.html">← Übersicht</a> &nbsp;|&nbsp;
-    <a href="solver_comparison.html">Vergleichsmatrix →</a>
+    <a href="index.html" data-lang="de">← Übersicht</a><a href="index.html" data-lang="en">← Overview</a> &nbsp;|&nbsp;
+    <a href="solver_comparison.html" data-lang="de">Vergleichsmatrix →</a><a href="solver_comparison.html" data-lang="en">Comparison Matrix →</a>
   </span>
 </footer>
 

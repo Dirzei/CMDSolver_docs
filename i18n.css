@@ -1,0 +1,102 @@
+/* ╔══════════════════════════════════════════════════════════════════╗
+   ║  CMDSolver Documentation — i18n & Sticky Header                  ║
+   ║  Wird von jeder Doku-Seite als zusätzliches Stylesheet geladen.  ║
+   ║  Wirkt zusätzlich zum Inline-CSS bzw. zur docs.css.              ║
+   ╚══════════════════════════════════════════════════════════════════╝ */
+
+
+/* ── Sticky Header mit Akzent-Glow ───────────────────────────────── */
+.doc-header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: var(--bg);
+  transition: border-bottom-color .2s ease;
+}
+
+/* Scrim-Pseudo-Element direkt unterhalb des Headers.
+   Akzent-Variante: blauer Glow statt schwarzer Schatten —
+   wirkt auf dunklen Themes weniger wie "Schatten",
+   mehr wie "Header gehört zur Marke und glüht leicht nach". */
+.doc-header::after {
+  content: '';
+  position: absolute;
+  left: 0; right: 0;
+  top: 100%;
+  height: 20px;
+  pointer-events: none;
+  background: linear-gradient(to bottom,
+    rgba(74, 158, 255, .18) 0%,
+    rgba(74, 158, 255, 0)   100%);
+  opacity: 0;
+  transition: opacity .2s ease;
+}
+.doc-header.scrolled {
+  border-bottom-color: rgba(74, 158, 255, .25);
+}
+.doc-header.scrolled::after {
+  opacity: 1;
+}
+
+/* Sentinel: 1 px hohes unsichtbares Element direkt vor dem Header.
+   Sobald es aus dem Viewport scrollt, weiß der IntersectionObserver:
+   der Header klebt jetzt → .scrolled-Klasse setzen. */
+.header-sentinel { height: 1px; }
+
+
+/* ── Sprachschalter ──────────────────────────────────────────────── */
+.lang-switch {
+  display: flex; align-items: center; gap: .4rem;
+  font-family: var(--mono); font-size: 11px;
+}
+.lang-btn {
+  background: none;
+  border: 1px solid var(--border2);
+  color: var(--text3);
+  padding: 3px 9px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: .06em;
+  transition: all .15s;
+}
+.lang-btn:hover { border-color: var(--accent); color: var(--accent); }
+.lang-btn.active {
+  background: rgba(74, 158, 255, .12);
+  border-color: var(--accent);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+/* Header-rechte Seite: Schalter + Badge nebeneinander */
+.doc-header-right {
+  display: flex; align-items: center; gap: 1rem;
+}
+
+
+/* ── i18n Sichtbarkeitsregeln ────────────────────────────────────────
+   Element-spezifische Hide-Regeln. <button data-lang=…> wird NICHT
+   getroffen, weil button hier nicht aufgeführt ist.
+   Solange noch keine data-lang-Attribute im Inhalt stehen, hat das
+   Hinzufügen einer Sprachklasse keinen Effekt — die Seite bleibt
+   wie bisher in Deutsch sichtbar. */
+span[data-lang],
+div[data-lang],
+section[data-lang],
+p[data-lang],
+h1[data-lang], h2[data-lang], h3[data-lang], h4[data-lang],
+li[data-lang],
+td[data-lang], th[data-lang]   { display: none; }
+
+body.lang-de span[data-lang="de"], body.lang-en span[data-lang="en"] { display: inline; }
+body.lang-de div[data-lang="de"],  body.lang-en div[data-lang="en"]  { display: block; }
+body.lang-de section[data-lang="de"], body.lang-en section[data-lang="en"] { display: block; }
+body.lang-de p[data-lang="de"],    body.lang-en p[data-lang="en"]    { display: block; }
+body.lang-de h1[data-lang="de"],   body.lang-en h1[data-lang="en"],
+body.lang-de h2[data-lang="de"],   body.lang-en h2[data-lang="en"],
+body.lang-de h3[data-lang="de"],   body.lang-en h3[data-lang="en"],
+body.lang-de h4[data-lang="de"],   body.lang-en h4[data-lang="en"]   { display: block; }
+body.lang-de li[data-lang="de"],   body.lang-en li[data-lang="en"]   { display: list-item; }
+body.lang-de td[data-lang="de"],   body.lang-en td[data-lang="en"],
+body.lang-de th[data-lang="de"],   body.lang-en th[data-lang="en"]   { display: table-cell; }

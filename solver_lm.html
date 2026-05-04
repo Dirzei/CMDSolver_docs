@@ -4,95 +4,410 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>CMDSolver Docs — Levenberg-Marquardt</title>
-<link rel="stylesheet" href="docs.css">
+<style>
+/* CMDSolver Documentation — Shared Stylesheet */
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;1,400&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap');
+
+:root {
+  --bg:      #0d0f12;
+  --bg2:     #13161b;
+  --bg3:     #1a1e25;
+  --bg4:     #20252f;
+  --border:  #252a33;
+  --border2: #2e3540;
+  --text:    #c8cdd6;
+  --text2:   #7a8496;
+  --text3:   #4a5568;
+  --accent:  #4a9eff;
+  --ok:      #3ecf8e;
+  --warn:    #f0a030;
+  --err:     #ff5c5c;
+  --purple:  #a78bfa;
+  --teal:    #2dd4bf;
+  --mono:    'IBM Plex Mono', monospace;
+  --sans:    'IBM Plex Sans', sans-serif;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: var(--sans);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 13.5px;
+  line-height: 1.75;
+}
+
+/* ── Header ── */
+.doc-header {
+  border-bottom: 1px solid var(--border);
+  padding: 1.2rem 3rem;
+  display: flex; align-items: center;
+  justify-content: space-between; flex-wrap: wrap; gap: 1rem;
+}
+
+.breadcrumb {
+  font-family: var(--mono); font-size: 11px; color: var(--text3);
+  letter-spacing: .08em; text-transform: uppercase;
+  display: flex; align-items: center; gap: .5rem;
+}
+.breadcrumb a { color: var(--accent); text-decoration: none; }
+.breadcrumb span { color: var(--text3); }
+
+.doc-badge {
+  font-family: var(--mono); font-size: 11px;
+  padding: 3px 10px; border-radius: 4px;
+}
+.doc-badge.solver {
+  background: rgba(74,158,255,.1); border: 1px solid rgba(74,158,255,.25);
+  color: var(--accent);
+}
+.doc-badge.overview {
+  background: rgba(167,139,250,.1); border: 1px solid rgba(167,139,250,.25);
+  color: var(--purple);
+}
+.doc-badge.comparison {
+  background: rgba(62,207,142,.1); border: 1px solid rgba(62,207,142,.25);
+  color: var(--ok);
+}
+
+/* ── Hero ── */
+.hero {
+  padding: 2.5rem 3rem 2rem;
+  border-bottom: 1px solid var(--border);
+  background: linear-gradient(135deg, var(--bg) 0%, #0f1520 100%);
+}
+.hero-sub {
+  font-family: var(--mono); font-size: 11px; color: var(--text3);
+  letter-spacing: .15em; text-transform: uppercase; margin-bottom: .5rem;
+}
+h1 {
+  font-size: 28px; font-weight: 600; color: #e8ecf4;
+  letter-spacing: -.03em; margin-bottom: .5rem; line-height: 1.2;
+}
+.tagline {
+  font-size: 14px; color: var(--text2); margin-bottom: 1.5rem;
+  max-width: 680px;
+}
+.hero-stats { display: flex; gap: 2rem; flex-wrap: wrap; }
+.stat { display: flex; flex-direction: column; gap: .2rem; }
+.stat-val {
+  font-family: var(--mono); font-size: 18px; font-weight: 500; color: var(--ok);
+}
+.stat-lbl {
+  font-size: 11px; color: var(--text3);
+  text-transform: uppercase; letter-spacing: .08em;
+}
+
+/* ── Nav ── */
+nav {
+  position: sticky; top: 0; z-index: 10;
+  background: rgba(13,15,18,.95); backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--border);
+  padding: .6rem 3rem;
+  display: flex; gap: 1.5rem; flex-wrap: wrap;
+}
+nav a {
+  font-family: var(--mono); font-size: 11px; color: var(--text3);
+  text-decoration: none; letter-spacing: .08em;
+  text-transform: uppercase; transition: color .15s;
+}
+nav a:hover { color: var(--accent); }
+
+/* ── Main ── */
+main { padding: 2rem 3rem 4rem; max-width: 1040px; }
+
+section { margin-bottom: 3.5rem; scroll-margin-top: 3rem; }
+
+section > h2 {
+  font-size: 12px; font-family: var(--mono);
+  letter-spacing: .12em; text-transform: uppercase;
+  color: var(--text3); margin-bottom: 1.4rem;
+  padding-bottom: .5rem; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: .6rem;
+}
+section > h2::before {
+  content: ''; display: inline-block;
+  width: 8px; height: 8px; border-radius: 50%; background: var(--accent);
+}
+
+h3 { font-size: 14px; font-weight: 500; color: #e8ecf4; margin: 1.6rem 0 .6rem; }
+h4 { font-size: 13px; font-weight: 500; color: var(--text2); margin: 1.2rem 0 .4rem; }
+
+p { color: var(--text); margin-bottom: .9rem; max-width: 780px; }
+
+/* ── Math ── */
+.math-block {
+  background: var(--bg3); border: 1px solid var(--border);
+  border-left: 3px solid var(--purple);
+  border-radius: 6px; padding: 1.2rem 1.5rem;
+  margin: 1rem 0 1.2rem; font-family: var(--mono);
+  font-size: 13px; line-height: 2.1; white-space: pre;
+}
+.math-block .eq  { color: #e8ecf4; }
+.math-block .cmt { color: var(--text3); font-style: italic; }
+.math-block .hi  { color: var(--teal); }
+.math-block .hi2 { color: var(--warn); }
+
+/* ── Notes ── */
+.note {
+  border-radius: 6px; padding: .85rem 1.1rem;
+  font-size: 13px; line-height: 1.7; margin-bottom: 1.2rem;
+}
+.note.blue   { background: rgba(74,158,255,.06);  border-left: 3px solid var(--accent); }
+.note.green  { background: rgba(62,207,142,.06);  border-left: 3px solid var(--ok); }
+.note.amber  { background: rgba(240,160,48,.06);  border-left: 3px solid var(--warn); }
+.note.red    { background: rgba(255,92,92,.06);   border-left: 3px solid var(--err); }
+.note.purple { background: rgba(167,139,250,.06); border-left: 3px solid var(--purple); }
+.note strong { color: #e8ecf4; }
+
+/* ── Code ── */
+code {
+  font-family: var(--mono); font-size: 11.5px;
+  background: rgba(255,255,255,.05); padding: 1px 5px;
+  border-radius: 3px; color: #a8c8f0;
+}
+pre {
+  font-family: var(--mono); font-size: 12px;
+  background: var(--bg3); border: 1px solid var(--border);
+  border-radius: 8px; padding: 1rem 1.2rem;
+  overflow-x: auto; line-height: 1.7; margin-bottom: 1rem; color: #c8cdd6;
+}
+.kw  { color: var(--purple); }
+.cmt { color: var(--text3); font-style: italic; }
+.fn  { color: var(--teal); }
+.num { color: var(--warn); }
+.str { color: var(--ok); }
+
+/* ── Tables ── */
+.tbl-wrap {
+  overflow-x: auto; border-radius: 8px;
+  border: 1px solid var(--border); margin-bottom: 1.5rem;
+}
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+thead th {
+  background: var(--bg3); padding: 9px 14px; text-align: left;
+  font-weight: 500; font-size: 11px; letter-spacing: .06em;
+  text-transform: uppercase; color: var(--text2);
+  border-bottom: 1px solid var(--border2); white-space: nowrap;
+}
+tbody tr { border-bottom: 1px solid var(--border); transition: background .1s; }
+tbody tr:last-child { border-bottom: none; }
+tbody tr:hover { background: var(--bg3); }
+td { padding: 9px 14px; vertical-align: top; line-height: 1.6; }
+td.center { text-align: center; }
+
+/* ── Badges ── */
+.badge {
+  display: inline-block; font-size: 11px; padding: 2px 9px;
+  border-radius: 12px; font-family: var(--mono); white-space: nowrap;
+}
+.b-ok   { background: rgba(62,207,142,.1);  color: var(--ok);     border: 1px solid rgba(62,207,142,.25); }
+.b-warn { background: rgba(240,160,48,.1);  color: var(--warn);   border: 1px solid rgba(240,160,48,.25); }
+.b-err  { background: rgba(255,92,92,.1);   color: var(--err);    border: 1px solid rgba(255,92,92,.25); }
+.b-info { background: rgba(74,158,255,.1);  color: var(--accent); border: 1px solid rgba(74,158,255,.25); }
+.b-na   { background: rgba(74,84,96,.1);    color: var(--text3);  border: 1px solid var(--border2); }
+
+/* ── Star rating ── */
+.stars { color: var(--warn); letter-spacing: -.05em; }
+.stars.dim { color: var(--border2); }
+
+/* ── File list ── */
+.file-list { list-style: none; }
+.file-list li {
+  display: flex; gap: 1rem; align-items: flex-start;
+  padding: .7rem 1rem; background: var(--bg2);
+  border: 1px solid var(--border); border-radius: 4px; margin-bottom: .4rem;
+}
+.file-icon {
+  font-family: var(--mono); font-size: 11px; color: var(--accent);
+  white-space: nowrap; margin-top: 2px; min-width: 50px;
+}
+.file-desc { font-size: 13px; color: var(--text2); }
+.file-desc strong { color: var(--text); display: block; margin-bottom: .2rem; }
+
+/* ── Flowchart ── */
+.flowchart {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 10px; padding: 1.5rem; margin: 1rem 0 1.5rem;
+  overflow-x: auto;
+}
+
+/* ── Footer ── */
+footer {
+  border-top: 1px solid var(--border); padding: 1.5rem 3rem;
+  font-family: var(--mono); font-size: 11px; color: var(--text3);
+  display: flex; justify-content: space-between; flex-wrap: wrap; gap: .5rem;
+}
+footer a { color: var(--accent); text-decoration: none; }
+
+/* ── Footnotes ── */
+.footnotes {
+  margin-top: 2rem; padding-top: 1.5rem;
+  border-top: 1px solid var(--border);
+  font-size: 12px; color: var(--text2);
+}
+.footnotes p { max-width: none; margin-bottom: .5rem; }
+sup { font-size: 10px; color: var(--accent); }
+
+/* Default: alle Sprachelemente sichtbar (kein JS-Flash) */
+/* Mit lang-Klasse auf body: nur die aktive Sprache sichtbar */
+
+/* Nur wenn body eine Sprachklasse hat, werden Elemente ausgeblendet */
+/* Sprach-Sichtbarkeit via class auf body */
+</style>
+<link rel="stylesheet" href="i18n.css">
 </head>
 <body>
+<script>
+(function(){
+  var stored = '';
+  try { stored = localStorage.getItem('cmdlang') || ''; } catch(e){}
+  var lang = stored || 'de';
 
+  function apply(l) {
+    lang = l;
+    try { localStorage.setItem('cmdlang', l); } catch(e){}
+    document.documentElement.lang = l;
+    var body = document.body;
+    body.classList.remove('lang-de','lang-en');
+    body.classList.add('lang-' + l);
+    document.querySelectorAll('.lang-btn').forEach(function(b){
+      b.classList.toggle('active', b.dataset.lang === l);
+    });
+  }
+
+  // Body-Klasse sofort setzen, damit data-lang-Elemente direkt korrekt
+  // sichtbar sind (kein Flash mit unsichtbarem Header-Inhalt).
+  apply(lang);
+  document.addEventListener('DOMContentLoaded', function(){
+    apply(lang); // erneut, damit jetzt auch die Buttons gestyled werden
+    document.querySelectorAll('.lang-btn').forEach(function(b){
+      b.addEventListener('click', function(){ apply(b.dataset.lang); });
+    });
+    // Sticky-Header Schatten via IntersectionObserver
+    var sentinel = document.querySelector('.header-sentinel');
+    var header   = document.querySelector('.doc-header');
+    if (sentinel && header && 'IntersectionObserver' in window) {
+      new IntersectionObserver(function(entries){
+        header.classList.toggle('scrolled', !entries[0].isIntersecting);
+      }).observe(sentinel);
+    }
+  });
+})();
+</script>
+
+
+
+
+<div class="header-sentinel"></div>
 <div class="doc-header">
   <div class="breadcrumb">
     <a href="index.html">CMDSolver Docs</a>
-    <span>›</span><span>Solver</span>
-    <span>›</span><span>Levenberg-Marquardt</span>
+    ›
+    ›
   </div>
-  <span class="doc-badge solver">SolverType.LEVENBERG_MARQUARDT</span>
-</div>
+  <div class="doc-header-right"><div class="lang-switch"><button class="lang-btn" data-lang="de">DE</button><button class="lang-btn" data-lang="en">EN</button></div><span class="doc-badge solver">SolverType.LEVENBERG_MARQUARDT</span></div></div>
 
 <div class="hero">
-  <div class="hero-sub">Solver 4 von 7</div>
-  <h1>Levenberg-Marquardt</h1>
-  <p class="tagline">
-    Der robusteste Solver für schlecht konditionierte Systeme. Kombiniert
-    Newton-Raphson mit Gradientenabstieg über einen adaptiven Dämpfungsparameter μ.
-    Konvergiert auch bei κ > 10²⁵.
-  </p>
+  <div class="hero-sub"><span data-lang="de">Solver 4 von 7</span><span data-lang="en">Solver 4 of 7</span></div>
+  <h1 data-lang="de">Levenberg-Marquardt</h1><h1 data-lang="en">Levenberg-Marquardt</h1>
+  <p class="tagline" data-lang="de">Robuster Solver für mäßig bis stark schlecht konditionierte Systeme. <strong>v2.12 Newton-Direkt-Hybrid</strong>: bei kleinem μ direkte <code>J⁻¹</code>-Inversion statt Normalengleichung — vermeidet kappa²-Verlust und konvergiert auf NozzleSystem (kappa=4.6×10¹¹) in 5 Iter mit <code>-SC:EQUILIBRATE</code>.</p>
+  <p class="tagline" data-lang="en">Robust solver for moderately to severely ill-conditioned systems. <strong>v2.12 Newton-direct hybrid</strong>: at small μ, direct <code>J⁻¹</code> inversion instead of the normal equation — avoids kappa² loss and converges on NozzleSystem (kappa=4.6×10¹¹) in 5 iterations with <code>-SC:EQUILIBRATE</code>.</p>
   <div class="hero-stats">
-    <div class="stat"><span class="stat-val">36</span><span class="stat-lbl">Iter (SimpleSystem)</span></div>
+    <div class="stat"><span class="stat-val">36</span><span class="stat-lbl" data-lang="de">Iter (SimpleSystem)</span><span class="stat-lbl" data-lang="en">Iter (SimpleSystem)</span></div>
     <div class="stat"><span class="stat-val">8.30e-09</span><span class="stat-lbl">fsum</span></div>
-    <div class="stat"><span class="stat-val">~61ms</span><span class="stat-lbl">Laufzeit</span></div>
-    <div class="stat"><span class="stat-val">Adaptiv μ</span><span class="stat-lbl">Dämpfung</span></div>
+    <div class="stat"><span class="stat-val">~61ms</span><span class="stat-lbl" data-lang="de">Laufzeit</span><span class="stat-lbl" data-lang="en">Runtime</span></div>
+    <div class="stat"><span class="stat-val">Adaptiv μ</span><span class="stat-lbl" data-lang="de">Dämpfung</span><span class="stat-lbl" data-lang="en">Damping</span></div>
   </div>
 </div>
 
 <nav>
-  <a href="#theorie">Theorie</a>
-  <a href="#flussdiagramm">Flussdiagramm</a>
-  <a href="#pseudocode">Pseudocode</a>
-  <a href="#dateien">Dateien</a>
-  <a href="#parameter">Parameter</a>
-  <a href="#verhalten">Verhalten</a>
-  <a href="#grenzen">Grenzen</a>
+  <a href="#theorie" data-lang="de">Theorie</a><a href="#theorie" data-lang="en">Theory</a>
+  <a href="#flussdiagramm" data-lang="de">Flussdiagramm</a><a href="#flussdiagramm" data-lang="en">Flow Chart</a>
+  <a href="#pseudocode" data-lang="de">Pseudocode</a><a href="#pseudocode" data-lang="en">Pseudocode</a>
+  <a href="#dateien" data-lang="de">Dateien</a><a href="#dateien" data-lang="en">Files</a>
+  <a href="#parameter" data-lang="de">Parameter</a><a href="#parameter" data-lang="en">Parameters</a>
+  <a href="#verhalten" data-lang="de">Verhalten</a><a href="#verhalten" data-lang="en">Behavior</a>
+  <a href="#grenzen" data-lang="de">Grenzen</a><a href="#grenzen" data-lang="en">Limits</a>
 </nav>
 
 <main>
 
 <section id="theorie">
-  <h2>Theoretischer Kontext</h2>
+  <h2 data-lang="de">Theoretischer Kontext</h2><h2 data-lang="en">Theoretical Context</h2>
 
-  <h3>Grundidee — allgemein verständlich</h3>
-  <p>
+  <h3 data-lang="de">Grundidee — allgemein verständlich</h3><h3 data-lang="en">Core idea — in plain terms</h3>
+  <p data-lang="de">
     Levenberg-Marquardt (LM) löst das Problem dass Newton-Raphson bei schlecht
     konditionierten Systemen versagt. Die Idee: Man fügt der Jacobi einen
     Dämpfungsterm μ·I hinzu. Das macht das System numerisch stabiler —
     ähnlich wie man eine wackelige Leiter durch einen Stützpunkt sichert.
+  </p><p data-lang="en">
+    Levenberg-Marquardt (LM) tackles the problem that Newton-Raphson fails on
+    ill-conditioned systems. The idea: add a damping term μ·I to the Jacobian.
+    This makes the system numerically more stable — like bracing a wobbly
+    ladder with an extra support.
   </p>
-  <p>
+  <p data-lang="de">
     Der Parameter μ wird adaptiv angepasst: Wenn der Schritt gut war (Residuum
     sinkt), wird μ verkleinert (→ Newton-artig, schneller). Wenn der Schritt
     schlecht war, wird μ vergrößert (→ Gradientenabstieg, stabiler).
+  </p><p data-lang="en">
+    The parameter μ is adapted dynamically: when a step is good (residual drops)
+    μ is reduced (→ more Newton-like, faster). When a step is bad, μ is
+    increased (→ gradient descent, more stable).
   </p>
 
   <div class="math-block">
-    <div class="eq"><span class="hi">LM-System:</span>  (JᵀJ + μ·I) · Δx = −Jᵀ·F(x)</div>
+    <div class="eq"><span class="hi" data-lang="de">LM-System:</span><span class="hi" data-lang="en">LM system:</span>  (JᵀJ + μ·I) · Δx = −Jᵀ·F(x)</div>
     <div class="eq"></div>
-    <div class="eq"><span class="hi">μ-Anpassung:</span></div>
-    <div class="eq">  Schritt gut  (||F(x+Δx)|| &lt; ||F(x)||) → μ ← μ / νdown  <span class="cmt">← schneller</span></div>
-    <div class="eq">  Schritt schlecht                           → μ ← μ · νup   <span class="cmt">← stabiler</span></div>
+    <div class="eq"><span class="hi" data-lang="de">μ-Anpassung:</span><span class="hi" data-lang="en">μ adaptation:</span></div>
+    <div class="eq" data-lang="de">  Schritt gut  (||F(x+Δx)|| &lt; ||F(x)||) → μ ← μ / νdown  <span class="cmt">← schneller</span></div><div class="eq" data-lang="en">  Good step  (||F(x+Δx)|| &lt; ||F(x)||) → μ ← μ / νdown  <span class="cmt">← faster</span></div>
+    <div class="eq" data-lang="de">  Schritt schlecht                           → μ ← μ · νup   <span class="cmt">← stabiler</span></div><div class="eq" data-lang="en">  Bad step                                   → μ ← μ · νup   <span class="cmt">← more stable</span></div>
     <div class="eq"></div>
-    <div class="eq"><span class="hi">Grenzfälle:</span></div>
-    <div class="eq">  μ → 0  :  reines Newton-Raphson (quadratisch, schnell)</div>
-    <div class="eq">  μ → ∞  :  skalierter Gradientenabstieg (robust, langsam)</div>
+    <div class="eq"><span class="hi" data-lang="de">Grenzfälle:</span><span class="hi" data-lang="en">Limit cases:</span></div>
+    <div class="eq" data-lang="de">  μ → 0  :  reines Newton-Raphson (quadratisch, schnell)</div><div class="eq" data-lang="en">  μ → 0  :  pure Newton-Raphson (quadratic, fast)</div>
+    <div class="eq" data-lang="de">  μ → ∞  :  skalierter Gradientenabstieg (robust, langsam)</div><div class="eq" data-lang="en">  μ → ∞  :  scaled gradient descent (robust, slow)</div>
   </div>
 
-  <h3>Warum JᵀJ + μI statt nur J?</h3>
-  <p>
+  <h3 data-lang="de">Warum JᵀJ + μI statt nur J?</h3><h3 data-lang="en">Why JᵀJ + μI instead of just J?</h3>
+  <p data-lang="de">
     Bei fast-singulärer Jacobi J sind kleine Singulärwerte nahe 0 — das erzeugt
     riesige Lösungskomponenten in Δx. JᵀJ + μI ist immer positiv definit
-    (alle Eigenwerte ≥ μ > 0) — das garantiert numerische Stabilität auch bei
-    κ → ∞. Der Preis: mehr Iterationen als reines Newton.
+    (alle Eigenwerte ≥ μ &gt; 0) — das garantiert <em>algebraische</em> Stabilität.
+    Numerisch ist die Wirkung allerdings begrenzt, weil <code>JᵀJ</code> die
+    Konditionszahl quadriert: <code>κ(JᵀJ) ≈ κ(J)²</code>. Bei κ(J) &gt; 10⁸
+    übersteigt das Maschinengenauigkeit. Der Preis ist also doppelt: mehr
+    Iterationen als Newton, plus engerer Konditionsbereich als die
+    bloße Algebra suggeriert.
+  </p><p data-lang="en">
+    For a near-singular Jacobian J, small singular values near 0 produce huge
+    components in Δx. JᵀJ + μI is always positive definite (all eigenvalues
+    ≥ μ &gt; 0) — guaranteeing <em>algebraic</em> stability. Numerically the
+    effect is limited though, because <code>JᵀJ</code> squares the condition
+    number: <code>κ(JᵀJ) ≈ κ(J)²</code>. At κ(J) &gt; 10⁸ this exceeds machine
+    precision. The price is therefore double: more iterations than Newton, and
+    a tighter conditioning regime than the bare algebra suggests.
   </p>
 
-  <h3>LM in CMDSolver — Implementierungsdetails</h3>
-  <p>
+  <h3 data-lang="de">LM in CMDSolver — Implementierungsdetails</h3><h3 data-lang="en">LM in CMDSolver — implementation details</h3>
+  <p data-lang="de">
     In CMDSolver verwendet LM die dichte <code>MatrixSimple</code> für die
     (JᵀJ + μI)-Zerlegung. μ wird beim ersten Schritt aus der Jacobi-Diagonale
     initialisiert (<code>μ = lmMuInit · maxDiag</code>) und danach adaptiv
     angepasst. Bei singulärer Matrix wird μ erhöht und der Schritt wiederholt.
+  </p><p data-lang="en">
+    In CMDSolver, LM uses the dense <code>MatrixSimple</code> for the
+    (JᵀJ + μI) factorization. μ is initialized from the Jacobian diagonal at
+    the first step (<code>μ = lmMuInit · maxDiag</code>) and adapted from then
+    on. If the matrix is singular, μ is increased and the step is retried.
   </p>
 </section>
 
 <section id="flussdiagramm">
-  <h2>Flussdiagramm</h2>
-  <div class="flowchart">
+  <h2 data-lang="de">Flussdiagramm</h2><h2 data-lang="en">Flow Chart</h2>
+  <div data-lang="de"><div class="flowchart">
   <svg width="100%" viewBox="0 0 680 560" xmlns="http://www.w3.org/2000/svg"
        font-family="IBM Plex Sans, sans-serif" font-size="12">
     <defs>
@@ -168,40 +483,116 @@
     <rect x="230" y="530" width="220" height="28" rx="14" fill="#0f2a1e" stroke="#3ecf8e" stroke-width="1.5"/>
     <text x="340" y="548" text-anchor="middle" fill="#3ecf8e" font-weight="600">fsum &lt; tol → CONVERGED</text>
   </svg>
-  </div>
+  </div></div><div data-lang="en"><div class="flowchart">
+  <svg width="100%" viewBox="0 0 680 560" xmlns="http://www.w3.org/2000/svg"
+       font-family="IBM Plex Sans, sans-serif" font-size="12">
+    <defs>
+      <marker id="arr" viewBox="0 0 10 10" refX="8" refY="5"
+              markerWidth="6" markerHeight="6" orient="auto">
+        <path d="M2 1L8 5L2 9" fill="none" stroke="#4a9eff" stroke-width="1.5"/>
+      </marker>
+      <marker id="arr-warn" viewBox="0 0 10 10" refX="8" refY="5"
+              markerWidth="6" markerHeight="6" orient="auto">
+        <path d="M2 1L8 5L2 9" fill="none" stroke="#f0a030" stroke-width="1.5"/>
+      </marker>
+    </defs>
+
+    <rect x="240" y="10" width="200" height="38" rx="19" fill="#1a2535" stroke="#4a9eff" stroke-width="1.5"/>
+    <text x="340" y="34" text-anchor="middle" fill="#4a9eff" font-weight="600">START</text>
+    <line x1="340" y1="48" x2="340" y2="76" stroke="#4a9eff" stroke-width="1.5" marker-end="url(#arr)"/>
+
+    <rect x="170" y="78" width="340" height="44" rx="6" fill="#13161b" stroke="#2e3540"/>
+    <text x="340" y="97" text-anchor="middle" fill="#c8cdd6">Build Jacobian J + residual F</text>
+    <text x="340" y="113" text-anchor="middle" fill="#4a5568" font-size="10">Iteration 0: μ = lmMuInit · maxDiag(JᵀJ)</text>
+    <line x1="340" y1="122" x2="340" y2="150" stroke="#4a9eff" stroke-width="1.5" marker-end="url(#arr)"/>
+
+    <rect x="170" y="152" width="340" height="44" rx="6" fill="#13161b" stroke="#2e3540"/>
+    <text x="340" y="171" text-anchor="middle" fill="#c8cdd6">Solve LM system</text>
+    <text x="340" y="187" text-anchor="middle" fill="#4a5568" font-size="10">(JᵀJ + μ·I) · Δx = −Jᵀ·F(x)</text>
+    <line x1="340" y1="196" x2="340" y2="224" stroke="#4a9eff" stroke-width="1.5" marker-end="url(#arr)"/>
+
+    <!-- Singular? -->
+    <polygon points="340,226 450,250 340,274 230,250"
+             fill="#1a1e25" stroke="#a78bfa" stroke-width="1.5"/>
+    <text x="340" y="254" text-anchor="middle" fill="#a78bfa" font-size="11">Singular?</text>
+
+    <!-- Ja: μ erhöhen -->
+    <line x1="450" y1="250" x2="540" y2="250" stroke="#f0a030" stroke-width="1.5" marker-end="url(#arr-warn)"/>
+    <rect x="542" y="230" width="120" height="40" rx="4" fill="#1a1600" stroke="#f0a030"/>
+    <text x="602" y="247" text-anchor="middle" fill="#f0a030" font-size="11">μ ← μ · νup</text>
+    <text x="602" y="262" text-anchor="middle" fill="#4a5568" font-size="10">Retry</text>
+    <!-- Zurückpfeil -->
+    <line x1="602" y1="230" x2="602" y2="170" stroke="#f0a030" stroke-width="1"/>
+    <line x1="602" y1="170" x2="510" y2="170" stroke="#f0a030" stroke-width="1" marker-end="url(#arr-warn)"/>
+    <text x="460" y="250" fill="#f0a030" font-size="10">yes</text>
+
+    <!-- Nein: Update -->
+    <line x1="340" y1="274" x2="340" y2="302" stroke="#4a9eff" stroke-width="1.5" marker-end="url(#arr)"/>
+    <text x="350" y="294" fill="#4a5568" font-size="10">no</text>
+
+    <rect x="170" y="304" width="340" height="44" rx="6" fill="#13161b" stroke="#2e3540"/>
+    <text x="340" y="323" text-anchor="middle" fill="#c8cdd6">x_try ← x + Δx</text>
+    <text x="340" y="339" text-anchor="middle" fill="#4a5568" font-size="10">Compute ||F(x_try)||</text>
+    <line x1="340" y1="348" x2="340" y2="376" stroke="#4a9eff" stroke-width="1.5" marker-end="url(#arr)"/>
+
+    <!-- Better? -->
+    <polygon points="340,378 450,402 340,426 230,402"
+             fill="#1a1e25" stroke="#a78bfa" stroke-width="1.5"/>
+    <text x="340" y="406" text-anchor="middle" fill="#a78bfa" font-size="11">Better?</text>
+
+    <!-- Nein: μ erhöhen -->
+    <line x1="230" y1="402" x2="130" y2="402" stroke="#f0a030" stroke-width="1.5" marker-end="url(#arr-warn)"/>
+    <rect x="10" y="382" width="120" height="40" rx="4" fill="#1a1600" stroke="#f0a030"/>
+    <text x="70" y="399" text-anchor="middle" fill="#f0a030" font-size="11">μ ← μ · νup</text>
+    <text x="70" y="414" text-anchor="middle" fill="#4a5568" font-size="10">more stable</text>
+    <text x="180" y="394" fill="#f0a030" font-size="10">no</text>
+
+    <!-- Ja: Akzeptieren + μ reduzieren -->
+    <line x1="340" y1="426" x2="340" y2="454" stroke="#4a9eff" stroke-width="1.5" marker-end="url(#arr)"/>
+    <text x="350" y="446" fill="#4a5568" font-size="10">yes</text>
+
+    <rect x="170" y="456" width="340" height="44" rx="6" fill="#13161b" stroke="#2e3540"/>
+    <text x="340" y="475" text-anchor="middle" fill="#c8cdd6">x ← x_try · μ ← μ / νdown</text>
+    <text x="340" y="491" text-anchor="middle" fill="#4a5568" font-size="10">converge faster</text>
+    <line x1="340" y1="500" x2="340" y2="528" stroke="#4a9eff" stroke-width="1.5" marker-end="url(#arr)"/>
+
+    <rect x="230" y="530" width="220" height="28" rx="14" fill="#0f2a1e" stroke="#3ecf8e" stroke-width="1.5"/>
+    <text x="340" y="548" text-anchor="middle" fill="#3ecf8e" font-weight="600">fsum &lt; tol → CONVERGED</text>
+  </svg>
+  </div></div>
 </section>
 
 <section id="pseudocode">
-  <h2>Pseudocode</h2>
+  <h2 data-lang="de">Pseudocode</h2><h2 data-lang="en">Pseudocode</h2>
 <pre><span class="kw">function</span> <span class="fn">levenberg_marquardt_solve</span>(F, x₀, tol, maxIter):
     x ← InitGuessApplier(x₀)
-    μ ← <span class="num">0</span>  <span class="cmt">// wird beim ersten Schritt initialisiert</span>
+    μ ← <span class="num">0</span>  <span class="cmt" data-lang="de">// wird beim ersten Schritt initialisiert</span><span class="cmt" data-lang="en">// initialized at first step</span>
 
     <span class="kw">for</span> k = 0 <span class="kw">to</span> maxIter:
         J ← buildJacobian(F, x)
         f ← F(x)
         JtJ ← Jᵀ · J
 
-        <span class="cmt">// μ initialisieren (Iteration 0)</span>
+        <span class="cmt" data-lang="de">// μ initialisieren (Iteration 0)</span><span class="cmt" data-lang="en">// initialize μ (iteration 0)</span>
         <span class="kw">if</span> k == 0:
             μ ← lmMuInit · max(diag(JtJ))
 
-        <span class="cmt">// ── LM-System lösen (mit Wiederholung bei singulärer Matrix) ──</span>
+        <span class="cmt" data-lang="de">// ── LM-System lösen (mit Wiederholung bei singulärer Matrix) ──</span><span class="cmt" data-lang="en">// ── Solve LM system (with retry on singular matrix) ──</span>
         <span class="kw">for</span> attempt = 1 <span class="kw">to</span> maxAttempts:
-            A ← JtJ + μ·I             <span class="cmt">// regularisiert, immer pd</span>
+            A ← JtJ + μ·I             <span class="cmt" data-lang="de">// regularisiert, immer pd</span><span class="cmt" data-lang="en">// regularized, always pd</span>
             <span class="kw">try</span>:
                 Δx ← solve(A, −Jᵀ·f)
                 <span class="kw">break</span>
             <span class="kw">except</span> Singular:
-                μ ← μ · νup           <span class="cmt">// erhöhen und wiederholen</span>
+                μ ← μ · νup           <span class="cmt" data-lang="de">// erhöhen und wiederholen</span><span class="cmt" data-lang="en">// increase and retry</span>
 
-        <span class="cmt">// ── Schritt testen ──</span>
+        <span class="cmt" data-lang="de">// ── Schritt testen ──</span><span class="cmt" data-lang="en">// ── Test step ──</span>
         x_try ← x + Δx
         <span class="kw">if</span> ||F(x_try)|| &lt; ||f||:
             x ← x_try
-            μ ← μ / νdown            <span class="cmt">// Newton-artiger</span>
+            μ ← μ / νdown            <span class="cmt" data-lang="de">// Newton-artiger</span><span class="cmt" data-lang="en">// more Newton-like</span>
         <span class="kw">else</span>:
-            μ ← μ · νup              <span class="cmt">// stabiler</span>
+            μ ← μ · νup              <span class="cmt" data-lang="de">// stabiler</span><span class="cmt" data-lang="en">// more stable</span>
 
         x ← PhysicalProjector(x)
         fsum ← Σ|Fᵢ(x)|
@@ -211,80 +602,163 @@
 </section>
 
 <section id="dateien">
-  <h2>Wichtige Dateien</h2>
+  <h2 data-lang="de">Wichtige Dateien</h2><h2 data-lang="en">Key Files</h2>
   <ul class="file-list">
     <li>
-      <span class="file-icon">KERN</span>
+      <span class="file-icon" data-lang="de">KERN</span><span class="file-icon" data-lang="en">CORE</span>
       <div class="file-desc">
-        <strong>LevenbergMarquardtSolver.java</strong>
+        <span data-lang="de"><strong>LevenbergMarquardtSolver.java</strong>
         Implementiert LM mit adaptivem μ. Enthält μ-Initialisierung,
         Singular-Recovery und Schritttestung.
-        <br><code>apps/eqnParser/solver/LevenbergMarquardtSolver.java</code>
+        <br><code>apps/eqnParser/solver/LevenbergMarquardtSolver.java</code></span><span data-lang="en"><strong>LevenbergMarquardtSolver.java</strong>
+        Implements LM with adaptive μ. Contains μ initialization,
+        singular recovery and step testing.
+        <br><code>apps/eqnParser/solver/LevenbergMarquardtSolver.java</code></span>
       </div>
     </li>
     <li>
-      <span class="file-icon">BASIS</span>
+      <span class="file-icon" data-lang="de">BASIS</span><span class="file-icon" data-lang="en">BASE</span>
       <div class="file-desc">
-        <strong>AbstractSolver.java</strong>
+        <span data-lang="de"><strong>AbstractSolver.java</strong>
         Basisklasse — Jacobi aufbauen, Iteration, Konvergenzprüfung.
-        <br><code>apps/eqnParser/solver/AbstractSolver.java</code>
+        <br><code>apps/eqnParser/solver/AbstractSolver.java</code></span><span data-lang="en"><strong>AbstractSolver.java</strong>
+        Base class — Jacobian build, iteration, convergence check.
+        <br><code>apps/eqnParser/solver/AbstractSolver.java</code></span>
       </div>
     </li>
   </ul>
 </section>
 
 <section id="parameter">
-  <h2>Parameter</h2>
+  <h2 data-lang="de">Parameter</h2><h2 data-lang="en">Parameters</h2>
   <pre>java CASSolver -I:model.cas -S:LEVENBERG_MARQUARDT</pre>
   <div class="tbl-wrap">
   <table>
-    <thead><tr><th>Parameter</th><th>Default</th><th>Beschreibung</th></tr></thead>
+    <thead><tr><th>Parameter</th><th>Default</th><th data-lang="de">Beschreibung</th><th data-lang="en">Description</th></tr></thead>
     <tbody>
-      <tr><td><code>tolerance</code></td><td><code>1e-7</code></td><td>Konvergenzschwelle</td></tr>
-      <tr><td><code>maxIter</code></td><td><code>100</code></td><td>Maximale Iterationen</td></tr>
-      <tr><td><code>lmMuInit</code></td><td><code>1e-3</code></td><td>Initialer μ-Faktor (× max Diagonale)</td></tr>
-      <tr><td><code>lmNuUp</code></td><td><code>10.0</code></td><td>μ-Erhöhungsfaktor bei schlechtem Schritt</td></tr>
-      <tr><td><code>lmNuDown</code></td><td><code>3.0</code></td><td>μ-Reduktionsfaktor bei gutem Schritt</td></tr>
-      <tr><td><code>lmMuMax</code></td><td><code>1e20</code></td><td>Obere Schranke für μ</td></tr>
+      <tr><td><code>tolerance</code></td><td><code>1e-7</code></td><td data-lang="de">Konvergenzschwelle</td><td data-lang="en">Convergence threshold</td></tr>
+      <tr><td><code>maxIter</code></td><td><code>100</code></td><td data-lang="de">Maximale Iterationen</td><td data-lang="en">Maximum iterations</td></tr>
+      <tr><td><code>lmMuInit</code></td><td><code>1e-3</code></td><td data-lang="de">Initialer μ-Faktor (× max Diagonale)</td><td data-lang="en">Initial μ factor (× max diagonal)</td></tr>
+      <tr><td><code>lmNuUp</code></td><td><code>10.0</code></td><td data-lang="de">μ-Erhöhungsfaktor bei schlechtem Schritt</td><td data-lang="en">μ increase factor on bad step</td></tr>
+      <tr><td><code>lmNuDown</code></td><td><code>3.0</code></td><td data-lang="de">μ-Reduktionsfaktor bei gutem Schritt</td><td data-lang="en">μ reduction factor on good step</td></tr>
+      <tr><td><code>lmMuMax</code></td><td><code>1e20</code></td><td data-lang="de">Obere Schranke für μ</td><td data-lang="en">Upper bound for μ</td></tr>
     </tbody>
   </table>
   </div>
 </section>
 
 <section id="verhalten">
-  <h2>Konvergenzverhalten</h2>
+  <h2 data-lang="de">Konvergenzverhalten</h2><h2 data-lang="en">Convergence Behavior</h2>
   <div class="tbl-wrap">
   <table>
-    <thead><tr><th>Situation</th><th>Verhalten</th><th>Empfehlung</th></tr></thead>
+    <thead><tr><th data-lang="de">Situation</th><th data-lang="en">Situation</th><th data-lang="de">Verhalten</th><th data-lang="en">Behavior</th><th data-lang="de">Empfehlung</th><th data-lang="en">Recommendation</th></tr></thead>
     <tbody>
-      <tr><td>Schlecht konditioniert (κ &gt; 10¹²)</td><td><span class="badge b-ok">✅ Robust</span></td><td>Erste Wahl bei κ-Warnungen</td></tr>
-      <tr><td>Fast-singuläre Jacobi</td><td><span class="badge b-ok">✅ Erhöht μ und wiederholt</span></td><td>Automatische Recovery</td></tr>
-      <tr><td>Gut konditioniertes System</td><td><span class="badge b-warn">⚠️ Mehr Iterationen als Newton</span></td><td>→ NEWTON_SPARSE_ARMIJO bevorzugen</td></tr>
+      <tr><td data-lang="de">Mäßig schlecht konditioniert (κ ~ 10⁸–10¹⁰)</td><td data-lang="en">Moderately ill-conditioned (κ ~ 10⁸–10¹⁰)</td><td><span class="badge b-ok" data-lang="de">✅ Robust</span><span class="badge b-ok" data-lang="en">✅ Robust</span></td><td data-lang="de">Erste Wahl bei κ-Warnungen wenn EQUILIBRATE nicht hilft</td><td data-lang="en">First choice on κ warnings when EQUILIBRATE does not help</td></tr>
+      <tr><td data-lang="de">Sehr schlecht konditioniert (κ &gt; 10¹¹)</td><td data-lang="en">Very ill-conditioned (κ &gt; 10¹¹)</td><td><span class="badge b-warn" data-lang="de">⚠️ Riskant</span><span class="badge b-warn" data-lang="en">⚠️ Risky</span></td><td data-lang="de">JᵀJ-Quadratur überschreitet Maschinengenauigkeit — eher NEWTON_SPARSE_ARMIJO -SC:EQUILIBRATE</td><td data-lang="en">JᵀJ squaring exceeds machine precision — prefer NEWTON_SPARSE_ARMIJO -SC:EQUILIBRATE</td></tr>
+      <tr><td data-lang="de">Fast-singuläre Jacobi (lokal)</td><td data-lang="en">Near-singular Jacobian (locally)</td><td><span class="badge b-ok" data-lang="de">✅ Erhöht μ und wiederholt</span><span class="badge b-ok" data-lang="en">✅ Increases μ and retries</span></td><td data-lang="de">Automatische Recovery</td><td data-lang="en">Automatic recovery</td></tr>
+      <tr><td data-lang="de">Gut konditioniertes System</td><td data-lang="en">Well-conditioned system</td><td><span class="badge b-warn" data-lang="de">⚠️ Mehr Iterationen als Newton</span><span class="badge b-warn" data-lang="en">⚠️ More iterations than Newton</span></td><td data-lang="de">→ NEWTON_SPARSE_ARMIJO bevorzugen</td><td data-lang="en">→ Prefer NEWTON_SPARSE_ARMIJO</td></tr>
     </tbody>
   </table>
   </div>
 </section>
 
 <section id="grenzen">
-  <h2>Bekannte Grenzen</h2>
-  <div class="note amber">
-    <strong>Mehr Iterationen:</strong> LM konvergiert superlinear statt quadratisch —
-    typisch 20-50 Iterationen statt 3-5. Bei gut konditionierten Systemen ist
-    Newton-Sparse-Armijo schneller.
+  <h2 data-lang="de">Bekannte Grenzen — und der v2.12-Fix</h2><h2 data-lang="en">Known Limitations — and the v2.12 Fix</h2>
+
+  <div class="note green" data-lang="de">
+    <strong>v2.12 Update (Newton-Direkt-Hybrid):</strong> Die alte Grenze
+    "LM nicht zuverlässig bei kappa &gt; 10⁸" wurde durch eine architektonische
+    Verbesserung weitgehend aufgehoben. Bei kleinem μ (wo LM mathematisch
+    ≈ Newton ist) lösen wir jetzt direkt <code>dx = -J⁻¹·f</code> wie Newton,
+    statt über die Normalengleichung — das vermeidet die kappa²-Verlust.
+    NozzleSystem (kappa = 4.6×10¹¹) konvergiert mit
+    <code>-S:LEVENBERG_MARQUARDT -SC:EQUILIBRATE</code> jetzt in 5 Iter,
+    identisch zu Newton-Armijo.
+  </div><div class="note green" data-lang="en">
+    <strong>v2.12 update (Newton-direct hybrid):</strong> the old limit
+    "LM unreliable at kappa &gt; 10⁸" has been largely lifted by an architectural
+    improvement. At small μ (where LM is mathematically ≈ Newton) we now solve
+    <code>dx = -J⁻¹·f</code> directly like Newton instead of via the normal
+    equation — avoiding the kappa² loss. NozzleSystem (kappa = 4.6×10¹¹) now
+    converges with <code>-S:LEVENBERG_MARQUARDT -SC:EQUILIBRATE</code> in 5
+    iterations, identical to Newton-Armijo.
   </div>
-  <div class="note amber">
-    <strong>Dichte Matrix:</strong> JᵀJ ist immer dicht — auch wenn J sparse ist.
-    Für sehr große Systeme kann das ein Problem sein.
+
+  <div class="note amber" data-lang="de">
+    <strong>Mehr Iterationen ohne Equilibrator:</strong> LM konvergiert
+    superlinear statt quadratisch — bei aktiver μ-Regularisierung typisch
+    10-30 Iterationen statt 3-5. Bei gut konditionierten Systemen ist
+    Newton-Sparse-Armijo schneller. Mit Equilibrator und Newton-Direkt-Hybrid
+    erreicht LM jedoch Newton-Niveau.
+  </div><div class="note amber" data-lang="en">
+    <strong>More iterations without equilibrator:</strong> LM converges
+    superlinearly, not quadratically — with active μ regularization typically
+    10–30 iterations instead of 3–5. On well-conditioned systems Newton-Sparse-Armijo
+    is faster. With the equilibrator and the Newton-direct hybrid, LM reaches
+    Newton-level performance.
+  </div>
+
+  <div class="note amber" data-lang="de">
+    <strong>Dichte JᵀJ wird nur als Fallback benutzt:</strong> Im
+    Newton-Direkt-Pfad wird <code>JᵀJ</code> gar nicht erst gebildet —
+    nur bei größerem μ (rückgewiesene Schritte) greift die klassische
+    Marquardt-Form mit <code>(JᵀJ + μ·D)</code>. Schwellenwerte:
+    <code>μ &lt; 10⁻⁴</code> bei aktivem Equilibrator (Levenberg-Form),
+    <code>μ &lt; 10⁻⁶</code> sonst.
+  </div><div class="note amber" data-lang="en">
+    <strong>Dense JᵀJ is only used as a fallback:</strong> in the Newton-direct
+    path, <code>JᵀJ</code> is not formed at all — only at larger μ (rejected
+    steps) does the classical Marquardt form with <code>(JᵀJ + μ·D)</code> kick
+    in. Thresholds: <code>μ &lt; 10⁻⁴</code> with an active equilibrator (Levenberg
+    form), <code>μ &lt; 10⁻⁶</code> otherwise.
+  </div>
+
+  <div class="note red" data-lang="de">
+    <strong>Modell-Singularitäten an Bounds:</strong> Wenn das Modell selbst
+    Singularitäten an Variablen-Bounds hat (z.B. <code>1/(γ-1)</code> mit
+    <code>γ.Lower = 1.0</code>), schießt der erste Newton-Schritt die
+    Variable an die Bound, und die nachfolgende Funktionsauswertung wird
+    NaN. Das ist <em>kein Solver-Bug</em>, sondern ein Modell-Issue. Lösung:
+    realistische Bounds setzen (z.B. <code>γ.Lower = 1.05</code>) oder
+    Equilibrator nutzen damit die Konvergenz schnell genug ist.
+  </div><div class="note red" data-lang="en">
+    <strong>Model singularities at bounds:</strong> if the model itself has
+    singularities at variable bounds (e.g. <code>1/(γ-1)</code> with
+    <code>γ.Lower = 1.0</code>), the first Newton step pushes the variable
+    onto the bound and the subsequent function evaluation becomes NaN. This
+    is <em>not a solver bug</em> but a model issue. Fix: set realistic bounds
+    (e.g. <code>γ.Lower = 1.05</code>) or use the equilibrator so convergence
+    is fast enough to avoid the bound.
+  </div>
+
+  <div class="note blue" data-lang="de">
+    <strong>v2.12-Konvergenz auf NozzleSystem (n=303):</strong>
+    <pre style="margin: 0.5rem 0;"><code>-S:LEVENBERG_MARQUARDT -SC:EQUILIBRATE
+  → 5 Iter, ||F|| = 8.99e-09, 0.36 s
+
+-S:LEVENBERG_MARQUARDT  (ohne Skalierung, mit GAMMA-Bound-Fix)
+  → reduziert um 5 Größenordnungen, dann Plateau bei ~5e+02
+  → keine Konvergenz in 100 Iter</code></pre>
+    Empfehlung: <code>-SC:EQUILIBRATE</code> bei kappa &gt; 10⁹.
+  </div><div class="note blue" data-lang="en">
+    <strong>v2.12 convergence on NozzleSystem (n=303):</strong>
+    <pre style="margin: 0.5rem 0;"><code>-S:LEVENBERG_MARQUARDT -SC:EQUILIBRATE
+  → 5 iter, ||F|| = 8.99e-09, 0.36 s
+
+-S:LEVENBERG_MARQUARDT  (no scaling, with GAMMA bound fix)
+  → drops by 5 orders of magnitude, then plateaus at ~5e+02
+  → no convergence in 100 iter</code></pre>
+    Recommendation: <code>-SC:EQUILIBRATE</code> at kappa &gt; 10⁹.
   </div>
 </section>
 
 </main>
 
 <footer>
-  <span>CMDSolver Docs · Levenberg-Marquardt · v2.5</span>
+  <span data-lang="de">CMDSolver Docs · Levenberg-Marquardt · v2.5</span><span data-lang="en">CMDSolver Docs · Levenberg-Marquardt · v2.5</span>
   <span>
-    <a href="solver_newton_sparse_armijo.html">← Newton-Sparse+Armijo</a> &nbsp;|&nbsp;
-    <a href="solver_broyden.html">Broyden →</a>
+    <a href="solver_newton_sparse_armijo.html" data-lang="de">← Newton-Sparse+Armijo</a><a href="solver_newton_sparse_armijo.html" data-lang="en">← Newton-Sparse+Armijo</a> &nbsp;|&nbsp;
+    <a href="solver_broyden.html" data-lang="de">Broyden →</a><a href="solver_broyden.html" data-lang="en">Broyden →</a>
   </span>
 </footer>
 </body>
