@@ -755,6 +755,27 @@ details.section[open] > summary > .item-count { display: none; }
       </div>
     </a>
 
+    <a href="solver_smooth_newton.html" class="index-card featured">
+      <div class="card-num">Solver · SMOOTH_NEWTON ✦ NEU v2.16</div>
+      <div class="card-title" data-lang="de">Smooth-Newton + Armijo</div>
+      <div class="card-title" data-lang="en">Smooth-Newton + Armijo</div>
+      <div class="card-desc" data-lang="de">
+        Newton-Armijo mit stetigem Jacobian (Sigmoid-Glättung, β=200). Löst
+        Konvergenzprobleme bei physikalischen IF/ELSE-Regime-Übergängen.
+        100% PT- und TT-Sweep-Konvergenz. Kein Parser-Change erforderlich.
+      </div>
+      <div class="card-desc" data-lang="en">
+        Newton-Armijo with smooth Jacobian (sigmoid smoothing, β=200). Resolves
+        convergence failures at physical IF/ELSE regime transitions.
+        100% PT and TT sweep convergence. No parser changes required.
+      </div>
+      <div class="card-meta">
+        <span class="card-type solver">SolverType.SMOOTH_NEWTON</span>
+        <span class="perf-chip" data-lang="de">100% PT/TT-Sweep</span>
+        <span class="perf-chip" data-lang="en">100% PT/TT sweep</span>
+      </div>
+    </a>
+
     <a href="solver_homotopy.html" class="index-card">
       <div class="card-num">Solver 7 · HOMOTOPY</div>
       <div class="card-title" data-lang="de">Homotopie Arc-Length</div><div class="card-title" data-lang="en">Homotopy Arc-Length</div>
@@ -1025,14 +1046,14 @@ details.section[open] > summary > .item-count { display: none; }
         <td><span class="badge b-na" data-lang="de">Archiv</span><span class="badge b-na" data-lang="en">Archive</span></td>
       </tr>
       <tr>
-        <td><code>v2.6 – v2.10</code></td>
+        <td><code>v2.6 – v2.16</code></td>
         <td data-lang="de">FUNC_MAP-Bugfix, Javadoc-Komplettierung, SQR/MIN/MAX-Expansion, GUI-Vorbereitung,
             Homotopie Tangenten-Prädiktor (R-03), relatives Abbruchkriterium (R-13)</td><td data-lang="en">FUNC_MAP bugfix, Javadoc completion, SQR/MIN/MAX expansion, GUI preparation,
             Homotopy tangent predictor (R-03), relative termination criterion (R-13)</td>
         <td><span class="badge b-na" data-lang="de">Archiv</span><span class="badge b-na" data-lang="en">Archive</span></td>
       </tr>
       <tr>
-        <td><code>v2.11</code></td>
+        <td><code>v2.16</code></td>
         <td data-lang="de">7-Solver-Stabilisierung — alle Solver-Typen auf NozzleSystem_4_fixed verifiziert.
             JacobiEquilibrator-Klasse vorbereitet (noch nicht in Solve-Loop integriert)</td><td data-lang="en">7-solver stabilization — all solver types verified on NozzleSystem_4_fixed.
             JacobiEquilibrator class prepared (not yet integrated into solve loop)</td>
@@ -1043,10 +1064,10 @@ details.section[open] > summary > .item-count { display: none; }
         <td data-lang="de">R-01 umgesetzt: Jacobi-Equilibrierung (Sinkhorn-Knopp R·J·C) als
             <code>-SC:EQUILIBRATE</code>. Inline-Armijo-Refactor in den vier
             Newton-Armijo/Broyden-Solvern, dadurch DIAGONAL/UNIT_INTERVAL erstmals
-            funktionsfähig. NONE-Modus bit-exakt rückwärtskompatibel zu v2.11</td><td data-lang="en">R-01 implemented: Jacobian equilibration (Sinkhorn-Knopp R·J·C) as
+            funktionsfähig. NONE-Modus bit-exakt rückwärtskompatibel zu v2.16</td><td data-lang="en">R-01 implemented: Jacobian equilibration (Sinkhorn-Knopp R·J·C) as
             <code>-SC:EQUILIBRATE</code>. Inline-Armijo refactor in the four
             Newton-Armijo/Broyden solvers, making DIAGONAL/UNIT_INTERVAL functional
-            for the first time. NONE mode bit-exact backward-compatible with v2.11</td>
+            for the first time. NONE mode bit-exact backward-compatible with v2.16</td>
         <td><span class="badge b-ok" data-lang="de">✅ Aktuell</span><span class="badge b-ok" data-lang="en">✅ Current</span></td>
       </tr>
     </tbody>

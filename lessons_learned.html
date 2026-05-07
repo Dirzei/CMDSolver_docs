@@ -925,7 +925,7 @@ sup { font-size: 10px; color: var(--accent); }
       (<code>weightedAbsSum</code>, <code>weightedNormSq</code>, <code>weightedDot</code>),
       die bei aktivem Equilibrator die Norm gewichten — mehr nicht. Bei inaktivem
       Equilibrator sind sie bit-exakt identisch zu den ungewichteten Pendants,
-      v2.11-Verhalten bei <code>NONE</code>-Skalierung bleibt unverändert.</p>
+      v2.16-Verhalten bei <code>NONE</code>-Skalierung bleibt unverändert.</p>
     </div>
     <div class="lesson-key">Bevor man eine Architektur umbauen will, prüfen ob das
     eigentliche Problem nicht woanders liegt. "Vier inkonsistente Räume" klang
@@ -942,7 +942,7 @@ sup { font-size: 10px; color: var(--accent); }
     <div class="lesson-title">Wenn ein Feature scheinbar funktioniert aber nichts bewirkt, ist es vermutlich heimlich deaktiviert</div>
     <div class="lesson-body">
       <p>Die Skalierungs-Optionen <code>DIAGONAL</code> und <code>UNIT_INTERVAL</code>
-      existierten in v2.5 bis v2.11, wurden aber nie produktiv eingesetzt
+      existierten in v2.5 bis v2.16, wurden aber nie produktiv eingesetzt
       weil Tests damit nicht konvergierten. Die Vermutung war, dass die
       Skalierung als Konzept ungeeignet sei. Bei der R-01-Aufarbeitung kam
       heraus: die Skalierung selbst war korrekt, aber die Inline-Armijo-Routinen

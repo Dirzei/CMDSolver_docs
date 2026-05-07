@@ -326,7 +326,7 @@ sup { font-size: 10px; color: var(--accent); }
   .s-open     { background: rgba(240,160,48,.1);  color: var(--warn); border: 1px solid rgba(240,160,48,.2); }
   .s-resolved { background: rgba(74,158,255,.1);  color: var(--accent);border: 1px solid rgba(74,158,255,.2);}
 
-/* ── Phase-Block (Phase 12 v2.13/v2.14, neu nach v2.10) ── */
+/* ── Phase-Block (Phase 12 v2.13/v2.14, neu nach v2.16) ── */
 .phase-block {
   background: var(--bg2); border: 1px solid var(--border);
   border-radius: 8px; padding: 1rem 1.4rem; margin-bottom: 1.2rem;
@@ -555,7 +555,7 @@ sup { font-size: 10px; color: var(--accent); }
     </div>
 
     <div class="phase new">
-      <div class="phase-label"><span class="new-badge">NEU</span> Phase 10 — v2.6 bis v2.10</div>
+      <div class="phase-label"><span class="new-badge">NEU</span> Phase 10 — v2.6 bis v2.16</div>
       <div class="phase-title">Bugfixes · Javadoc · CAS-Erweiterungen · GUI-Vorbereitung</div>
       <div class="phase-body">
         <ul>
@@ -563,18 +563,18 @@ sup { font-size: 10px; color: var(--accent); }
           <li><strong>v2.7 — Javadoc:</strong> Alle 14 undokumentierten Klassen vollständig dokumentiert (Variable, VarDef, ProcDef, ForDef, DerivResult, OutputVariable, DerivativeMatrix, MatrixSimple, StructCondition, SolverException, EqnSysReaderDataBlock, BIfunctions, ThermoConstants, EqnSystem)</li>
           <li><strong>v2.8 — R-07/R-08/R-13:</strong> Inline-Kommentare in CAS-Gleichungszeilen, SQR(x)→x² Expansion, relatives Abbruchkriterium toleranceRelative</li>
           <li><strong>v2.9 — GUI-Vorbereitung:</strong> SolverAPI.addLogHandler() für JTextArea-Integration, SolverResultTableModel für JTable-Anzeige</li>
-          <li><strong>v2.10 — Mittelfristige Roadmap:</strong> Homotopie Tangenten-Prädiktor (R-03), MIN/MAX Expansion (R-06), INTEGERPARAMETER (R-09), BatchRunner Warm-Start verifiziert (R-14), SolverResultTableModel befüllt (R-20), setToleranceRelative() (R-21)</li>
+          <li><strong>v2.16 — Mittelfristige Roadmap:</strong> Homotopie Tangenten-Prädiktor (R-03), MIN/MAX Expansion (R-06), INTEGERPARAMETER (R-09), BatchRunner Warm-Start verifiziert (R-14), SolverResultTableModel befüllt (R-20), setToleranceRelative() (R-21)</li>
         </ul>
       </div>
     </div>
 
     <div class="phase new">
-      <div class="phase-label"><span class="new-badge">NEU</span> Phase 11 — v2.11 bis v2.12</div>
+      <div class="phase-label"><span class="new-badge">NEU</span> Phase 11 — v2.16 bis v2.12</div>
       <div class="phase-title">Solver-Stabilisierung · Jacobi-Equilibrierung · Armijo-Refactor (R-01)</div>
       <div class="phase-body">
         <ul>
-          <li><strong>v2.11 — 7-Solver-Test-Stabilisierung:</strong> Alle sieben Solver-Typen (NEWTON_ARMIJO, LEVENBERG_MARQUARDT, HOMOTOPY, BROYDEN, NEWTON_SPARSE, NEWTON_SPARSE_ARMIJO, BROYDEN_SPARSE) auf NozzleSystem_4_fixed.cas verifiziert. JacobiEquilibrator-Klasse als Vorbereitung für R-01 implementiert (noch nicht in Solve-Loop integriert).</li>
-          <li><strong>v2.12 — R-01 Jacobi-Equilibrierung umgesetzt:</strong> Neuer Skalierungsmodus <code>EQUILIBRATE</code> (Sinkhorn-Knopp R·J·C). Im selben Schritt wurde ein latenter Bug in den Inline-Armijo-Routinen der vier Newton-Armijo/Broyden-Solver behoben — Probe-Schritte wurden bei aktiver Skalierung im skalierten Raum auf physikalische Werte addiert, was Armijo de facto deaktiviert hatte. Inline-Armijo wurde in den <code>armijoStep</code>-Hook von AbstractSolver verlagert; Probe-Schritte laufen jetzt im Originalraum mit dxOrig. <code>DIAGONAL</code> und <code>UNIT_INTERVAL</code> funktionieren dadurch ab v2.12 erstmals korrekt. Bei <code>NONE</code>-Skalierung bit-exakt rückwärtskompatibel zu v2.11.</li>
+          <li><strong>v2.16 — 7-Solver-Test-Stabilisierung:</strong> Alle sieben Solver-Typen (NEWTON_ARMIJO, LEVENBERG_MARQUARDT, HOMOTOPY, BROYDEN, NEWTON_SPARSE, NEWTON_SPARSE_ARMIJO, BROYDEN_SPARSE) auf NozzleSystem_4_fixed.cas verifiziert. JacobiEquilibrator-Klasse als Vorbereitung für R-01 implementiert (noch nicht in Solve-Loop integriert).</li>
+          <li><strong>v2.12 — R-01 Jacobi-Equilibrierung umgesetzt:</strong> Neuer Skalierungsmodus <code>EQUILIBRATE</code> (Sinkhorn-Knopp R·J·C). Im selben Schritt wurde ein latenter Bug in den Inline-Armijo-Routinen der vier Newton-Armijo/Broyden-Solver behoben — Probe-Schritte wurden bei aktiver Skalierung im skalierten Raum auf physikalische Werte addiert, was Armijo de facto deaktiviert hatte. Inline-Armijo wurde in den <code>armijoStep</code>-Hook von AbstractSolver verlagert; Probe-Schritte laufen jetzt im Originalraum mit dxOrig. <code>DIAGONAL</code> und <code>UNIT_INTERVAL</code> funktionieren dadurch ab v2.12 erstmals korrekt. Bei <code>NONE</code>-Skalierung bit-exakt rückwärtskompatibel zu v2.16.</li>
           <li><strong>v2.12 — LM komplette Neufassung (v3b Newton-Direkt-Hybrid):</strong>
             Acht Iterationen lang versucht den LM-Solver auf NozzleSystem mit
             EQUILIBRATE konvergent zu kriegen. Erkenntnis nach Iter 5: die

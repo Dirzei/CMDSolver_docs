@@ -508,17 +508,17 @@ sup { font-size: 10px; color: var(--accent); }
       <div class="method-desc" data-lang="de">Setzt die absolute Konvergenzschwelle ||F(x)|| &lt; tolerance. Standard: <code>1e-7</code>.</div><div class="method-desc" data-lang="en">Sets the absolute convergence threshold ||F(x)|| &lt; tolerance. Default: <code>1e-7</code>.</div>
     </div>
 
-    <!-- setToleranceRelative — neu v2.10 -->
+    <!-- setToleranceRelative — neu v2.16 -->
     <div class="method">
       <div class="method-sig">
         <span class="ret">SolverAPI</span> <span class="name">setToleranceRelative</span>(<span class="param-type">double</span> <span class="param-name">toleranceRelative</span>)
         <span class="method-chain">↩ this</span>
       </div>
       <div class="method-desc" data-lang="de">
-        Relatives Abbruchkriterium (neu in v2.10). Konvergenz wenn <code>fsum/fsum_initial &lt; toleranceRelative</code>.
+        Relatives Abbruchkriterium (neu in v2.16). Konvergenz wenn <code>fsum/fsum_initial &lt; toleranceRelative</code>.
         Verhindert Dominanz großer Gleichungen (Pa neben kg/s). Standard: <code>0</code> (deaktiviert).
       </div><div class="method-desc" data-lang="en">
-        Relative termination criterion (new in v2.10). Convergence when <code>fsum/fsum_initial &lt; toleranceRelative</code>.
+        Relative termination criterion (new in v2.16). Convergence when <code>fsum/fsum_initial &lt; toleranceRelative</code>.
         Prevents dominance by large equations (Pa next to kg/s). Default: <code>0</code> (disabled).
       </div>
       <div class="method-example">api.<span class="fn">setToleranceRelative</span>(<span class="num">1e-4</span>); <span class="cmt">// 10.000× Verbesserung als Kriterium</span></div>
